@@ -1,4 +1,5 @@
 # FOR REFERENCE ONLY
+# pylint: disable=all
 
 """
 decorpy

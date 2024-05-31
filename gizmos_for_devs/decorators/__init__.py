@@ -1,5 +1,5 @@
-"""devtoolset.decorators
-------------------------
+"""decorators
+-------------
 Module containing useful decorators for scripting.
 
 Below is a list of the decorators contained in this module.
