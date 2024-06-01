@@ -4,6 +4,8 @@ Module used for checking certain cases.
 Mainly used for type and value checking function parameters.
 """
 
+from re import match as rematch
+
 def verify_types(v, /, *types, raise_exc=True, exc_msg=""):
     """checks.verify_types
     ----------------------
@@ -311,12 +313,54 @@ def verify_length(v, min_length, max_length=-1, *, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_regex(
-    value: str,
-    regex: str,
-    *,
-    raise_exc=True, exc_msg=""
-): ...
+def verify_regex(v: str, regex: str, *, raise_exc=True, exc_msg=""):
+    """checks.verify_regex
+    ----------------------
+    Verifies the given value matches the regex provided.
+    Either raises a ValueError or returns False depending on raise_exc.
+
+    :param v: The value to check.
+
+    :type v: Any
+
+    :param regex: The regex to compare to.
+
+    :type regex: int
+
+    :param raise_exc: Whether to raise an exception, defaults to True
+    - If True, the corresponding exception will be raised.
+    - If False, will return False instead of raising an exception.
+
+    :type raise_exc: bool, optional
+
+    :param exc_msg: A custom exception message if changed, defaults to ""
+    - Below is a list of supported fields to be used in an unformatted string:
+    - value: The checked value.
+    - min: The minimum length.
+    - max: The maximum length.
+    - Ex: exc_msg="len({value}) is not in the range ({min}, {max})."
+
+    :type exc_msg: str, optional
+
+    :return: True if the value's length is within the inclusive range, otherwise False.
+
+    :rtype: bool
+    """
+
+    if rematch(regex, v):
+        return True
+
+    if exc_msg:
+        exc_msg = exc_msg.format(
+            value=repr(v),
+            regex=regex
+        )
+    else:
+        exc_msg = f"{repr(v)} does not match the regex {repr(regex)}."
+
+    if raise_exc:
+        raise ValueError(exc_msg)
+    return False
 
 
 def verify_key_in_dict(
