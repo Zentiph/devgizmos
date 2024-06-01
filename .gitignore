@@ -1,3 +1,4 @@
 sandbox.py
 __pycache__/
 .vscode/
+.mypy_cache/

@@ -24,8 +24,8 @@ def timer(unit="ns", precision=0, *, msg_format=""):
     Parameters
     ----------
     :param unit: The unit of time to use, defaults to "ns"
-        - Supported units are "ns", "us", "ms", "s"
-        - If an invalid unit is provided, unit will default to "ns".
+    - Supported units are "ns", "us", "ms", "s"
+    - If an invalid unit is provided, unit will default to "ns".
 
     :type unit: str, optional
 
@@ -34,14 +34,14 @@ def timer(unit="ns", precision=0, *, msg_format=""):
     :type precision: int, optional
 
     :param msg_format: Used to enter a custom message format, defaults to ""
-        - Enter an unformatted string with the following fields to include their values
-        - name: The name of the function.
-        - elapsed: The time elapsed by the function's execution.
-        - unit: The unit used in the timing.
-        - args: The arguments passed to the function.
-        - kwargs: The keyword arguments passed to the function.
-        - returned: The return value of the function.
-        - Ex: msg_format="Func {name} took {elapsed} {unit} to run and returned {returned}."
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - elapsed: The time elapsed by the function's execution.
+    - unit: The unit used in the timing.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - returned: The return value of the function.
+    - Ex: msg_format="Func {name} took {elapsed} {unit} to run and returned {returned}."
 
     :type msg_format: str, optional
     """
