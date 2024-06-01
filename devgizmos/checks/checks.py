@@ -253,7 +253,7 @@ def verify_not_none(v, /, *, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_length(v, min_length, max_length=-1, *, raise_exc=True, exc_msg=""):
+def verify_length(v, /, min_length, max_length=-1, *, raise_exc=True, exc_msg=""):
     """checks.verify_length
     -----------------------
     Verifies the given value has a length in the specified range provided.
@@ -313,19 +313,19 @@ def verify_length(v, min_length, max_length=-1, *, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_regex(v: str, regex: str, *, raise_exc=True, exc_msg=""):
+def verify_regex(s, /, regex, *, raise_exc=True, exc_msg=""):
     """checks.verify_regex
     ----------------------
-    Verifies the given value matches the regex provided.
+    Verifies the given string matches the regex provided.
     Either raises a ValueError or returns False depending on raise_exc.
 
-    :param v: The value to check.
+    :param s: The string to check.
 
-    :type v: Any
+    :type s: str
 
     :param regex: The regex to compare to.
 
-    :type regex: int
+    :type regex: str
 
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
@@ -335,28 +335,27 @@ def verify_regex(v: str, regex: str, *, raise_exc=True, exc_msg=""):
 
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
-    - value: The checked value.
-    - min: The minimum length.
-    - max: The maximum length.
-    - Ex: exc_msg="len({value}) is not in the range ({min}, {max})."
+    - string: The checked string.
+    - regex: The regex to match with.
+    - Ex: exc_msg="{string} does not match the regex {regex}."
 
     :type exc_msg: str, optional
 
-    :return: True if the value's length is within the inclusive range, otherwise False.
+    :return: True if the string matches the regex, otherwise False.
 
     :rtype: bool
     """
 
-    if rematch(regex, v):
+    if rematch(regex, s):
         return True
 
     if exc_msg:
         exc_msg = exc_msg.format(
-            value=repr(v),
+            string=repr(s),
             regex=regex
         )
     else:
-        exc_msg = f"{repr(v)} does not match the regex {repr(regex)}."
+        exc_msg = f"{repr(s)} does not match the regex {repr(regex)}."
 
     if raise_exc:
         raise ValueError(exc_msg)
