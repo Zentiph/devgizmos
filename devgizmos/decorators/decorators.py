@@ -4,13 +4,11 @@
 Module containing decorators for the package.
 """
 
-
 from functools import wraps
 from time import perf_counter_ns
 
 __all__ = [
     "timer",
-
 ]
 
 TIMER_UNITS = ("ns", "us", "ms", "s")
@@ -69,7 +67,7 @@ def timer(unit="ns", precision=0, *, msg_format=""):
                     unit=unit,
                     args=args,
                     kwargs=kwargs,
-                    returned=repr(result)
+                    returned=repr(result),
                 )
             else:
                 msg = f"[TIMER]: {funcname} RAN IN {rounded} {local_unit}"

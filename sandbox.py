@@ -2,5 +2,5 @@
 
 import devgizmos as dgiz
 
-dgiz.checks.verify_regex("example@example.com", r"^\S+@\S+\.\S+$")
-dgiz.checks.verify_regex("example.com", r"^\S+@\S+\.\S+$")
+
+dgiz.checks.verify_not_none(3, "Hi", True)
