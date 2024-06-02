@@ -7,6 +7,21 @@ Mainly used for type and value checking function parameters.
 from re import match as rematch
 
 
+__all__ = [
+    "verify_types",
+    "verify_values",
+    "verify_in_range",
+    "verify_truthy",
+    "verify_not_none",
+    "verify_length",
+    "verify_regexes",
+    "verify_keys_in_dict",
+    "verify_contains",
+    "verify_subclasses",
+    "verify_callables",
+]
+
+
 def verify_types(value, /, *types, raise_exc=True, exc_msg=""):
     """checks.verify_types
     ----------------------
@@ -314,8 +329,8 @@ def verify_length(value, /, min_length, max_length=-1, *, raise_exc=True, exc_ms
 
 
 def verify_regexes(string, *regexes, raise_exc=True, exc_msg=""):
-    """checks.verify_regex
-    ----------------------
+    """checks.verify_regexes
+    ------------------------
     Verifies the given string matches the regexes provided.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -363,8 +378,8 @@ def verify_regexes(string, *regexes, raise_exc=True, exc_msg=""):
 
 
 def verify_keys_in_dict(dictionary, *keys, raise_exc=True, exc_msg=""):
-    """checks.verify_key_in_dict
-    ----------------------------
+    """checks.verify_keys_in_dict
+    -----------------------------
     Verifies the given dictionary contains the keys provided.
     Either raises a KeyError or returns False depending on raise_exc.
 
@@ -460,9 +475,9 @@ def verify_contains(iterable, *items, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_subclass(superclass, *subclasses, raise_exc=True, exc_msg=""):
-    """checks.verify_subclass
-    -------------------------
+def verify_subclasses(superclass, *subclasses, raise_exc=True, exc_msg=""):
+    """checks.verify_subclasses
+    ---------------------------
     Verifies the given subclasses are all subclasses of the superclass.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -508,9 +523,9 @@ def verify_subclass(superclass, *subclasses, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_callable(*objs, raise_exc=True, exc_msg=""):
-    """checks.verify_callable
-    -------------------------
+def verify_callables(*objs, raise_exc=True, exc_msg=""):
+    """checks.verify_callables
+    --------------------------
     Verifies the given objects are callable.
     Either raises a TypeError or returns False depending on raise_exc.
 

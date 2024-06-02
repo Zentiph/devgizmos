@@ -46,6 +46,6 @@ def verify_contains(
 def verify_subclasses(
     superclass: Type, *subclasses: Type, raise_exc: bool = True, exc_msg: str = ""
 ) -> bool: ...
-def verify_callable(
+def verify_callables(
     *objs: object, raise_exc: bool = True, exc_msg: str = ""
 ) -> bool: ...
