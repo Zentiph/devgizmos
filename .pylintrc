@@ -91,7 +91,7 @@ bad-names=
     tata
 
 [FORMAT]
-max-line-length=100
+max-line-length=120
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
 single-line-if-stmt=no
 single-line-class-stmt=no

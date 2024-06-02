@@ -1,0 +1,9 @@
+plans for devgizmos
+
+1. option to return data for each decorator for logging use
+2. more decorators
+	- retry (indev)
+	- timeout
+	- more
+3. interp stuff
+4. more

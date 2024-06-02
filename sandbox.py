@@ -2,13 +2,14 @@
 
 import devgizmos as dgiz
 
-from time import sleep
+from random import randint
 
 
-@dgiz.decorators.timer()
-def wait(s):
-    sleep(s)
-    return f"{s}"
+@dgiz.decorators.retry()
+def risky():
+    if randint(1, 3) == 3:
+        return None
+    raise ValueError
 
 
-wait(2)
+risky()
