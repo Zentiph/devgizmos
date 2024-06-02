@@ -2,5 +2,13 @@
 
 import devgizmos as dgiz
 
+from time import sleep
 
-dgiz.checks.verify_not_none(3, "Hi", True)
+
+@dgiz.decorators.timer()
+def wait(s):
+    sleep(s)
+    return f"{s}"
+
+
+wait(2)

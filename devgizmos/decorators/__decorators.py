@@ -7,6 +7,8 @@ Module containing decorators for the package.
 from functools import wraps
 from time import perf_counter_ns
 
+from ..checks import verify_types, verify_values
+
 __all__ = [
     "timer",
 ]
@@ -19,8 +21,6 @@ def timer(unit="ns", precision=0, *, msg_format=""):
     -------------------
     Standard timer decorator.
 
-    Parameters
-    ----------
     :param unit: The unit of time to use, defaults to "ns"
     - Supported units are "ns", "us", "ms", "s"
     - If an invalid unit is provided, unit will default to "ns".
@@ -43,6 +43,14 @@ def timer(unit="ns", precision=0, *, msg_format=""):
 
     :type msg_format: str, optional
     """
+
+    # type checks
+    verify_types(unit, str)
+    verify_types(precision, int)
+    verify_types(msg_format, str)
+
+    # value checks
+    verify_values(unit, *TIMER_UNITS)
 
     def decorator(func):
         @wraps(func)

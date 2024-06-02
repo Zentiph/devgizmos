@@ -7,4 +7,4 @@ Below is a list of the decorators contained in this module.
     - retry(exceptions, tries, delay, backoff, jitter, raise_exceptions)
 """
 
-from .decorators import timer
+from .__decorators import timer
