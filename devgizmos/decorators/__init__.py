@@ -1,10 +1,26 @@
 """decorators
 -------------
-Module containing useful decorators for scripting.
+Module containing useful decorators.
 
-Below is a list of the decorators contained in this module.
-    - timer(unit, precision, msg_format)
-    - retry(exceptions, tries, delay, backoff, jitter, raise_exceptions)
+This module utilizes the following functionality from built-in modules/packages:
+
+functools
+    - wraps
+
+platform
+    - system
+
+signal (Linux & MacOS)
+    - alarm
+    - signal
+    - SIGALRM
+
+threading (Windows)
+    - Thread
+
+time
+    - perf_counter_ns
+    - sleep
 """
 
 from .__decorators import *

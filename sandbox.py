@@ -1,15 +1,17 @@
 # pylint: disable=all
 
-import devgizmos as dgiz
-
-from random import randint
-
-
-@dgiz.decorators.retry()
-def risky():
-    if randint(1, 3) == 3:
-        return None
-    raise ValueError
+import devgizmos.decorators as decs
+from time import sleep
 
 
-risky()
+@decs.timer()
+@decs.timeout(2)
+def process(i):
+    for _ in range(i):
+        pass
+
+
+process(1)
+process(1_000)
+process(1_000_000)
+process(1_000_000_000)

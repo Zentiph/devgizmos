@@ -1,15 +1,25 @@
 """decorators.decorators
 ------------------------
-
-Module containing decorators for the package.
+Module containing decorators.
 """
 
 from functools import wraps
+from platform import system
 from time import perf_counter_ns, sleep
 
 from ..checks import verify_types, verify_values
 
-__all__ = ["timer", "retry"]
+if system() in ("Darwin", "Linux"):
+    # pylint: disable=no-name-in-module
+    from signal import SIGALRM, alarm, signal  # type: ignore
+elif system() == "Windows":
+    # pylint: disable=no-name-in-module
+    from threading import Thread
+else:
+    raise Exception("What OS are you on!?!?!")
+
+
+__all__ = ["timer", "retry", "timeout"]
 
 TIMER_UNITS = ("ns", "us", "ms", "s")
 
@@ -66,6 +76,7 @@ def timer(unit="ns", precision=0, *, msg_format=""):
             elapsed = delta / (1000 ** TIMER_UNITS.index(local_unit))
             rounded = round(elapsed, precision)
 
+            msg = None
             if msg_format:
                 msg = msg_format.format(
                     name=funcname,
@@ -75,10 +86,12 @@ def timer(unit="ns", precision=0, *, msg_format=""):
                     kwargs=kwargs,
                     returned=repr(result),
                 )
-            else:
+            elif msg_format == "":
                 msg = f"[TIMER]: {funcname} RAN IN {rounded} {local_unit}"
 
-            print(msg)
+            if msg:
+                print(msg)
+
             return result
 
         return wrapper
@@ -99,10 +112,10 @@ def retry(
     -------------------
     Retries a function if it fails up until the number of attempts is reached.
 
-    :param attempts: The maximum number of times to attempt running the decorated function,
+    :param max_attempts: The maximum number of times to attempt running the decorated function,
     including the first time, defaults to 3
 
-    :type attempts: int, optional
+    :type max_attempts: int, optional
 
     :param delay: The time in seconds to wait after each retry, defaults to 1
 
@@ -155,6 +168,12 @@ def retry(
     verify_types(success_msg_format, str)
     verify_types(failure_msg_format, str)
 
+    # value checks
+    if max_attempts < 1:
+        raise ValueError("max_attempts cannot be less than 1.")
+    if delay < 0:
+        raise ValueError("delay cannot be less than 0.")
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -165,6 +184,7 @@ def retry(
                 try:
                     result = func(*args, **kwargs)
 
+                    msg = None
                     if success_msg_format:
                         msg = success_msg_format.format(
                             name=funcname,
@@ -175,16 +195,18 @@ def retry(
                             kwargs=kwargs,
                             returned=repr(result),
                         )
-                    else:
+                    elif success_msg_format == "":
                         msg = f"[RETRY]: {funcname} SUCCESSFULLY RAN AFTER {attempts + 1}/{max_attempts} ATTEMPTS"
 
-                    print(msg)
+                    if msg:
+                        print(msg)
 
                     return result
 
                 except exceptions as e:
                     attempts += 1
 
+                    msg = None
                     if failure_msg_format:
                         msg = failure_msg_format.format(
                             name=funcname,
@@ -195,10 +217,11 @@ def retry(
                             args=args,
                             kwargs=kwargs,
                         )
-                    else:
+                    elif failure_msg_format == "":
                         msg = f"[RETRY]: {funcname} FAILED AT ATTEMPT {attempts}/{max_attempts}; RAISED {repr(e)}"
 
-                        print(msg)
+                        if msg:
+                            print(msg)
 
                     if attempts >= max_attempts and raise_last:
                         raise
@@ -212,28 +235,136 @@ def retry(
     return decorator
 
 
-def timeout(cutoff, *, exception=TimeoutError, msg_format=""):
+def timeout(cutoff, *, success_msg_format="", failure_msg_format=""):
     """decorators.timeout
     ---------------------
-    Times out a function if it takes longer than the cutoff time to run.
+    Times out a function if it takes longer than the cutoff time to complete.
+    Utilizes signal on Linux or MacOS; utilizes threading on Windows.
     Raises a TimeoutError by default. Enter a different exception type
-    or None to either change the exception raised or to not raise an exception.
+    to change the exception, or None to not raise an exception.
 
     :param cutoff: The cutoff time, in seconds.
 
     :type cutoff: Union[int, float]
 
-    :param exception: The exception to raise when time runs out, defaults to TimeoutError
-    - Enter None to not raise an exception
-
-    :type exception: Union[Type[Exception], None], optional
-
-    :param msg_format: Used to enter a custom message format if changed, defaults to ""
+    :param success_msg_format: Used to enter a custom success message format if changed, defaults to ""
     - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
     - cutoff: The cutoff time.
-    - exc: The exception raised due to timeout
 
-    :type msg_format: str, optional
+    :type success_msg_format: str, optional
+
+    :param failure_msg_format: Used to enter a custom failure message format if changed, defaults to ""
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - cutoff: The cutoff time.
+
+    :type failure_msg_format: str, optional
     """
 
-    # TODO
+    # type checks
+    verify_types(cutoff, int, float)
+    verify_types(success_msg_format, str)
+    verify_types(failure_msg_format, str)
+
+    # value checks
+    if cutoff < 0:
+        raise ValueError("cutoff cannot be less than 0.")
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            funcname = func.__name__
+
+            if system() in ("Darwin", "Linux"):
+
+                def _handle_timeout(signum, frame):
+                    raise TimeoutError(
+                        f"Function {funcname} timed out after {cutoff} seconds."
+                    )
+
+                original_handler = signal(SIGALRM, _handle_timeout)
+                alarm(cutoff)
+
+                try:
+                    result = func(*args, **kwargs)
+                    alarm(0)
+
+                    msg = None
+                    if success_msg_format:
+                        msg = success_msg_format.format(name=funcname, cutoff=cutoff)
+                    elif success_msg_format == "":
+                        msg = f"[TIMEOUT]: {funcname} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
+
+                    if msg:
+                        print(msg)
+
+                    return result
+
+                except TimeoutError:
+                    alarm(0)
+
+                    msg = None
+                    if failure_msg_format:
+                        msg = failure_msg_format.format(name=funcname, cutoff=cutoff)
+                    elif failure_msg_format == "":
+                        msg = f"[TIMEOUT]: {funcname} TIMED OUT AFTER {cutoff} SECONDS"
+
+                    if msg:
+                        print(msg)
+
+                    raise
+
+                finally:
+                    signal(SIGALRM, original_handler)
+
+            if system() == "Windows":
+                # initialize as lists to allow for modifications in nests
+                result = [None]
+                exc_raised = [False]
+
+                def target():
+                    try:
+                        result[0] = func(*args, **kwargs)
+                    except Exception as e:
+                        result[0] = e
+                        exc_raised[0] = True
+
+                thread = Thread(target=target)
+                thread.daemon = True
+                thread.start()
+                thread.join(cutoff)
+                if thread.is_alive():
+                    thread.join()
+
+                    msg = None
+                    if failure_msg_format:
+                        msg = failure_msg_format.format(name=funcname, cutoff=cutoff)
+                    elif failure_msg_format == "":
+                        msg = f"[TIMEOUT]: {funcname} TIMED OUT AFTER {cutoff} SECONDS"
+                    if msg:
+                        print(msg)
+
+                    raise TimeoutError(
+                        f"Function {funcname} timed out after {cutoff} seconds."
+                    )
+
+                # handle unexpected exceptions
+                if exc_raised[0]:
+                    # pylint: disable=raising-bad-type
+                    raise result[0]
+
+                msg = None
+                if success_msg_format:
+                    msg = success_msg_format.format(name=funcname, cutoff=cutoff)
+                elif success_msg_format == "":
+                    msg = f"[TIMEOUT]: {funcname} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
+
+                if msg:
+                    print(msg)
+
+                return result[0]
+
+        return wrapper
+
+    return decorator

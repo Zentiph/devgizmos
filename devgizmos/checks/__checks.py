@@ -134,10 +134,12 @@ def verify_in_range(value, seq, /, start=-1, end=-1, *, raise_exc=True, exc_msg=
     :type seq: Sequence
 
     :param start: The start index of the range to check (inclusive).
+    - Will be set to 0 if negative.
 
     :type start: int, optional
 
     :param end: The end index of the range to check (inclusive).
+    - Will be set to the final index if negative.
 
     :type end: int, optional
 
