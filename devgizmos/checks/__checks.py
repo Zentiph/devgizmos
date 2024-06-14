@@ -8,22 +8,23 @@ from re import match as rematch
 
 
 __all__ = [
-    "verify_types",
-    "verify_values",
-    "verify_in_range",
-    "verify_truthy",
-    "verify_not_none",
-    "verify_length",
-    "verify_regexes",
-    "verify_keys_in_dict",
-    "verify_contains",
-    "verify_subclasses",
-    "verify_callables",
+    "check_types",
+    "check_values",
+    "check_in_range",
+    "check_in_bounds",
+    "check_truthy",
+    "check_not_none",
+    "check_length",
+    "check_regexes",
+    "check_keys_in_dict",
+    "check_contains",
+    "check_subclasses",
+    "check_callables",
 ]
 
 
-def verify_types(value, /, *types, optional=False, raise_exc=True, exc_msg=""):
-    """checks.verify_types
+def check_types(value, /, *types, optional=False, raise_exc=True, exc_msg=""):
+    """checks.check_types
     ----------------------
     Verifies the given value is one of the expected types.
     Either raises a TypeError or returns False depending on raise_exc.
@@ -76,8 +77,8 @@ def verify_types(value, /, *types, optional=False, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_values(value, /, *values, raise_exc=True, exc_msg=""):
-    """checks.verify_values
+def check_values(value, /, *values, raise_exc=True, exc_msg=""):
+    """checks.check_values
     -----------------------
     Verifies the given value is one of the expected values.
     Either raises a ValueError or returns False depending on raise_exc.
@@ -125,8 +126,8 @@ def verify_values(value, /, *values, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_in_range(value, seq, /, start=-1, end=-1, *, raise_exc=True, exc_msg=""):
-    """checks.verify_in_range
+def check_in_range(value, seq, /, start=-1, end=-1, *, raise_exc=True, exc_msg=""):
+    """checks.check_in_range
     -------------------------
     Verifies the given value is in the specified range in the sequence provided.
     Either raises a ValueError or returns False depending on raise_exc.
@@ -191,8 +192,105 @@ def verify_in_range(value, seq, /, start=-1, end=-1, *, raise_exc=True, exc_msg=
     return False
 
 
-def verify_truthy(*values, raise_exc=True, exc_msg=""):
-    """checks.verify_truthy
+def check_in_bounds(
+    value, lower, upper, /, inclusive=True, *, raise_exc=True, exc_msg=""
+):
+    """checks.check_in_bounds
+    -------------------------
+
+    :param value: The value to check.
+
+    :type value: Union[int, float]
+
+    :param lower: The lower bound.
+    - If None, no lower bound will be set.
+
+    :type lower: Union[int, float, None]
+
+    :param upper: The upper bound.
+    - If None, no upper bound will be set.
+
+    :type upper: Union[int, float, None]
+
+    :param inclusive: Whether the bounds are inclusive or exclusive, defaults to True.
+
+    :type inclusive: bool, optional
+
+    :param raise_exc: Whether to raise an exception, defaults to True
+    - If True, the corresponding exception will be raised.
+    - If False, will return False instead of raising an exception.
+
+    :type raise_exc: bool, optional
+
+    :param exc_msg: A custom exception message if changed, defaults to ""
+    - Below is a list of supported fields to be used in an unformatted string:
+    - value: The checked value.
+    - lower: The lower bound.
+    - upper: The upper bound.
+    - Ex: exc_msg="{value} is not in the bounds ({lower}, {upper})."
+
+    :type exc_msg: str, optional
+
+    :return: True if the value is within the bounds, otherwise False.
+
+    :rtype: bool
+    """
+
+    def _helper(default, exc_msg):
+        if exc_msg:
+            exc_msg = exc_msg.format(value=value, lower=lower, upper=upper)
+        else:
+            exc_msg = default
+
+        if raise_exc:
+            raise ValueError(exc_msg)
+        return False
+
+    # ugly code, but if it works...
+    if upper is None:
+        if not inclusive:
+            if value > lower:
+                return True
+
+            _helper(f"{value} must be greater than {lower}.", exc_msg)
+        elif value >= lower:
+            return True
+
+        _helper(f"{value} must be greater than or equal to {lower}.", exc_msg)
+
+    elif lower is None:
+        if not inclusive:
+            if value < upper:
+                return True
+
+            _helper(f"{value} must be less than {upper}.", exc_msg)
+        elif value <= upper:
+            return True
+
+        _helper(f"{value} must be less than or equal to {upper}.", exc_msg)
+
+    elif upper and lower:
+        if not inclusive:
+            if lower < value < upper:
+                return True
+
+            _helper(
+                f"{value} must be greater than {lower} and less than {upper}.", exc_msg
+            )
+        elif lower <= value <= upper:
+            return True
+
+        _helper(
+            f"{value} must be greater than or equal to {lower} and less than or equal to {upper}.",
+            exc_msg,
+        )
+
+    # if both bounds are None return True since there is no upper or lower bound
+    return True
+
+
+def check_truthy(*values, raise_exc=True, exc_msg=""):
+    """checks.check_truthy
     -----------------------
     Verifies the given values are truthy.
     Either raises a ValueError or returns False depending on raise_exc.
@@ -235,8 +333,8 @@ def verify_truthy(*values, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_not_none(*values, raise_exc=True, exc_msg=""):
-    """checks.verify_not_none
+def check_not_none(*values, raise_exc=True, exc_msg=""):
+    """checks.check_not_none
     -------------------------
     Verifies the given values are not None.
     Either raises a ValueError or returns False depending on raise_exc.
@@ -278,8 +376,8 @@ def verify_not_none(*values, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_length(value, /, min_length, max_length=-1, *, raise_exc=True, exc_msg=""):
-    """checks.verify_length
+def check_length(value, /, min_length, max_length=-1, *, raise_exc=True, exc_msg=""):
+    """checks.check_length
     -----------------------
     Verifies the given value has a length in the specified range provided.
     Either raises a ValueError or returns False depending on raise_exc.
@@ -336,8 +434,8 @@ def verify_length(value, /, min_length, max_length=-1, *, raise_exc=True, exc_ms
     return False
 
 
-def verify_regexes(string, *regexes, raise_exc=True, exc_msg=""):
-    """checks.verify_regexes
+def check_regexes(string, *regexes, raise_exc=True, exc_msg=""):
+    """checks.check_regexes
     ------------------------
     Verifies the given string matches the regexes provided.
     Either raises a ValueError or returns False depending on raise_exc.
@@ -385,8 +483,8 @@ def verify_regexes(string, *regexes, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_keys_in_dict(dictionary, *keys, raise_exc=True, exc_msg=""):
-    """checks.verify_keys_in_dict
+def check_keys_in_dict(dictionary, *keys, raise_exc=True, exc_msg=""):
+    """checks.check_keys_in_dict
     -----------------------------
     Verifies the given dictionary contains the keys provided.
     Either raises a KeyError or returns False depending on raise_exc.
@@ -434,8 +532,8 @@ def verify_keys_in_dict(dictionary, *keys, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_contains(iterable, *items, raise_exc=True, exc_msg=""):
-    """checks.verify_contains
+def check_contains(iterable, *items, raise_exc=True, exc_msg=""):
+    """checks.check_contains
     -------------------------
     Verifies the given iterable contains the items provided.
     Either raises a ValueError or returns False depending on raise_exc.
@@ -483,8 +581,8 @@ def verify_contains(iterable, *items, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_subclasses(superclass, *subclasses, raise_exc=True, exc_msg=""):
-    """checks.verify_subclasses
+def check_subclasses(superclass, *subclasses, raise_exc=True, exc_msg=""):
+    """checks.check_subclasses
     ---------------------------
     Verifies the given subclasses are all subclasses of the superclass.
     Either raises a ValueError or returns False depending on raise_exc.
@@ -531,8 +629,8 @@ def verify_subclasses(superclass, *subclasses, raise_exc=True, exc_msg=""):
     return False
 
 
-def verify_callables(*objs, raise_exc=True, exc_msg=""):
-    """checks.verify_callables
+def check_callables(*objs, raise_exc=True, exc_msg=""):
+    """checks.check_callables
     --------------------------
     Verifies the given objects are callable.
     Either raises a TypeError or returns False depending on raise_exc.

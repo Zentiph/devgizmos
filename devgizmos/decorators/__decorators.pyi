@@ -1,37 +1,55 @@
 # pylint: disable=all
 
-from logging import INFO, Logger
-from typing import Any, Callable, Optional, Tuple, Type, Union
+from logging import ERROR, INFO, Logger, WARNING
+from typing import Any, Callable, Literal, Optional, Tuple, Type, TypeVar, Union
 
+F = TypeVar("F", bound=Callable[..., Any])
+Decorator = Callable[[F], F]
 LoggingLevel = int | str
 
 def timer(
-    unit: str = "ns",
+    unit: Literal["ns", "us", "ms", "s"] = "ns",
     precision: int = 0,
     *,
-    msg_format: Optional[str] = "",
+    fmt: str = "",
     logger: Optional[Logger] = None,
     level: LoggingLevel = INFO,
-) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
+) -> Callable[[F], F]: ...
 def retry(
     max_attempts: int = 3,
     delay: Union[int, float] = 1,
     *,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     raise_last: bool = True,
-    success_msg_format: Optional[str] = "",
-    failure_msg_format: Optional[str] = "",
-) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
+    success_fmt: str = "",
+    failure_fmt: str = "",
+    logger: Optional[Logger] = None,
+    level: LoggingLevel = INFO,
+) -> Callable[[F], F]: ...
 def timeout(
     cutoff: Union[int, float],
     *,
-    success_msg_format: Optional[str] = "",
-    failure_msg_format: Optional[str] = "",
-) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
-def cache() -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
-def singleton() -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
-def type_checker() -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
-def deprecated(reason: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
-def log_calls(
-    logger: Union[Logger, None]
-) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
+    success_fmt: str = "",
+    failure_fmt: str = "",
+    logger: Optional[Logger] = None,
+    success_level: LoggingLevel = INFO,
+    failure_level: LoggingLevel = WARNING,
+) -> Callable[[F], F]: ...
+def cache() -> Callable[[F], F]: ...
+def singleton() -> Callable[[F], F]: ...
+def type_checker() -> Callable[[F], F]: ...
+def deprecated(reason: str) -> Callable[[F], F]: ...
+def call_logger(
+    fmt: str = "",
+    logger: Optional[Logger] = None,
+    level: LoggingLevel = INFO,
+) -> Callable[[F], F]: ...
+def error_logger(
+    fmt: str = "",
+    suppress: bool = True,
+    logger: Optional[Logger] = None,
+    level: LoggingLevel = ERROR,
+) -> Callable[[F], F]: ...
+def decorate_all_methods(
+    *decorators: Decorator, cls: Optional[Type] = None
+) -> Callable[[F], F]: ...

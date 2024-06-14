@@ -11,3 +11,5 @@ plans for devgizmos
 	- ...
 5. allow for no print msgs if entered as 'None'
 6. option to add a logger for each decorator
+7. add type verifying to checks.py
+8. lightweight versions of functions

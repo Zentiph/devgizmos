@@ -1,8 +1,8 @@
 # pylint: disable=all
 
-from typing import Any, Dict, Iterable, Sequence, Sized, Type
+from typing import Any, Dict, Iterable, Sequence, Sized, Type, Union
 
-def verify_types(
+def check_types(
     value: Any,
     /,
     *types: Type,
@@ -10,10 +10,10 @@ def verify_types(
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
-def verify_values(
+def check_values(
     value: Any, /, *values: Any, raise_exc: bool = True, exc_msg: str = ""
 ) -> bool: ...
-def verify_in_range(
+def check_in_range(
     value: Any,
     seq: Sequence,
     /,
@@ -23,11 +23,19 @@ def verify_in_range(
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
-def verify_truthy(*values: Any, raise_exc: bool = True, exc_msg: str = "") -> bool: ...
-def verify_not_none(
-    *values: Any, raise_exc: bool = True, exc_msg: str = ""
+def check_in_bounds(
+    value: Union[int, float],
+    lower: Union[int, float, None],
+    upper: Union[int, float, None],
+    /,
+    inclusive: bool = True,
+    *,
+    raise_exc: bool = True,
+    exc_msg: str = "",
 ) -> bool: ...
-def verify_length(
+def check_truthy(*values: Any, raise_exc: bool = True, exc_msg: str = "") -> bool: ...
+def check_not_none(*values: Any, raise_exc: bool = True, exc_msg: str = "") -> bool: ...
+def check_length(
     value: Sized,
     /,
     min_length: int,
@@ -36,21 +44,21 @@ def verify_length(
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
-def verify_regexes(
+def check_regexes(
     string: str, *regexes: str, raise_exc: bool = True, exc_msg: str = ""
 ) -> bool: ...
-def verify_keys_in_dict(
+def check_keys_in_dict(
     dictionary: Dict[Any, Any],
     *keys: Any,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
-def verify_contains(
+def check_contains(
     iterable: Iterable, *items: Any, raise_exc: bool = True, exc_msg: str = ""
 ) -> bool: ...
-def verify_subclasses(
+def check_subclasses(
     superclass: Type, *subclasses: Type, raise_exc: bool = True, exc_msg: str = ""
 ) -> bool: ...
-def verify_callables(
+def check_callables(
     *objs: object, raise_exc: bool = True, exc_msg: str = ""
 ) -> bool: ...

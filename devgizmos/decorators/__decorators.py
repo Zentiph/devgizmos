@@ -4,14 +4,14 @@ Module containing decorators.
 """
 
 from functools import wraps
-from logging import INFO, Logger, getLogger
+from logging import ERROR, INFO, WARNING, Logger
 from platform import system
 from re import findall
 from time import perf_counter_ns, sleep
-from typing import get_type_hints
+from typing import Any, Callable, TypeVar, get_type_hints
 from warnings import warn
 
-from ..checks import verify_types, verify_values
+from ..checks import check_in_bounds, check_types, check_values
 
 if system() in ("Darwin", "Linux"):
     # pylint: disable=no-name-in-module
@@ -29,11 +29,16 @@ __all__ = [
     "singleton",
     "type_checker",
     "deprecated",
-    "log_calls",
+    "call_logger",
+    "error_logger",
+    "decorate_all_methods",
 ]
 
-TIMER_UNITS = ("ns", "us", "ms", "s")
+F = TypeVar("F", bound=Callable[..., Any])
+Decorator = Callable[[F], F]
 LoggingLevel = int | str
+
+TIMER_UNITS = ("ns", "us", "ms", "s")
 LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
 
 
@@ -90,13 +95,13 @@ def _handle_logging(fmt, default, logger=None, level=INFO, **values):
     :type values: Any
     """
 
-    if logger is None:
-        return
-
     if fmt == "":
         fmt = default
 
-    str_vars = findall(r"\{(.*?)\}", fmt)
+    # finds all values inside brackets but
+    # doesn't go deeper than 1 layer
+    # to prevent it from finding dicts
+    str_vars = findall(r"\{(\w+)\}", fmt)
     logging_formatter = fmt
 
     for str_var in str_vars:
@@ -107,23 +112,49 @@ def _handle_logging(fmt, default, logger=None, level=INFO, **values):
     logger.log(level, logging_formatter, *args)
 
 
-def timer(unit="ns", precision=0, *, msg_format="", logger=None, level=INFO):
+def _handle_result_reporting(fmt, default, logger, level, **kwargs):
+    """Handles result reporting for decorators.
+
+    :param fmt: The message format.
+
+    :type fmt: str
+
+    :param default: The default message.
+
+    :type default: str
+
+    :param logger: The logger to use.
+
+    :type logger: Optional[Logger]
+
+    :param level: The logging level.
+
+    :type level: LoggingLevel
+    """
+
+    if logger is not None:
+        _handle_logging(fmt, default, logger, level, **kwargs)
+    else:
+        _print_msg(fmt, default, **kwargs)
+
+
+def timer(unit="ns", precision=0, *, fmt="", logger=None, level=INFO):
     """decorators.timer
     -------------------
     Times how long function it is decorated to takes to run.
 
-    :param unit: The unit of time to use, defaults to "ns"
-    - Supported units are "ns", "us", "ms", "s"
+    :param unit: The unit of time to use, defaults to "ns".
+    - Supported units are "ns", "us", "ms", "s".
     - If an invalid unit is provided, unit will default to "ns".
 
-    :type unit: str, optional
+    :type unit: Literal["ns", "us", "ms", "s"], optional
 
     :param precision: The precision to use when rounding the time, defaults to 0
 
     :type precision: int, optional
 
-    :param msg_format: Used to enter a custom message format, defaults to ""
-    - Enter None for an empty message; leave as an empty string to use the pre-made message.
+    :param fmt: Used to enter a custom message format, defaults to "".
+    - Leave as an empty string to use the pre-made message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - elapsed: The time elapsed by the function's execution.
@@ -131,11 +162,12 @@ def timer(unit="ns", precision=0, *, msg_format="", logger=None, level=INFO):
     - args: The arguments passed to the function.
     - kwargs: The keyword arguments passed to the function.
     - returned: The return value of the function.
-    - Ex: msg_format="Func {name} took {elapsed} {unit} to run and returned {returned}."
+    - Ex: fmt="Func {name} took {elapsed} {unit} to run and returned {returned}."
 
-    :type msg_format: str, optional
+    :type fmt: str, optional
 
     :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
     :type logger: Optional[Logger], optional
 
@@ -145,15 +177,15 @@ def timer(unit="ns", precision=0, *, msg_format="", logger=None, level=INFO):
     """
 
     # type checks
-    verify_types(unit, str)
-    verify_types(precision, int)
-    verify_types(msg_format, str)
-    verify_types(logger, Logger, optional=True)
-    verify_types(level, LoggingLevel)
+    check_types(unit, str)
+    check_types(precision, int)
+    check_types(fmt, str)
+    check_types(logger, Logger, optional=True)
+    check_types(level, LoggingLevel)
 
     # value checks
-    verify_values(unit, *TIMER_UNITS)
-    verify_values(level, *LOGGING_LEVELS)
+    check_values(unit, *TIMER_UNITS)
+    check_values(level, *LOGGING_LEVELS)
 
     def decorator(func):
         @wraps(func)
@@ -169,7 +201,7 @@ def timer(unit="ns", precision=0, *, msg_format="", logger=None, level=INFO):
             elapsed = delta / (1000 ** TIMER_UNITS.index(local_unit))
             rounded = round(elapsed, precision)
 
-            msg_kwargs = {
+            fmt_kwargs = {
                 "name": func.__name__,
                 "elapsed": rounded,
                 "unit": local_unit,
@@ -177,20 +209,9 @@ def timer(unit="ns", precision=0, *, msg_format="", logger=None, level=INFO):
                 "kwargs": kwargs,
                 "returned": repr(result),
             }
+            default = f"[TIMER]: {func.__name__} RAN IN {rounded} {local_unit}"
 
-            _print_msg(
-                msg_format,
-                f"[TIMER]: {func.__name__} RAN IN {rounded} {local_unit}",
-                **msg_kwargs,
-            )
-
-            _handle_logging(
-                msg_format,
-                f"[TIMER]: {func.__name__} RAN IN {rounded} {local_unit}",
-                logger=logger,
-                level=level,
-                **msg_kwargs,
-            )
+            _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
             return result
 
@@ -205,8 +226,10 @@ def retry(
     *,
     exceptions=(Exception,),
     raise_last=True,
-    success_msg_format="",
-    failure_msg_format="",
+    success_fmt="",
+    failure_fmt="",
+    logger=None,
+    level=INFO,
 ):
     """decorators.retry
     -------------------
@@ -230,8 +253,8 @@ def retry(
 
     :type raise_last: bool, optional
 
-    :param success_msg_format: Used to enter a custom success message format, defaults to ""
-    - Enter None for an empty message; leave as an empty string to use the pre-made message.
+    :param success_fmt: Used to enter a custom success message format, defaults to "".
+    - Leave as an empty string to use the pre-made message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - attempts: The number of attempts that ran.
@@ -240,12 +263,12 @@ def retry(
     - args: The arguments passed to the function.
     - kwargs: The keyword arguments passed to the function.
     - returned: The return value of the function.
-    - Ex: success_msg_format="Func {name} took {attempts}/{max_attempts} attempts to run."
+    - Ex: success_fmt="Func {name} took {attempts}/{max_attempts} attempts to run."
 
-    :type success_msg_format: str, optional
+    :type success_fmt: str, optional
 
-    :param failure_msg_format: Used to enter a custom failure message format, defaults to ""
-    - Enter None for an empty message; leave as an empty string to use the pre-made message.
+    :param failure_fmt: Used to enter a custom failure message format, defaults to "".
+    - Leave as an empty string to use the pre-made message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - attempts: The current number of attempts.
@@ -254,27 +277,36 @@ def retry(
     - raised: The exception raised.
     - args: The arguments passed to the function.
     - kwargs: The keyword arguments passed to the function.
-    - Ex: failure_msg_format="Func {name} failed at attempt {attempts}/{max_attempts}."
+    - Ex: failure_fmt="Func {name} failed at attempt {attempts}/{max_attempts}."
 
-    :type failure_msg_format: str, optional
+    :type failure_fmt: str, optional
 
+    :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.
+
+    :type logger: Optional[Logger], optional
+
+    :param level: The logging level to use, defaults to logging.INFO (20).
+
+    :type level: LoggingLevel, optional
     """
 
     # type checks
-    verify_types(max_attempts, int)
-    verify_types(delay, int, float)
-    verify_types(exceptions, tuple)
+    check_types(max_attempts, int)
+    check_types(delay, int, float)
+    check_types(exceptions, tuple)
     for exc in exceptions:
-        verify_types(exc, type)
-    verify_types(raise_last, bool)
-    verify_types(success_msg_format, str)
-    verify_types(failure_msg_format, str)
+        check_types(exc, type)
+    check_types(raise_last, bool)
+    check_types(success_fmt, str)
+    check_types(failure_fmt, str)
+    check_types(logger, Logger, optional=True)
+    check_types(level, LoggingLevel)
 
     # value checks
-    if max_attempts < 1:
-        raise ValueError("max_attempts cannot be less than 1.")
-    if delay < 0:
-        raise ValueError("delay cannot be less than 0.")
+    check_in_bounds(max_attempts, 1, None)
+    check_in_bounds(delay, 0, None)
+    check_values(level, *LOGGING_LEVELS)
 
     def decorator(func):
         @wraps(func)
@@ -285,7 +317,7 @@ def retry(
                 try:
                     result = func(*args, **kwargs)
 
-                    msg_kwargs = {
+                    fmt_kwargs = {
                         "name": func.__name__,
                         "attempts": attempts + 1,
                         "max_attempts": max_attempts,
@@ -294,11 +326,10 @@ def retry(
                         "kwargs": kwargs,
                         "returned": repr(result),
                     }
+                    default = f"[RETRY]: {func.__name__} SUCCESSFULLY RAN AFTER {attempts + 1}/{max_attempts} ATTEMPTS"
 
-                    _print_msg(
-                        success_msg_format,
-                        f"[RETRY]: {func.__name__} SUCCESSFULLY RAN AFTER {attempts + 1}/{max_attempts} ATTEMPTS",
-                        **msg_kwargs,
+                    _handle_result_reporting(
+                        success_fmt, default, logger, level, **fmt_kwargs
                     )
 
                     return result
@@ -306,7 +337,7 @@ def retry(
                 except exceptions as e:
                     attempts += 1
 
-                    msg_kwargs = {
+                    fmt_kwargs = {
                         "name": func.__name__,
                         "attempts": attempts,
                         "max_attempts": max_attempts,
@@ -315,11 +346,10 @@ def retry(
                         "args": args,
                         "kwargs": kwargs,
                     }
+                    default = f"[RETRY]: {func.__name__} FAILED AT ATTEMPT {attempts}/{max_attempts}; RAISED {repr(e)}"
 
-                    _print_msg(
-                        failure_msg_format,
-                        f"[RETRY]: {func.__name__} FAILED AT ATTEMPT {attempts}/{max_attempts}; RAISED {repr(e)}",
-                        **msg_kwargs,
+                    _handle_result_reporting(
+                        failure_fmt, default, logger, level, **fmt_kwargs
                     )
 
                     if attempts >= max_attempts and raise_last:
@@ -334,43 +364,64 @@ def retry(
     return decorator
 
 
-def timeout(cutoff, *, success_msg_format="", failure_msg_format=""):
+def timeout(
+    cutoff,
+    *,
+    success_fmt="",
+    failure_fmt="",
+    logger=None,
+    success_level=INFO,
+    failure_level=WARNING,
+):
     """decorators.timeout
     ---------------------
     Times out a function if it takes longer than the cutoff time to complete.
-    Utilizes signal on Unix systems; utilizes threading on Windows.
-    Raises a TimeoutError by default. Enter a different exception type
-    to change the exception, or None to not raise an exception.
+    Utilizes signal on Unix systems and threading on Windows.
 
     :param cutoff: The cutoff time, in seconds.
 
     :type cutoff: Union[int, float]
 
-    :param success_msg_format: Used to enter a custom success message format if changed, defaults to ""
-    - Enter None for an empty message; leave as an empty string to use the pre-made message.
+    :param success_fmt: Used to enter a custom success message format if changed, defaults to "".
+    - Leave as an empty string to use the pre-made message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - cutoff: The cutoff time.
 
-    :type success_msg_format: str, optional
+    :type success_fmt: str, optional
 
-    :param failure_msg_format: Used to enter a custom failure message format if changed, defaults to ""
-    - Enter None for an empty message; leave as an empty string to use the pre-made message.
+    :param failure_fmt: Used to enter a custom failure message format if changed, defaults to "".
+    - Leave as an empty string to use the pre-made message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - cutoff: The cutoff time.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
 
-    :type failure_msg_format: str, optional
+    :type failure_fmt: str, optional
+
+    :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.
+
+    :type logger: Optional[Logger], optional
+
+    :param level: The logging level to use, defaults to logging.INFO (20).
+
+    :type level: LoggingLevel, optional
     """
 
     # type checks
-    verify_types(cutoff, int, float)
-    verify_types(success_msg_format, str)
-    verify_types(failure_msg_format, str)
+    check_types(cutoff, int, float)
+    check_types(success_fmt, str)
+    check_types(failure_fmt, str)
+    check_types(logger, Logger)
+    check_types(success_level, LoggingLevel)
+    check_types(failure_level, LoggingLevel)
 
     # value checks
-    if cutoff < 0:
-        raise ValueError("cutoff cannot be less than 0.")
+    check_in_bounds(cutoff, 0, None)
+    check_values(success_level, *LOGGING_LEVELS)
+    check_values(failure_level, *LOGGING_LEVELS)
 
     def decorator(func):
         @wraps(func)
@@ -391,15 +442,16 @@ def timeout(cutoff, *, success_msg_format="", failure_msg_format=""):
                     result = func(*args, **kwargs)
                     alarm(0)
 
-                    msg_kwargs = {
+                    fmt_kwargs = {
                         "name": func.__name__,
                         "cutoff": cutoff,
+                        "args": args,
+                        "kwargs": kwargs,
                     }
+                    default = f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
 
-                    _print_msg(
-                        success_msg_format,
-                        f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS",
-                        **msg_kwargs,
+                    _handle_result_reporting(
+                        success_fmt, default, logger, success_level, **fmt_kwargs
                     )
 
                     return result
@@ -407,15 +459,18 @@ def timeout(cutoff, *, success_msg_format="", failure_msg_format=""):
                 except TimeoutError:
                     alarm(0)
 
-                    msg_kwargs = {
+                    fmt_kwargs = {
                         "name": func.__name__,
                         "cutoff": cutoff,
+                        "args": args,
+                        "kwargs": kwargs,
                     }
+                    default = (
+                        f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS"
+                    )
 
-                    _print_msg(
-                        failure_msg_format,
-                        f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS",
-                        **msg_kwargs,
+                    _handle_result_reporting(
+                        failure_fmt, default, logger, failure_level, **fmt_kwargs
                     )
 
                     raise
@@ -443,35 +498,35 @@ def timeout(cutoff, *, success_msg_format="", failure_msg_format=""):
                 if thread.is_alive():
                     thread.join()
 
-                    msg_kwargs = {
+                    fmt_kwargs = {
                         "name": func.__name__,
                         "cutoff": cutoff,
+                        "args": args,
+                        "kwargs": kwargs,
                     }
-
-                    _print_msg(
-                        failure_msg_format,
-                        f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS",
-                        **msg_kwargs,
+                    default = (
+                        f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS"
                     )
 
-                    raise TimeoutError(
-                        f"Function {func.__name__} timed out after {cutoff} seconds."
+                    _handle_result_reporting(
+                        failure_fmt, default, logger, failure_level, **fmt_kwargs
                     )
+
+                    raise TimeoutError(default)
 
                 # handle unexpected exceptions
                 if exc_raised[0]:
                     # pylint: disable=raising-bad-type
                     raise result[0]
 
-                msg_kwargs = {
+                fmt_kwargs = {
                     "name": func.__name__,
                     "cutoff": cutoff,
                 }
+                default = f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
 
-                _print_msg(
-                    success_msg_format,
-                    f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS",
-                    **msg_kwargs,
+                _handle_result_reporting(
+                    success_fmt, default, logger, success_level, **fmt_kwargs
                 )
 
                 return result[0]
@@ -488,7 +543,10 @@ def timeout(cutoff, *, success_msg_format="", failure_msg_format=""):
 
 
 def cache():
-    """Caches the output of a function and instantly returns it when given the same args and kwargs later."""
+    """Caches the output of the decorated function and instantly returns it
+    when given the same args and kwargs later.
+    """
+
     cache_ = {}
 
     def decorator(func):
@@ -525,7 +583,7 @@ def singleton():
 
 
 def type_checker():
-    """Ensures the arguments passed to the function are of the correct type based on the type hints."""
+    """Ensures the arguments passed to the decorated function are of the correct type based on the type hints."""
 
     def decorator(func):
         hints = get_type_hints(func)
@@ -551,8 +609,8 @@ def type_checker():
     return decorator
 
 
-def deprecated(reason: str):
-    """Decorator to show a function is deprecated.
+def deprecated(reason):
+    """Creates a DeprecationWarning to show the decorated function or class is deprecated.
 
     :param reason: The reason for deprecation.
     :type reason: str
@@ -573,32 +631,106 @@ def deprecated(reason: str):
     return decorator
 
 
-# TODO: more logging stuff
-# TODO: change to detect calls, and implement a logger to each func
-def log_calls(logger=None):
-    """Logs function calls using the logger provided.
+def call_logger(fmt="", logger=None, level=INFO):
+    """Logs each time the decorated function is called.
 
-    :param logger: The logger to use, defaults to None
+    :param fmt: Used to enter a custom message format, defaults to "".
+    - Leave as an empty string to use the pre-made message.
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - returned: The return value of the function.
+    - Ex: fmt="Func {name} was called with args={args} and kwargs={kwargs} and returned {returned}."
+
+    :type fmt: str, optional
+
+    :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
     :type logger: Optional[Logger], optional
-    """
 
-    if logger is None:
-        logger = getLogger(__name__)
+    :param level: The logging level to use, defaults to logging.INFO (20).
+
+    :type level: LoggingLevel, optional
+    """
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
-            logger.info(
-                "Called %s with args=%s, kwargs=%s, returned %s",
-                func.__name__,
-                args,
-                kwargs,
-                result,
-            )
+
+            fmt_kwargs = {
+                "name": func.__name__,
+                "args": args,
+                "kwargs": kwargs,
+                "returned": result,
+            }
+            default = f"[CALL]: {func.__name__} CALLED WITH {args=} AND {kwargs=}; RETURNED {result}"
+
+            _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+
             return result
 
         return wrapper
 
     return decorator
+
+
+def error_logger(fmt="", suppress=True, logger=None, level=ERROR):
+    """Logs any errors that are raised by the decorated function.
+
+    :param fmt: Used to enter a custom message format, defaults to "".
+    - Leave as an empty string to use the pre-made message.
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - raised: The error raised.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - Ex: fmt="Func {name} was called with args={args} and kwargs={kwargs} and raised {raised}."
+
+    :type fmt: str, optional
+
+    :param suppress: Whether to suppress the error raised or not, defaults to True.
+    - If an error occurs and suppress if False, the decorated function will return None.
+
+    :type suppress: bool, optional
+
+    :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.
+
+    :type logger: Optional[Logger], optional
+
+    :param level: The logging level to use, defaults to logging.ERROR (20).
+
+    :type level: LoggingLevel, optional
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                result = func(*args, **kwargs)
+                return result
+            except Exception as e:
+                fmt_kwargs = {
+                    "name": func.__name__,
+                    "raised": repr(e),
+                    "args": args,
+                    "kwargs": kwargs,
+                }
+                default = f"[ERROR]: {func.__name__} RAISED {repr(e)} WITH {args=} AND {kwargs=}"
+
+                _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+
+                if not suppress:
+                    raise
+
+                return None
+
+        return wrapper
+
+    return decorator
+
+
+def decorate_all_methods(*decorators, cls=None): ...
