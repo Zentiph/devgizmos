@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 
-def verify_types(value, /, *types, raise_exc=True, exc_msg=""):
+def verify_types(value, /, *types, optional=False, raise_exc=True, exc_msg=""):
     """checks.verify_types
     ----------------------
     Verifies the given value is one of the expected types.
@@ -42,6 +42,10 @@ def verify_types(value, /, *types, raise_exc=True, exc_msg=""):
 
     :type raise_exc: bool, optional
 
+    :param optional: Whether the types are optional, meaning the value can be None, defaults to False.
+
+    :type optional: bool
+
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - value: The checked value.
@@ -56,6 +60,8 @@ def verify_types(value, /, *types, raise_exc=True, exc_msg=""):
     """
 
     if isinstance(value, types):
+        return True
+    if optional and value is None:
         return True
 
     type_names = ", ".join([type_.__name__ for type_ in types])

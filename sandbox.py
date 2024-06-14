@@ -1,13 +1,17 @@
 # pylint: disable=all
 
+import devgizmos as dgiz
 import devgizmos.decorators as decs
 
+import logging
 from time import sleep
 
-
-@decs.retry(success_msg_format="{args} {kwargs} {returned}")
-def foo():
-    sleep(1)
+logger = dgiz.BasicLogger()
 
 
-foo()
+@decs.timer(logger=logger)
+def wait(t, /):
+    sleep(t)
+
+
+wait(2)

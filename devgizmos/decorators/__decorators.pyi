@@ -1,14 +1,17 @@
 # pylint: disable=all
 
-from logging import Logger
+from logging import INFO, Logger
 from typing import Any, Callable, Optional, Tuple, Type, Union
+
+LoggingLevel = int | str
 
 def timer(
     unit: str = "ns",
     precision: int = 0,
     *,
     msg_format: Optional[str] = "",
-    logger: Union[Logger, None] = None,
+    logger: Optional[Logger] = None,
+    level: LoggingLevel = INFO,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
 def retry(
     max_attempts: int = 3,

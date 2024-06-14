@@ -8,10 +8,15 @@ functools
     - wraps
 
 logging
+    - INFO
+    - Logger
     - getLogger
 
 platform
     - system
+
+re
+    - findall
 
 signal (Unix)
     - alarm

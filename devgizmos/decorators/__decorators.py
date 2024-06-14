@@ -4,8 +4,9 @@ Module containing decorators.
 """
 
 from functools import wraps
-from logging import getLogger
+from logging import INFO, Logger, getLogger
 from platform import system
+from re import findall
 from time import perf_counter_ns, sleep
 from typing import get_type_hints
 from warnings import warn
@@ -32,6 +33,8 @@ __all__ = [
 ]
 
 TIMER_UNITS = ("ns", "us", "ms", "s")
+LoggingLevel = int | str
+LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
 
 
 class _UnsupportedOSError(Exception):
@@ -39,12 +42,12 @@ class _UnsupportedOSError(Exception):
 
 
 # helper funcs
-def _print_msg(format_, default, **kwargs):
+def _print_msg(fmt, default, **kwargs):
     """Internal function used to print messages.
 
-    :param format_: The format for the message.
+    :param fmt: The format for the message.
 
-    :type format_: str
+    :type fmt: str
 
     :param default: The default message.
 
@@ -54,16 +57,57 @@ def _print_msg(format_, default, **kwargs):
     """
 
     msg = None
-    if format_:
-        msg = format_.format(**kwargs)
-    elif format_ == "":
+    if fmt:
+        msg = fmt.format(**kwargs)
+    elif fmt == "":
         msg = default
 
     if msg:
         print(msg)
 
 
-def timer(unit="ns", precision=0, *, msg_format="", logger=None):
+def _handle_logging(fmt, default, logger=None, level=INFO, **values):
+    """Internal function used to handle logging operations.
+
+    :param fmt: The message format.
+
+    :type fmt: str
+
+    :param default: The default message format.
+
+    :type default: str
+
+    :param logger: The logger to use.
+
+    :type logger: Optional[Logger], optional
+
+    :param level: The logging level to use, defaults to logging.INFO (20).
+
+    :type level: LoggingLevel, optional
+
+    :param values: The names and values to place in the message using '%s' formatting.
+
+    :type values: Any
+    """
+
+    if logger is None:
+        return
+
+    if fmt == "":
+        fmt = default
+
+    str_vars = findall(r"\{(.*?)\}", fmt)
+    logging_formatter = fmt
+
+    for str_var in str_vars:
+        logging_formatter = logging_formatter.replace(f"{{{str_var}}}", "%s")
+
+    args = tuple(values[str_var] for str_var in str_vars)
+
+    logger.log(level, logging_formatter, *args)
+
+
+def timer(unit="ns", precision=0, *, msg_format="", logger=None, level=INFO):
     """decorators.timer
     -------------------
     Times how long function it is decorated to takes to run.
@@ -94,15 +138,22 @@ def timer(unit="ns", precision=0, *, msg_format="", logger=None):
     :param logger: The logger to use if desired, defaults to None.
 
     :type logger: Optional[Logger], optional
+
+    :param level: The logging level to use, defaults to logging.INFO (20).
+
+    :type level: LoggingLevel, optional
     """
 
     # type checks
     verify_types(unit, str)
     verify_types(precision, int)
     verify_types(msg_format, str)
+    verify_types(logger, Logger, optional=True)
+    verify_types(level, LoggingLevel)
 
     # value checks
     verify_values(unit, *TIMER_UNITS)
+    verify_values(level, *LOGGING_LEVELS)
 
     def decorator(func):
         @wraps(func)
@@ -130,6 +181,14 @@ def timer(unit="ns", precision=0, *, msg_format="", logger=None):
             _print_msg(
                 msg_format,
                 f"[TIMER]: {func.__name__} RAN IN {rounded} {local_unit}",
+                **msg_kwargs,
+            )
+
+            _handle_logging(
+                msg_format,
+                f"[TIMER]: {func.__name__} RAN IN {rounded} {local_unit}",
+                logger=logger,
+                level=level,
                 **msg_kwargs,
             )
 
@@ -521,7 +580,7 @@ def log_calls(logger=None):
 
     :param logger: The logger to use, defaults to None
 
-    :type logger: Logger, optional
+    :type logger: Optional[Logger], optional
     """
 
     if logger is None:

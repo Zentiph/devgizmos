@@ -3,7 +3,12 @@
 from typing import Any, Dict, Iterable, Sequence, Sized, Type
 
 def verify_types(
-    value: Any, /, *types: Type, raise_exc: bool = True, exc_msg: str = ""
+    value: Any,
+    /,
+    *types: Type,
+    optional: bool = False,
+    raise_exc: bool = True,
+    exc_msg: str = "",
 ) -> bool: ...
 def verify_values(
     value: Any, /, *values: Any, raise_exc: bool = True, exc_msg: str = ""
