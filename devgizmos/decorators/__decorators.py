@@ -3,7 +3,7 @@
 Module containing decorators.
 """
 
-from functools import wraps
+from functools import lru_cache, wraps
 from logging import ERROR, INFO, WARNING, Logger
 from platform import system
 from re import findall
@@ -39,10 +39,17 @@ Decorator = Callable[[F], F]
 LoggingLevel = int | str
 
 TIMER_UNITS = ("ns", "us", "ms", "s")
-LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
+LOGGING_LEVELS = (
+    0,  # NOTSET
+    10,  # DEBUG
+    20,  # INFO
+    30,  # WARNING, WARN
+    40,  # ERROR
+    50,  # CRITICAL, FATAL
+)
 
 
-class _UnsupportedOSError(Exception):
+class UnsupportedOSError(Exception):
     """Error to raise when an unsupported OS is used for the timeout decorator."""
 
 
@@ -378,6 +385,10 @@ def timeout(
     Times out a function if it takes longer than the cutoff time to complete.
     Utilizes signal on Unix systems and threading on Windows.
 
+    WARNING:
+    On Windows, threading is much less reliable than signal and many processes will
+    still complete despite exceeding the cutoff time. This is unfortunately not fixable.
+
     :param cutoff: The cutoff time, in seconds.
 
     :type cutoff: Union[int, float]
@@ -532,7 +543,7 @@ def timeout(
                 return result[0]
 
             # if somehow not unix or windows, question everything
-            raise _UnsupportedOSError(
+            raise UnsupportedOSError(
                 "The detected OS is not Unix or Windows."
                 + "If this is an unexpected issue, open an issue or send an email."
             )
@@ -542,31 +553,32 @@ def timeout(
     return decorator
 
 
-def cache():
-    """Caches the output of the decorated function and instantly returns it
+def cache(maxsize=None):
+    """decorators.cache
+    -------------------
+
+    Caches the output of the decorated function and instantly returns it
     when given the same args and kwargs later.
+
+    :param maxsize: The maximum number of results to store in the cache using an LRU system, defaults to None.
+    - Enter None for no size limitation.
+
+    :type maxsize: Optional[int], optional
     """
 
-    cache_ = {}
-
     def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            key = (args, frozenset(kwargs.items()))
-            if key in cache_:
-                return cache_[key]
-
-            result = func(*args, **kwargs)
-            cache_[key] = result
-            return result
-
-        return wrapper
+        cached = lru_cache(maxsize)(func)
+        return wraps(func)(cached)
 
     return decorator
 
 
 def singleton():
-    """Ensures only one instance of a class can exist at once."""
+    """decorators.singleton
+    -----------------------
+
+    Ensures only one instance of a class can exist at once.
+    """
 
     instances = {}
 
@@ -583,7 +595,11 @@ def singleton():
 
 
 def type_checker():
-    """Ensures the arguments passed to the decorated function are of the correct type based on the type hints."""
+    """decorators.type_checker
+    --------------------------
+
+    Ensures the arguments passed to the decorated function are of the correct type based on the type hints.
+    """
 
     def decorator(func):
         hints = get_type_hints(func)
@@ -609,21 +625,35 @@ def type_checker():
     return decorator
 
 
-def deprecated(reason):
-    """Creates a DeprecationWarning to show the decorated function or class is deprecated.
+def deprecated(reason, version=None, date=None):
+    """decorators.deprecated
+    ------------------------
+
+    Creates a DeprecationWarning to show the decorated function or class is deprecated.
 
     :param reason: The reason for deprecation.
+
     :type reason: str
+
+    :param version: The version number of the function, defaults to None.
+
+    :type version: Union[int, float, str, None], optional
+
+    :param date: The date of removal.
+
+    :type date: Optional[str], optional
     """
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            warn(
-                f"{func.__name__} is deprecated: {reason}",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+            msg = f"{func.__name__} is deprecated: {reason}"
+            if version:
+                msg += f"(Version: {version})"
+            if date:
+                msg += f"(Removal Date: {date})"
+
+            warn(msg, DeprecationWarning, stacklevel=2)
             return func(*args, **kwargs)
 
         return wrapper
@@ -632,7 +662,10 @@ def deprecated(reason):
 
 
 def call_logger(fmt="", logger=None, level=INFO):
-    """Logs each time the decorated function is called.
+    """decorators.call_logger
+    -------------------------
+
+    Logs each time the decorated function is called.
 
     :param fmt: Used to enter a custom message format, defaults to "".
     - Leave as an empty string to use the pre-made message.
@@ -678,7 +711,10 @@ def call_logger(fmt="", logger=None, level=INFO):
 
 
 def error_logger(fmt="", suppress=True, logger=None, level=ERROR):
-    """Logs any errors that are raised by the decorated function.
+    """decorators.error_logger
+    --------------------------
+
+    Logs any errors that are raised by the decorated function.
 
     :param fmt: Used to enter a custom message format, defaults to "".
     - Leave as an empty string to use the pre-made message.
@@ -733,4 +769,33 @@ def error_logger(fmt="", suppress=True, logger=None, level=ERROR):
     return decorator
 
 
-def decorate_all_methods(*decorators, cls=None): ...
+def decorate_all_methods(decorator, *dec_args, **dec_kwargs):
+    """decorators.decorate_all_methods
+    ----------------------------------
+
+    Decorates all the methods in a class with the given decorators.
+    The first decorator is the inner-most decorator,
+    continuing until the final decorator which is the outer-most decorator.
+
+    :param decorator: The decorator to apply to each method.
+
+    :type decorator: Decorator
+
+    :param dec_args: The arguments passed to the decorator.
+
+    :type dec_args: Any
+
+    :param dec_kwargs: The keyword arguments passed to the decorator.
+
+    :type dec_kwargs: Any
+    """
+
+    def decorator_(cls):
+        for attr_name, attr_value in cls.__dict__.items():
+            if callable(attr_value):
+                attr_value = decorator(*dec_args, **dec_kwargs)(attr_value)
+                setattr(cls, attr_name, attr_value)
+
+        return cls
+
+    return decorator_

@@ -5,12 +5,14 @@ Module containing useful decorators.
 This module utilizes the following functionality from built-in modules/packages:
 
 functools
+    - lru_cache
     - wraps
 
 logging
+    - ERROR
     - INFO
+    - WARNING
     - Logger
-    - getLogger
 
 platform
     - system
@@ -19,9 +21,9 @@ re
     - findall
 
 signal (Unix)
+    - SIGALRM
     - alarm
     - signal
-    - SIGALRM
 
 threading (Windows)
     - Thread
@@ -31,6 +33,9 @@ time
     - sleep
 
 typing
+    - Any
+    - Callable
+    - TypeVar
     - get_type_hints
 
 warnings

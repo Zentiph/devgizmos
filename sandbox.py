@@ -54,3 +54,18 @@ def raiser():
 
 raiser()
 """
+
+"""
+@decs.decorate_all_methods(decs.timer, logger=logger)
+class TestClass:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+    def wait(self, t, /):
+        sleep(t + self.a + self.b)
+
+
+tc = TestClass(1, -1)
+tc.wait(1)
+"""
