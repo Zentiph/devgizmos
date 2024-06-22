@@ -1,8 +1,9 @@
 # pylint: disable=all
 
 from logging import DEBUG, Logger
+from typing import Union
 
-LoggingLevel = int | str
+LoggingLevel = Union[int, str]
 
 class BasicLogger(Logger):
     def __init__(

@@ -1,4 +1,4 @@
-"""decorators.decorators
+"""decorators.__decorators
 ------------------------
 Module containing decorators.
 """
@@ -7,8 +7,9 @@ from functools import lru_cache, wraps
 from logging import ERROR, INFO, WARNING, Logger
 from platform import system
 from re import findall
-from time import perf_counter_ns, sleep
-from typing import Any, Callable, TypeVar, get_type_hints
+from statistics import mean
+from time import perf_counter, perf_counter_ns, sleep
+from typing import Any, Callable, TypeVar, Union, get_type_hints
 from warnings import warn
 
 from ..checks import check_in_bounds, check_types, check_values
@@ -23,6 +24,7 @@ elif system() == "Windows":
 
 __all__ = [
     "timer",
+    "benchmark",
     "retry",
     "timeout",
     "cache",
@@ -32,13 +34,14 @@ __all__ = [
     "call_logger",
     "error_logger",
     "decorate_all_methods",
+    "rate_limit",
 ]
 
 F = TypeVar("F", bound=Callable[..., Any])
 Decorator = Callable[[F], F]
-LoggingLevel = int | str
+LoggingLevel = Union[int, str]
 
-TIMER_UNITS = ("ns", "us", "ms", "s")
+TIME_UNITS = ("ns", "us", "ms", "s")
 LOGGING_LEVELS = (
     0,  # NOTSET
     10,  # DEBUG
@@ -55,7 +58,7 @@ class UnsupportedOSError(Exception):
 
 # helper funcs
 def _print_msg(fmt, default, **kwargs):
-    """Internal function used to print messages.
+    """Helper function used to print messages.
 
     :param fmt: The format for the message.
 
@@ -79,7 +82,7 @@ def _print_msg(fmt, default, **kwargs):
 
 
 def _handle_logging(fmt, default, logger=None, level=INFO, **values):
-    """Internal function used to handle logging operations.
+    """Helper function used to handle logging operations.
 
     :param fmt: The message format.
 
@@ -91,7 +94,7 @@ def _handle_logging(fmt, default, logger=None, level=INFO, **values):
 
     :param logger: The logger to use.
 
-    :type logger: Optional[Logger], optional
+    :type logger: Logger | None, optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -132,7 +135,7 @@ def _handle_result_reporting(fmt, default, logger, level, **kwargs):
 
     :param logger: The logger to use.
 
-    :type logger: Optional[Logger]
+    :type logger: Logger | None
 
     :param level: The logging level.
 
@@ -145,7 +148,7 @@ def _handle_result_reporting(fmt, default, logger, level, **kwargs):
         _print_msg(fmt, default, **kwargs)
 
 
-def timer(unit="ns", precision=0, *, fmt="", logger=None, level=INFO):
+def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
     """decorators.timer
     -------------------
     Times how long function it is decorated to takes to run.
@@ -156,7 +159,7 @@ def timer(unit="ns", precision=0, *, fmt="", logger=None, level=INFO):
 
     :type unit: Literal["ns", "us", "ms", "s"], optional
 
-    :param precision: The precision to use when rounding the time, defaults to 0
+    :param precision: The precision to use when rounding the time, defaults to 3
 
     :type precision: int, optional
 
@@ -176,7 +179,7 @@ def timer(unit="ns", precision=0, *, fmt="", logger=None, level=INFO):
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Optional[Logger], optional
+    :type logger: Logger | None optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -191,21 +194,21 @@ def timer(unit="ns", precision=0, *, fmt="", logger=None, level=INFO):
     check_types(level, LoggingLevel)
 
     # value checks
-    check_values(unit, *TIMER_UNITS)
+    check_values(unit, *TIME_UNITS)
     check_values(level, *LOGGING_LEVELS)
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             local_unit = unit.lower()
-            if local_unit not in TIMER_UNITS:
+            if local_unit not in TIME_UNITS:
                 local_unit = "ns"
 
             start_time = perf_counter_ns()
             result = func(*args, **kwargs)
 
             delta = perf_counter_ns() - start_time
-            elapsed = delta / (1000 ** TIMER_UNITS.index(local_unit))
+            elapsed = delta / (1000 ** TIME_UNITS.index(local_unit))
             rounded = round(elapsed, precision)
 
             fmt_kwargs = {
@@ -221,6 +224,115 @@ def timer(unit="ns", precision=0, *, fmt="", logger=None, level=INFO):
             _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
             return result
+
+        return wrapper
+
+    return decorator
+
+
+def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO):
+    """decorators.benchmark
+    -----------------------
+    Runs the function multiple times and reports average, min, and max execution times.
+
+    :param trials: The number of times to run the function, defaults to 10.
+
+    :type trials: int
+
+    :param unit: The unit of time to use, defaults to "ns".
+    - Supported units are "ns", "us", "ms", "s".
+    - If an invalid unit is provided, unit will default to "ns".
+
+    :type unit: Literal["ns", "us", "ms", "s"], optional
+
+    :param precision: The precision to use when rounding the time, defaults to 3
+
+    :type precision: int, optional
+
+    :param fmt: Used to enter a custom message format, defaults to "".
+    - Leave as an empty string to use the pre-made message.
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - trials: The number of trials ran.
+    - avg: The average time of each trial.
+    - min: The shortest time from the trials.
+    - max: The longest time from the trials.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - returned: The return value of the function.
+    - Ex: fmt="Func {name} was called with args={args} and kwargs={kwargs} and raised {raised}."
+
+    :type fmt: str, optional
+
+    :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.
+
+    :type logger: Logger | None optional
+
+    :param level: The logging level to use, defaults to logging.INFO (20).
+
+    :type level: LoggingLevel, optional
+    """
+
+    # type checks
+    check_types(trials, int)
+    check_types(unit, str)
+    check_types(precision, int)
+    check_types(fmt, str)
+    check_types(logger, Logger, optional=True)
+    check_types(level, LoggingLevel)
+
+    # value checks
+    check_in_bounds(trials, 1, None)
+    check_values(unit, *TIME_UNITS)
+    check_values(level, *LOGGING_LEVELS)
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            local_unit = unit.lower()
+            if local_unit not in TIME_UNITS:
+                local_unit = "ns"
+
+            results = []
+            returned = [None]
+
+            for i in range(trials):
+                start_time = perf_counter_ns()
+
+                if i == len(range(trials)) - 1:
+                    returned[0] = func(*args, **kwargs)
+                else:
+                    func(*args, **kwargs)
+
+                delta = perf_counter_ns() - start_time
+                elapsed = delta / (1000 ** TIME_UNITS.index(local_unit))
+                rounded = round(elapsed, precision)
+
+                results.append(rounded)
+
+            avg_time = mean(results)
+            min_time = min(results)
+            max_time = max(results)
+
+            fmt_kwargs = {
+                "name": func.__name__,
+                "trials": trials,
+                "avg": avg_time,
+                "min": min_time,
+                "max": max_time,
+                "args": args,
+                "kwargs": kwargs,
+                "returned": repr(returned[0]),
+            }
+            default = (
+                f"[BENCHMARK]: RAN {trials} TRIALS ON {func.__name__}; "
+                + f"AVG: {avg_time} {local_unit}, MIN: {min_time} {local_unit}, MAX: {max_time}, {local_unit}"
+            )
+
+            _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+
+            return returned[0]
 
         return wrapper
 
@@ -291,7 +403,7 @@ def retry(
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Optional[Logger], optional
+    :type logger: Logger | None optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -391,7 +503,7 @@ def timeout(
 
     :param cutoff: The cutoff time, in seconds.
 
-    :type cutoff: Union[int, float]
+    :type cutoff: int | float
 
     :param success_fmt: Used to enter a custom success message format if changed, defaults to "".
     - Leave as an empty string to use the pre-made message.
@@ -414,7 +526,7 @@ def timeout(
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Optional[Logger], optional
+    :type logger: Logger | None optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -559,16 +671,38 @@ def cache(maxsize=None):
 
     Caches the output of the decorated function and instantly returns it
     when given the same args and kwargs later.
+    Will use LRU caching if a maxsize is provided.
 
     :param maxsize: The maximum number of results to store in the cache using an LRU system, defaults to None.
     - Enter None for no size limitation.
 
-    :type maxsize: Optional[int], optional
+    :type maxsize: int] | None optional
     """
 
+    check_types(maxsize, int, optional=True)
+
     def decorator(func):
-        cached = lru_cache(maxsize)(func)
-        return wraps(func)(cached)
+        cache_ = {}
+
+        # if a maxsize is specified, use LRU caching
+        if maxsize is not None:
+            check_in_bounds(maxsize, 1, None)
+
+            cached = lru_cache(maxsize)(func)
+            return wraps(func)(cached)
+
+        # otherwise use regular caching
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            key = (args, frozenset(kwargs.items()))
+            if key in cache_:
+                return cache_[key]
+
+            result = func(*args, **kwargs)
+            cache_[key] = result
+            return result
+
+        return wrapper
 
     return decorator
 
@@ -637,11 +771,11 @@ def deprecated(reason, version=None, date=None):
 
     :param version: The version number of the function, defaults to None.
 
-    :type version: Union[int, float, str, None], optional
+    :type version: int | float | str | None, optional
 
     :param date: The date of removal.
 
-    :type date: Optional[str], optional
+    :type date: str | None, optional
     """
 
     def decorator(func):
@@ -681,7 +815,7 @@ def call_logger(fmt="", logger=None, level=INFO):
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Optional[Logger], optional
+    :type logger: Logger | None optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -735,7 +869,7 @@ def error_logger(fmt="", suppress=True, logger=None, level=ERROR):
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Optional[Logger], optional
+    :type logger: Logger | None optional
 
     :param level: The logging level to use, defaults to logging.ERROR (20).
 
@@ -799,3 +933,38 @@ def decorate_all_methods(decorator, *dec_args, **dec_kwargs):
         return cls
 
     return decorator_
+
+
+def rate_limit(calls, period):
+    """decorators.rate_limit
+    ------------------------
+    Limits the number of times a function can be called in the given period.
+
+    :param calls: The number of allowed calls in the period.
+
+    :type calls: int
+
+    :param period: The time period in seconds.
+
+    :type period: int | float
+    """
+
+    interval = float(period) / float(calls)
+    last_called = [0.0]
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            elapsed = perf_counter() - last_called[0]
+            wait = interval - elapsed
+
+            if wait > 0:
+                sleep(wait)
+
+            last_called[0] = perf_counter()
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

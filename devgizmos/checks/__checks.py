@@ -1,10 +1,10 @@
-"""_checks.checks
+"""checks.__checks
 -----------------
 Module used for checking certain cases.
 Mainly used for type and value checking function parameters.
 """
 
-from re import match as rematch
+from re import match as re_match
 
 
 __all__ = [
@@ -200,17 +200,17 @@ def check_in_bounds(
 
     :param value: The value to check.
 
-    :type value: Union[int, float]
+    :type value: int | float
 
     :param lower: The lower bound.
     - If None, no lower bound will be set.
 
-    :type lower: Union[int, float, None]
+    :type lower: int | float | None
 
     :param upper: The upper bound.
     - If None, no upper bound will be set.
 
-    :type upper: Union[int, float, None]
+    :type upper: int | float | None
 
     :param inclusive: Whether the bounds are inclusive or exclusive, defaults to True.
 
@@ -237,12 +237,12 @@ def check_in_bounds(
     """
 
     def _helper(default, exc_msg):
-        if exc_msg:
-            exc_msg = exc_msg.format(value=value, lower=lower, upper=upper)
-        else:
-            exc_msg = default
-
         if raise_exc:
+            if exc_msg:
+                exc_msg = exc_msg.format(value=value, lower=lower, upper=upper)
+            else:
+                exc_msg = default
+
             raise ValueError(exc_msg)
         return False
 
@@ -287,6 +287,45 @@ def check_in_bounds(
 
     # if both bounds are None return True since there is no upper or lower bound
     return True
+
+
+def check_positive(*values, raise_exc=True, exc_msg=""):
+    """checks.check_positive
+    ------------------------
+
+    :param values: The values to check.
+
+    :type values: int | float
+
+    :param raise_exc: Whether to raise an exception, defaults to True
+    - If True, the corresponding exception will be raised.
+    - If False, will return False instead of raising an exception.
+
+    :type raise_exc: bool, optional
+
+    :param exc_msg: A custom exception message if changed, defaults to ""
+    - Below is a list of supported fields to be used in an unformatted string:
+    - values: The checked values.
+    - Ex: exc_msg="At least one of these values are not positive: {values}."
+
+    :type exc_msg: str, optional
+
+    :return: True if the all of the values are positive, otherwise False.
+    """
+
+    if all(v > 0 for v in values):
+        return True
+
+    if raise_exc:
+        value_names = ", ".join([repr(v) for v in values])
+
+        if exc_msg:
+            exc_msg = exc_msg.format(values=value_names)
+        else:
+            exc_msg = f"At least one of these values are not positive: {value_names}"
+
+        raise ValueError(exc_msg)
+    return False
 
 
 def check_truthy(*values, raise_exc=True, exc_msg=""):
@@ -468,7 +507,7 @@ def check_regexes(string, *regexes, raise_exc=True, exc_msg=""):
     """
 
     for regex in regexes:
-        if rematch(regex, string):
+        if re_match(regex, string):
             return True
 
     regex_names = ", ".join([repr(r) for r in regexes])

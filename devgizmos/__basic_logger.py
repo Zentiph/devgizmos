@@ -1,13 +1,25 @@
 """basic_logger
 ---------------
 Module containing an already set up logger to skip the few set up lines of code needed when testing basic logging.
+
+This module utilizes the following functionality from built-in modules/packages:
+
+logging
+- DEBUG
+- Formatter
+- Logger
+- StreamHandler
+
+typing
+- Union
 """
 
 from logging import DEBUG, Formatter, Logger, StreamHandler
+from typing import Union
 
 from .checks import check_types, check_values
 
-LoggingLevel = int | str
+LoggingLevel = Union[int, str]
 LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
 
 

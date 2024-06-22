@@ -1,10 +1,10 @@
 # pylint: disable=all
 
+from random import random
+from time import perf_counter, sleep
+
 import devgizmos as dgiz
 import devgizmos.decorators as decs
-
-from random import random
-from time import sleep
 
 logger = dgiz.BasicLogger()
 
@@ -15,6 +15,15 @@ def wait(t, /):
 
 
 wait(2)
+"""
+
+"""
+@decs.benchmark(unit="s")
+def wait(t, /):
+    sleep(t)
+
+
+wait(0.4)
 """
 
 """
@@ -68,4 +77,31 @@ class TestClass:
 
 tc = TestClass(1, -1)
 tc.wait(1)
+"""
+
+"""
+@decs.cache(maxsize=2)
+def expensive_operation(arg):
+    # expensive operation here
+    sleep(arg)
+    return random()
+
+
+print(expensive_operation(2))
+print(expensive_operation(2))
+print(expensive_operation(1))
+print(expensive_operation(1))
+print(expensive_operation(3))
+print(expensive_operation(2))
+"""
+
+"""
+@decs.rate_limit(1, 1)
+def printer():
+    print(f"Printing at time {perf_counter()}!")
+
+
+printer()
+printer()
+printer()
 """
