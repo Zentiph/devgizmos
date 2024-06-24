@@ -27,7 +27,7 @@ wait(0.4)
 """
 
 """
-@decs.retry(logger=logger)
+@decs.retry(backoff_factor=3, logger=logger)
 def risky():
     if random() > 0.2:
         raise ZeroDivisionError
@@ -104,4 +104,13 @@ def printer():
 printer()
 printer()
 printer()
+"""
+
+"""
+@decs.suppress(Exception)
+def risky():
+    raise TypeError
+
+
+risky()
 """

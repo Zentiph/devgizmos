@@ -38,6 +38,7 @@ def benchmark(
 def retry(
     max_attempts: int = 3,
     delay: Union[int, float] = 1,
+    backoff_factor: Union[int, float] = 1,
     *,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     raise_last: bool = True,
@@ -81,3 +82,9 @@ def decorate_all_methods(
     decorator: Decorator, *dec_args: Any, **dec_kwargs: Any
 ) -> DecoratedCls: ...
 def rate_limit(calls: int, period: Union[int, float]) -> DecoratedFunc: ...
+def suppress(
+    *exceptions: Type[Exception],
+    fmt: str = "",
+    logger: Optional[Logger] = None,
+    level: LoggingLevel = INFO,
+) -> DecoratedFunc: ...

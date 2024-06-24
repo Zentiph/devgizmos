@@ -1,3 +1,5 @@
+# pylint: disable=too-many-lines
+
 """decorators.__decorators
 ------------------------
 Module containing decorators.
@@ -21,21 +23,6 @@ elif system() == "Windows":
     # pylint: disable=no-name-in-module
     from threading import Thread  # type: ignore
 
-
-__all__ = [
-    "timer",
-    "benchmark",
-    "retry",
-    "timeout",
-    "cache",
-    "singleton",
-    "type_checker",
-    "deprecated",
-    "call_logger",
-    "error_logger",
-    "decorate_all_methods",
-    "rate_limit",
-]
 
 F = TypeVar("F", bound=Callable[..., Any])
 Decorator = Callable[[F], F]
@@ -179,7 +166,7 @@ def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Logger | None optional
+    :type logger: Logger | None, optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -267,7 +254,7 @@ def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Logger | None optional
+    :type logger: Logger | None, optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -327,7 +314,7 @@ def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO
             }
             default = (
                 f"[BENCHMARK]: RAN {trials} TRIALS ON {func.__name__}; "
-                + f"AVG: {avg_time} {local_unit}, MIN: {min_time} {local_unit}, MAX: {max_time}, {local_unit}"
+                + f"AVG: {avg_time} {local_unit}, MIN: {min_time} {local_unit}, MAX: {max_time} {local_unit}"
             )
 
             _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
@@ -342,6 +329,7 @@ def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO
 def retry(
     max_attempts=3,
     delay=1,
+    backoff_factor=1,
     *,
     exceptions=(Exception,),
     raise_last=True,
@@ -363,9 +351,13 @@ def retry(
 
     :type delay: int, optional
 
+    :param backoff_factor: The amount to multiply the delay by after each attempt.
+
+    :type backoff_factor: int | float
+
     :param exceptions: A tuple of the exceptions to catch and retry on, defaults to (Exception,)
 
-    :type exceptions: Tuple[Type[Exception], ...], optional
+    :type exceptions: Tuple[Type[BaseException..], optional
 
     :param raise_last: Whether to raise the final exception raised when all attempts fail,
     defaults to True
@@ -403,7 +395,7 @@ def retry(
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Logger | None optional
+    :type logger: Logger | None, optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -413,6 +405,7 @@ def retry(
     # type checks
     check_types(max_attempts, int)
     check_types(delay, int, float)
+    check_types(backoff_factor, int, float)
     check_types(exceptions, tuple)
     for exc in exceptions:
         check_types(exc, type)
@@ -431,6 +424,7 @@ def retry(
         @wraps(func)
         def wrapper(*args, **kwargs):
             attempts = 0
+            delay_ = delay
 
             while attempts < max_attempts:
                 try:
@@ -474,7 +468,8 @@ def retry(
                     if attempts >= max_attempts and raise_last:
                         raise
 
-                    sleep(delay)
+                    sleep(delay_)
+                    delay_ *= backoff_factor
 
             return None
 
@@ -526,7 +521,7 @@ def timeout(
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Logger | None optional
+    :type logger: Logger | None, optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -815,7 +810,7 @@ def call_logger(fmt="", logger=None, level=INFO):
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Logger | None optional
+    :type logger: Logger | None, optional
 
     :param level: The logging level to use, defaults to logging.INFO (20).
 
@@ -844,7 +839,7 @@ def call_logger(fmt="", logger=None, level=INFO):
     return decorator
 
 
-def error_logger(fmt="", suppress=True, logger=None, level=ERROR):
+def error_logger(fmt="", suppress_=True, logger=None, level=ERROR):
     """decorators.error_logger
     --------------------------
 
@@ -869,7 +864,7 @@ def error_logger(fmt="", suppress=True, logger=None, level=ERROR):
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.
 
-    :type logger: Logger | None optional
+    :type logger: Logger | None, optional
 
     :param level: The logging level to use, defaults to logging.ERROR (20).
 
@@ -893,7 +888,7 @@ def error_logger(fmt="", suppress=True, logger=None, level=ERROR):
 
                 _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
-                if not suppress:
+                if not suppress_:
                     raise
 
                 return None
@@ -964,6 +959,63 @@ def rate_limit(calls, period):
             last_called[0] = perf_counter()
 
             return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def suppress(*exceptions, fmt="", logger=None, level=INFO):
+    """decorators.suppress
+    ----------------------
+    Suppresses any of the given exceptions, returning None if they occur.
+
+    :param exceptions: The exceptions to suppress if they occurs.
+
+    :type exceptions: Type[Exception]
+
+    :param fmt: Used to enter a custom message format, defaults to "".
+    - Leave as an empty string to use the pre-made message.
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - raised: The error raised.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - Ex: fmt="Func {name} was called with args={args} and kwargs={kwargs} and raised {raised}."
+
+    :type fmt: str, optional
+
+    :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.
+
+    :type logger: Logger | None, optional
+
+    :param level: The logging level to use, defaults to logging.ERROR (20).
+
+    :type level: LoggingLevel, optional
+    """
+
+    # type checks
+    for exc in exceptions:
+        check_types(exc, type)
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except exceptions as e:
+                fmt_kwargs = {
+                    "name": func.__name__,
+                    "raised": repr(e),
+                    "args": args,
+                    "kwargs": kwargs,
+                }
+                default = f"[SUPPRESS]: SUPPRESSED {repr(e)} RAISED BY FUNC {func.__name__} WITH {args=} AND {kwargs=}"
+
+                _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+
+                return None
 
         return wrapper
 
