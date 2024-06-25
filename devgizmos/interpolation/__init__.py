@@ -1,4 +1,10 @@
-"""interpolation
-----------------
-Module containing useful interpolation functions.
+"""
+interpolation
+=============
+
+
+Description
+-----------
+
+Module containing standard interpolation functions.
 """

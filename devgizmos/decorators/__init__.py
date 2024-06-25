@@ -1,6 +1,16 @@
-"""decorators
--------------
-Module containing useful decorators.
+"""
+decorators
+==========
+
+
+Description
+-----------
+
+Module containing decorators such as timer, retry, benchmark, etc.
+
+
+Built-in Utilizations
+---------------------
 
 This module utilizes the following functionality from built-in modules/packages:
 
@@ -48,9 +58,12 @@ warnings
 """
 
 from .__decorators import (
+    ConditionError,
+    UnsupportedOSError,
     benchmark,
     cache,
     call_logger,
+    conditional,
     decorate_all_methods,
     deprecated,
     error_logger,
@@ -60,5 +73,6 @@ from .__decorators import (
     suppress,
     timeout,
     timer,
+    tracer,
     type_checker,
 )

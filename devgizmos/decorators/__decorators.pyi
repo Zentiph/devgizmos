@@ -19,6 +19,9 @@ DecoratedFunc = Decorator
 DecoratedCls = Callable[[Type], Type]
 LoggingLevel = Union[int, str]
 
+class UnsupportedOSError(Exception): ...
+class ConditionError(Exception): ...
+
 def timer(
     unit: Literal["ns", "us", "ms", "s"] = "ns",
     precision: int = 3,
@@ -72,6 +75,12 @@ def call_logger(
     logger: Optional[Logger] = None,
     level: LoggingLevel = INFO,
 ) -> DecoratedFunc: ...
+def tracer(
+    entry_fmt: str = "",
+    exit_fmt: str = "",
+    logger: Optional[Logger] = None,
+    level: LoggingLevel = INFO,
+) -> DecoratedFunc: ...
 def error_logger(
     fmt: str = "",
     suppress: bool = True,
@@ -87,4 +96,7 @@ def suppress(
     fmt: str = "",
     logger: Optional[Logger] = None,
     level: LoggingLevel = INFO,
+) -> DecoratedFunc: ...
+def conditional(
+    condition: Callable[..., bool], *, raise_exc: bool = False
 ) -> DecoratedFunc: ...

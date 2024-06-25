@@ -1,7 +1,9 @@
 # pylint: disable=too-many-lines
 
-"""decorators.__decorators
-------------------------
+"""
+decorators.__decorators
+=======================
+
 Module containing decorators.
 """
 
@@ -39,8 +41,15 @@ LOGGING_LEVELS = (
 )
 
 
+class ConditionError(Exception):
+    """Error to raise when a necessary condition is not met."""
+
+
 class UnsupportedOSError(Exception):
-    """Error to raise when an unsupported OS is used for the timeout decorator."""
+    """
+    Error to raise when an unsupported OS is being used.
+    Primary purpose is as a "catch all cases" solution, as it is unlikely this will ever be needed.
+    """
 
 
 # helper funcs
@@ -136,8 +145,10 @@ def _handle_result_reporting(fmt, default, logger, level, **kwargs):
 
 
 def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
-    """decorators.timer
-    -------------------
+    """
+    decorators.timer
+    ----------------
+
     Times how long function it is decorated to takes to run.
 
     :param unit: The unit of time to use, defaults to "ns".
@@ -218,8 +229,10 @@ def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
 
 
 def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO):
-    """decorators.benchmark
-    -----------------------
+    """
+    decorators.benchmark
+    --------------------
+
     Runs the function multiple times and reports average, min, and max execution times.
 
     :param trials: The number of times to run the function, defaults to 10.
@@ -294,13 +307,12 @@ def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO
 
                 delta = perf_counter_ns() - start_time
                 elapsed = delta / (1000 ** TIME_UNITS.index(local_unit))
-                rounded = round(elapsed, precision)
 
-                results.append(rounded)
+                results.append(elapsed)
 
-            avg_time = mean(results)
-            min_time = min(results)
-            max_time = max(results)
+            avg_time = round(mean(results), precision)
+            min_time = round(min(results), precision)
+            max_time = round(max(results), precision)
 
             fmt_kwargs = {
                 "name": func.__name__,
@@ -314,7 +326,7 @@ def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO
             }
             default = (
                 f"[BENCHMARK]: RAN {trials} TRIALS ON {func.__name__}; "
-                + f"AVG: {avg_time} {local_unit}, MIN: {min_time} {local_unit}, MAX: {max_time} {local_unit}"
+                f"AVG: {avg_time} {local_unit}, MIN: {min_time} {local_unit}, MAX: {max_time} {local_unit}"
             )
 
             _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
@@ -338,8 +350,10 @@ def retry(
     logger=None,
     level=INFO,
 ):
-    """decorators.retry
-    -------------------
+    """
+    decorators.retry
+    ----------------
+
     Retries a function if it fails up until the number of attempts is reached.
 
     :param max_attempts: The maximum number of times to attempt running the decorated function,
@@ -487,8 +501,10 @@ def timeout(
     success_level=INFO,
     failure_level=WARNING,
 ):
-    """decorators.timeout
-    ---------------------
+    """
+    decorators.timeout
+    ------------------
+
     Times out a function if it takes longer than the cutoff time to complete.
     Utilizes signal on Unix systems and threading on Windows.
 
@@ -661,8 +677,9 @@ def timeout(
 
 
 def cache(maxsize=None):
-    """decorators.cache
-    -------------------
+    """
+    decorators.cache
+    ----------------
 
     Caches the output of the decorated function and instantly returns it
     when given the same args and kwargs later.
@@ -703,8 +720,9 @@ def cache(maxsize=None):
 
 
 def singleton():
-    """decorators.singleton
-    -----------------------
+    """
+    decorators.singleton
+    --------------------
 
     Ensures only one instance of a class can exist at once.
     """
@@ -724,8 +742,9 @@ def singleton():
 
 
 def type_checker():
-    """decorators.type_checker
-    --------------------------
+    """
+    decorators.type_checker
+    -----------------------
 
     Ensures the arguments passed to the decorated function are of the correct type based on the type hints.
     """
@@ -755,8 +774,9 @@ def type_checker():
 
 
 def deprecated(reason, version=None, date=None):
-    """decorators.deprecated
-    ------------------------
+    """
+    decorators.deprecated
+    ---------------------
 
     Creates a DeprecationWarning to show the decorated function or class is deprecated.
 
@@ -791,8 +811,9 @@ def deprecated(reason, version=None, date=None):
 
 
 def call_logger(fmt="", logger=None, level=INFO):
-    """decorators.call_logger
-    -------------------------
+    """
+    decorators.call_logger
+    ----------------------
 
     Logs each time the decorated function is called.
 
@@ -839,9 +860,79 @@ def call_logger(fmt="", logger=None, level=INFO):
     return decorator
 
 
+def tracer(entry_fmt="", exit_fmt="", logger=None, level=INFO):
+    """
+    decorators.tracer
+    -----------------
+
+    Logs entries and exits of the decorated function.
+
+    :param entry_fmt: Used to enter a custom message format, defaults to "".
+    - Leave as an empty string to use the pre-made message.
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - Ex: entry_fmt="Entering func {name} with args={args} and kwargs={kwargs}."
+
+    :param exit_fmt: Used to enter a custom message format, defaults to "".
+    - Leave as an empty string to use the pre-made message.
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - returned: The return value of the function.
+    - Ex: fmt="Exiting func {name} with args={args} and kwargs={kwargs}; Returned {returned}."
+
+    :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.
+
+    :type logger: Logger | None, optional
+
+    :param level: The logging level to use, defaults to logging.ERROR (20).
+
+    :type level: LoggingLevel, optional
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            entry_fmt_kwargs = {
+                "name": func.__name__,
+                "args": args,
+                "kwargs": kwargs,
+            }
+            entry_default = (
+                f"[TRACER]: ENTERING FUNC {func.__name__} WITH {args=} AND {kwargs=}"
+            )
+            _handle_result_reporting(
+                entry_fmt, entry_default, logger, level, **entry_fmt_kwargs
+            )
+
+            result = func(*args, **kwargs)
+
+            exit_fmt_kwargs = {
+                "name": func.__name__,
+                "args": args,
+                "kwargs": kwargs,
+                "returned": result,
+            }
+            exit_default = f"[TRACER]: EXITING FUNC {func.__name__} WITH {args=} AND {kwargs=}; RETURNED {result}"
+            _handle_result_reporting(
+                exit_fmt, exit_default, logger, level, **exit_fmt_kwargs
+            )
+
+            return result
+
+        return wrapper
+
+    return decorator
+
+
 def error_logger(fmt="", suppress_=True, logger=None, level=ERROR):
-    """decorators.error_logger
-    --------------------------
+    """
+    decorators.error_logger
+    -----------------------
 
     Logs any errors that are raised by the decorated function.
 
@@ -899,8 +990,9 @@ def error_logger(fmt="", suppress_=True, logger=None, level=ERROR):
 
 
 def decorate_all_methods(decorator, *dec_args, **dec_kwargs):
-    """decorators.decorate_all_methods
-    ----------------------------------
+    """
+    decorators.decorate_all_methods
+    -------------------------------
 
     Decorates all the methods in a class with the given decorators.
     The first decorator is the inner-most decorator,
@@ -931,8 +1023,10 @@ def decorate_all_methods(decorator, *dec_args, **dec_kwargs):
 
 
 def rate_limit(calls, period):
-    """decorators.rate_limit
-    ------------------------
+    """
+    decorators.rate_limit
+    ---------------------
+
     Limits the number of times a function can be called in the given period.
 
     :param calls: The number of allowed calls in the period.
@@ -966,8 +1060,10 @@ def rate_limit(calls, period):
 
 
 def suppress(*exceptions, fmt="", logger=None, level=INFO):
-    """decorators.suppress
-    ----------------------
+    """
+    decorators.suppress
+    -------------------
+
     Suppresses any of the given exceptions, returning None if they occur.
 
     :param exceptions: The exceptions to suppress if they occurs.
@@ -993,6 +1089,18 @@ def suppress(*exceptions, fmt="", logger=None, level=INFO):
     :param level: The logging level to use, defaults to logging.ERROR (20).
 
     :type level: LoggingLevel, optional
+
+
+    Example Usage
+    -------------
+
+    ```python
+    @suppress(ZeroDivisionError)
+    def divide(x, y):
+        return x / y
+
+    divide(1, 0)  # will not raise an exception
+    ```
     """
 
     # type checks
@@ -1016,6 +1124,53 @@ def suppress(*exceptions, fmt="", logger=None, level=INFO):
                 _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
                 return None
+
+        return wrapper
+
+    return decorator
+
+
+def conditional(condition, *, raise_exc=False):
+    """
+    decorators.conditional
+    ----------------------
+
+    Executes the decorated function only if the condition is met.
+
+    :param condition: The condition to meet.
+
+    :type condition: Callable[..., bool]
+
+    :param raise_exc: Whether to raise an exception if the condition is not met, defaults to False.
+
+    :type raise_exc: bool, optional
+
+
+    Example Usage
+    -------------
+
+    ```python
+    @conditional(lambda x: x > 0, raise_exc=True)
+    def positives_only(x):
+        return x
+
+    positives_only(1)   # will work fine
+    positives_only(-1)  # will raise an exception
+    ```
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if condition(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            if raise_exc:
+                raise ConditionError(
+                    f"Condition was not met: {condition.__name__} {args=} {kwargs=}"
+                )
+
+            return None
 
         return wrapper
 

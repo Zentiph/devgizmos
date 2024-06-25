@@ -1,15 +1,12 @@
 plans for devgizmos
 
-1. option to return data for each decorator for logging use
-2. more decorators
+1. more decorators
 	- more
-3. interp stuff
-4. arithmetic package
+2. interp stuff
+3. arithmetic package
 	- need to check if already in math module
 	- sum (over args, or an iterable)
 	- product (over args, or an iterable)
 	- ...
-5. allow for no print msgs if entered as 'None'
-6. option to add a logger for each decorator
-7. add type verifying to checks.py
-8. lightweight versions of functions
+4. add type verifying to checks.py
+5. lightweight version of the package

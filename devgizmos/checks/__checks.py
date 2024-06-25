@@ -1,5 +1,7 @@
-"""checks.__checks
------------------
+"""
+checks.__checks
+===============
+
 Module used for checking certain cases.
 Mainly used for type and value checking function parameters.
 """
@@ -7,25 +9,11 @@ Mainly used for type and value checking function parameters.
 from re import match as re_match
 
 
-__all__ = [
-    "check_types",
-    "check_values",
-    "check_in_range",
-    "check_in_bounds",
-    "check_truthy",
-    "check_not_none",
-    "check_length",
-    "check_regexes",
-    "check_keys_in_dict",
-    "check_contains",
-    "check_subclasses",
-    "check_callables",
-]
-
-
 def check_types(value, /, *types, optional=False, raise_exc=True, exc_msg=""):
-    """checks.check_types
-    ----------------------
+    """
+    checks.check_types
+    ------------------
+
     Verifies the given value is one of the expected types.
     Either raises a TypeError or returns False depending on raise_exc.
 
@@ -78,8 +66,10 @@ def check_types(value, /, *types, optional=False, raise_exc=True, exc_msg=""):
 
 
 def check_values(value, /, *values, raise_exc=True, exc_msg=""):
-    """checks.check_values
-    -----------------------
+    """
+    checks.check_values
+    -------------------
+
     Verifies the given value is one of the expected values.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -127,8 +117,10 @@ def check_values(value, /, *values, raise_exc=True, exc_msg=""):
 
 
 def check_in_range(value, seq, /, start=-1, end=-1, *, raise_exc=True, exc_msg=""):
-    """checks.check_in_range
-    -------------------------
+    """
+    checks.check_in_range
+    ---------------------
+
     Verifies the given value is in the specified range in the sequence provided.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -195,8 +187,9 @@ def check_in_range(value, seq, /, start=-1, end=-1, *, raise_exc=True, exc_msg="
 def check_in_bounds(
     value, lower, upper, /, inclusive=True, *, raise_exc=True, exc_msg=""
 ):
-    """checks.check_in_bounds
-    -------------------------
+    """
+    checks.check_in_bounds
+    ----------------------
 
     :param value: The value to check.
 
@@ -290,8 +283,9 @@ def check_in_bounds(
 
 
 def check_positive(*values, raise_exc=True, exc_msg=""):
-    """checks.check_positive
-    ------------------------
+    """
+    checks.check_positive
+    ---------------------
 
     :param values: The values to check.
 
@@ -329,8 +323,10 @@ def check_positive(*values, raise_exc=True, exc_msg=""):
 
 
 def check_truthy(*values, raise_exc=True, exc_msg=""):
-    """checks.check_truthy
-    -----------------------
+    """
+    checks.check_truthy
+    -------------------
+
     Verifies the given values are truthy.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -373,8 +369,10 @@ def check_truthy(*values, raise_exc=True, exc_msg=""):
 
 
 def check_not_none(*values, raise_exc=True, exc_msg=""):
-    """checks.check_not_none
-    -------------------------
+    """
+    checks.check_not_none
+    ---------------------
+
     Verifies the given values are not None.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -416,8 +414,10 @@ def check_not_none(*values, raise_exc=True, exc_msg=""):
 
 
 def check_length(value, /, min_length, max_length=-1, *, raise_exc=True, exc_msg=""):
-    """checks.check_length
-    -----------------------
+    """
+    checks.check_length
+    -------------------
+
     Verifies the given value has a length in the specified range provided.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -474,8 +474,10 @@ def check_length(value, /, min_length, max_length=-1, *, raise_exc=True, exc_msg
 
 
 def check_regexes(string, *regexes, raise_exc=True, exc_msg=""):
-    """checks.check_regexes
-    ------------------------
+    """
+    checks.check_regexes
+    --------------------
+
     Verifies the given string matches the regexes provided.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -523,8 +525,10 @@ def check_regexes(string, *regexes, raise_exc=True, exc_msg=""):
 
 
 def check_keys_in_dict(dictionary, *keys, raise_exc=True, exc_msg=""):
-    """checks.check_keys_in_dict
-    -----------------------------
+    """
+    checks.check_keys_in_dict
+    -------------------------
+
     Verifies the given dictionary contains the keys provided.
     Either raises a KeyError or returns False depending on raise_exc.
 
@@ -572,8 +576,10 @@ def check_keys_in_dict(dictionary, *keys, raise_exc=True, exc_msg=""):
 
 
 def check_contains(iterable, *items, raise_exc=True, exc_msg=""):
-    """checks.check_contains
-    -------------------------
+    """
+    checks.check_contains
+    ---------------------
+
     Verifies the given iterable contains the items provided.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -621,8 +627,10 @@ def check_contains(iterable, *items, raise_exc=True, exc_msg=""):
 
 
 def check_subclasses(superclass, *subclasses, raise_exc=True, exc_msg=""):
-    """checks.check_subclasses
-    ---------------------------
+    """
+    checks.check_subclasses
+    -----------------------
+
     Verifies the given subclasses are all subclasses of the superclass.
     Either raises a ValueError or returns False depending on raise_exc.
 
@@ -669,8 +677,10 @@ def check_subclasses(superclass, *subclasses, raise_exc=True, exc_msg=""):
 
 
 def check_callables(*objs, raise_exc=True, exc_msg=""):
-    """checks.check_callables
-    --------------------------
+    """
+    checks.check_callables
+    ----------------------
+
     Verifies the given objects are callable.
     Either raises a TypeError or returns False depending on raise_exc.
 

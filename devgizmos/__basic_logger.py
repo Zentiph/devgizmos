@@ -1,5 +1,7 @@
-"""basic_logger
----------------
+"""
+basic_logger
+============
+
 Module containing an already set up logger to skip the few set up lines of code needed when testing basic logging.
 
 This module utilizes the following functionality from built-in modules/packages:
@@ -29,7 +31,8 @@ class BasicLogger(Logger):
     def __init__(
         self, level=DEBUG, fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     ):
-        """Initializer for a BasicLogger object.
+        """
+        Initializer for a BasicLogger object.
 
         :param level: The logging level, defaults to logging.DEBUG
 
