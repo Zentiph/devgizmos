@@ -371,7 +371,7 @@ def retry(
 
     :param exceptions: A tuple of the exceptions to catch and retry on, defaults to (Exception,)
 
-    :type exceptions: Tuple[Type[BaseException..], optional
+    :type exceptions: Tuple[Type[BaseException], ...], optional
 
     :param raise_last: Whether to raise the final exception raised when all attempts fail,
     defaults to True
@@ -688,7 +688,7 @@ def cache(maxsize=None):
     :param maxsize: The maximum number of results to store in the cache using an LRU system, defaults to None.
     - Enter None for no size limitation.
 
-    :type maxsize: int] | None optional
+    :type maxsize: int | None, optional
     """
 
     check_types(maxsize, int, optional=True)
