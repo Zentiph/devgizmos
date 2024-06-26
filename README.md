@@ -17,6 +17,7 @@ Documentation
 -------------
 
 devgizmos' documentation can be found [here]().
+**(PLACEHOLDER LINK, DOCUMENTATION HAS NOT YET BEEN MADE)**
 
 Disclaimers
 -----------
