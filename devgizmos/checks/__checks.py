@@ -9,44 +9,57 @@ Mainly used for type and value checking function parameters.
 from re import match as re_match
 
 
-def check_types(value, /, *types, optional=False, raise_exc=True, exc_msg=""):
+def check_type(value, /, type_or_tuple, optional=False, raise_exc=True, exc_msg=""):
     """
-    checks.check_types
-    ------------------
+    check_type
+    ==========
+    Verifies the given value is the expected type(s).
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
-    Verifies the given value is one of the expected types.
-    Either raises a TypeError or returns False depending on raise_exc.
-
+    Parameters
+    ----------
     :param value: The value to check.
-
     :type value: Any
-
-    :param types: The expected types.
-
-    :type types: Type
-
+    :param type_or_tuple: The expected type or a tuple of expected types.
+    :type type_or_tuple: Type | Tuple[Type, ...]
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param optional: Whether the types are optional, meaning the value can be None, defaults to False.
-
     :type optional: bool
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - value: The checked value.
     - types: A tuple of the expected types.
-    - Ex: exc_msg="{value} is not one of the expected types: {types}."
-
+    - Ex: exc_msg="{value} is not one of the expected types: {types}."\n
     :type exc_msg: str, optional
 
-    :return: True if the value is a member of one of the expected types, otherwise False.
+    Raises
+    ------
+    :raises TypeError: If raise_exc is True and the value is not the expected type(s).
 
+    Return
+    ------
+    :return: True if the value is a member of the expected type(s), otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> check_type(10, int)
+    True
+    >>> check_type(True, (float, str), raise_exc=False)
+    False
+    >>> check_type(True, (float, str))
+    TypeError: True is not one of the expected types: float, str
+    ```
     """
+
+    if isinstance(type_or_tuple, tuple):
+        types = type_or_tuple
+    else:
+        types = (type_or_tuple,)
 
     if isinstance(value, types):
         return True
@@ -65,40 +78,56 @@ def check_types(value, /, *types, optional=False, raise_exc=True, exc_msg=""):
     return False
 
 
-def check_values(value, /, *values, raise_exc=True, exc_msg=""):
+def check_value(value, /, value_or_tuple, raise_exc=True, exc_msg=""):
     """
-    checks.check_values
-    -------------------
+    check_values
+    ============
+    Verifies the given value is the expected value(s).
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
-    Verifies the given value is one of the expected values.
-    Either raises a ValueError or returns False depending on raise_exc.
-
+    Parameters
+    ----------
     :param value: The value to check.
-
     :type value: Any
-
-    :param values: The expected values.
-
-    :type values: Any
-
+    :param value_or_tuple: The expected value or a tuple of expected values.
+    :type value_or_tuple: Any | Tuple[Any, ...]
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - value: The checked value.
     - values: A tuple of the expected values.
-    - Ex: exc_msg="{value} is not one of the expected values: {values}."
-
+    - Ex: exc_msg="{value} is not one of the expected values: {values}."\n
     :type exc_msg: str, optional
 
-    :return: True if the value is equal to one of the expected values, otherwise False.
+    Raises
+    ------
+    :raises ValueError: If raise_exc is True and the value is not the expected value(s).
 
+    Return
+    ------
+    :return: True if the value(s) is/are equal to one of the expected values, otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> APPROVED_VALUES = (0, 1, 2, 3)
+    >>> check_value(2, APPROVED_VALUES)
+    True
+    >>> check_value(7, APPROVED_VALUES, raise_exc=False)
+    False
+    >>> check_value(7, APPROVED_VALUES)
+    ValueError: 7 is not one of the expected values: 0, 1, 2, 3
+    ```
     """
+
+    if isinstance(value_or_tuple, tuple):
+        values = value_or_tuple
+    else:
+        values = (value_or_tuple,)
 
     for v in values:
         if v == value:
@@ -116,56 +145,63 @@ def check_values(value, /, *values, raise_exc=True, exc_msg=""):
     return False
 
 
-def check_in_range(value, seq, /, start=-1, end=-1, *, raise_exc=True, exc_msg=""):
+def check_in_range(value, seq, /, start=None, end=None, *, raise_exc=True, exc_msg=""):
     """
-    checks.check_in_range
-    ---------------------
-
+    check_in_range
+    ==============
     Verifies the given value is in the specified range in the sequence provided.
-    Either raises a ValueError or returns False depending on raise_exc.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
+    Parameters
+    ----------
     :param value: The value to check.
-
     :type value: Any
-
     :param seq: The sequence to check within.
-
     :type seq: Sequence
-
     :param start: The start index of the range to check (inclusive).
-    - Will be set to 0 if negative.
-
-    :type start: int, optional
-
+    - Will be set to 0 if None.\n
+    :type start: int | None, optional
     :param end: The end index of the range to check (inclusive).
-    - Will be set to the final index if negative.
-
-    :type end: int, optional
-
+    - Will be set to the final index if None.\n
+    :type end: int | None, optional
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - value: The checked value.
     - seq: The sequence being checked.
     - start: The start index.
     - end: The end index.
-    - Ex: exc_msg="{value} is not in the sequence {seq} in the range ({start}, {end})."
-
+    - Ex: exc_msg="{value} is not in the sequence {seq} in the range ({start}, {end})."\n
     :type exc_msg: str, optional
 
-    :return: True if the value is in the inclusive range in the sequence, otherwise False.
+    Raises
+    ------
+    :raises ValueError: If raise_exc is True and the value is not within the range in the sequence.
 
+    Return
+    ------
+    :return: True if the value is in the inclusive range in the sequence, otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> check_in_range(3, range(0, 4))
+    True
+    >>> check_in_range(10, range(0, 4), raise_exc=False)
+    False
+    >>> check_in_range(10, range(0, 4))
+    ValueError: 10 is not within the range: (0, 4) in range(0, 4)
+    ```
     """
 
-    # set the indexes to the start/end if they are negative
-    start = max(start, 0)
-    if end < 0:
+    # set the indexes to the start/end if they are None
+    if start is None:
+        start = 0
+    if end is None:
         end = len(seq)
 
     if value in seq[start:end]:
@@ -176,7 +212,7 @@ def check_in_range(value, seq, /, start=-1, end=-1, *, raise_exc=True, exc_msg="
     else:
         exc_msg = (
             f"{repr(value)} is not within the range: "
-            + f"({start}, {end}) in {repr(seq)}."
+            + f"({start}, {end}) in {repr(seq)}"
         )
 
     if raise_exc:
@@ -184,274 +220,255 @@ def check_in_range(value, seq, /, start=-1, end=-1, *, raise_exc=True, exc_msg="
     return False
 
 
+# what can ya do
+# pylint: disable=too-many-return-statements
 def check_in_bounds(
     value, lower, upper, /, inclusive=True, *, raise_exc=True, exc_msg=""
 ):
     """
-    checks.check_in_bounds
-    ----------------------
+    check_in_bounds
+    ===============
+    Verifies if the given value is within the lower and upper bounds.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
+    Parameters
+    ----------
     :param value: The value to check.
-
-    :type value: int | float
-
+    :type value: Number
     :param lower: The lower bound.
-    - If None, no lower bound will be set.
-
-    :type lower: int | float | None
-
+    - If None, no lower bound will be set.\n
+    :type lower: Number | None
     :param upper: The upper bound.
-    - If None, no upper bound will be set.
-
-    :type upper: int | float | None
-
+    - If None, no upper bound will be set.\n
+    :type upper: Number | None
     :param inclusive: Whether the bounds are inclusive or exclusive, defaults to True.
-
     :type inclusive: bool, optional
-
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - value: The checked value.
     - lower: The lower bound.
     - upper: The upper bound.
-    - Ex: exc_msg="{value} is not in the bounds ({lower}, {upper})."
-
+    - Ex: exc_msg="{value} is not in the bounds ({lower}, {upper})."\n
     :type exc_msg: str, optional
 
-    :return: True if the value is within the bounds, otherwise False.
+    Raises
+    ------
+    :raises ValueError: If raise_exc is True and the value is not within the bounds.
 
+    Return
+    ------
+    :return: True if the value is within the bounds, otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> check_in_bounds(3, 1, 4)
+    True
+    >>> check_in_bounds(12, 1, 4, raise_exc=False)
+    False
+    >>> check_in_bounds(12, 1, 4)
+    ValueError: 12 must be greater than or equal to 1 and less than or equal to 4
+    ```
     """
 
-    def _helper(default, exc_msg):
+    def raise_or_return(default):
         if raise_exc:
-            if exc_msg:
-                exc_msg = exc_msg.format(value=value, lower=lower, upper=upper)
-            else:
-                exc_msg = default
-
-            raise ValueError(exc_msg)
+            raise ValueError(exc_msg or default)
         return False
 
-    # ugly code, but if it works...
-    if upper is None:
-        if not inclusive:
-            if value > lower:
+    if lower is not None and upper is not None:
+        if inclusive:
+            if lower <= value <= upper:
                 return True
-
-            _helper(f"{value} must be greater than {lower}.", exc_msg)
-        elif value >= lower:
-            return True
-
-        _helper(f"{value} must be greater than or equal to {lower}.", exc_msg)
-
-    elif lower is None:
-        if not inclusive:
-            if value < upper:
-                return True
-
-            _helper(f"{value} must be less than {upper}.", exc_msg)
-        elif value <= upper:
-            return True
-
-        _helper(f"{value} must be less than or equal to {upper}.", exc_msg)
-
-    elif upper and lower:
-        if not inclusive:
-            if lower < value < upper:
-                return True
-
-            _helper(
-                f"{value} must be greater than {lower} and less than {upper}.", exc_msg
+            return raise_or_return(
+                f"{value} must be greater than or equal to {lower} and less than or equal to {upper}"
             )
-        elif lower <= value <= upper:
-            return True
 
-        _helper(
-            f"{value} must be greater than or equal to {lower} and less than or equal to {upper}.",
-            exc_msg,
+        if lower < value < upper:
+            return True
+        return raise_or_return(
+            f"{value} must be greater than {lower} and less than {upper}"
         )
 
-    # if both bounds are None return True since there is no upper or lower bound
+    if lower is not None:
+        if inclusive:
+            if value >= lower:
+                return True
+            return raise_or_return(f"{value} must be greater than or equal to {lower}")
+
+        if value > lower:
+            return True
+        return raise_or_return(f"{value} must be greater than {lower}")
+
+    if upper is not None:
+        if inclusive:
+            if value <= upper:
+                return True
+            return raise_or_return(f"{value} must be less than or equal to {upper}")
+
+        if value < upper:
+            return True
+        return raise_or_return(f"{value} must be less than {upper}")
+
+    # if both bounds are None, return True
+    # since there is no upper or lower bound
     return True
 
 
-def check_positive(*values, raise_exc=True, exc_msg=""):
+def check_truthy(value, raise_exc=True, exc_msg=""):
     """
-    checks.check_positive
-    ---------------------
+    check_truthy
+    ============
+    Verifies the given value(s) is/are truthy.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
-    :param values: The values to check.
-
-    :type values: int | float
-
+    Parameters
+    ----------
+    :param value: The value to check.
+    :type value: Any
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
-    - values: The checked values.
-    - Ex: exc_msg="At least one of these values are not positive: {values}."
-
+    - value: The checked value.
+    - Ex: exc_msg="{value} is falsy."\n
     :type exc_msg: str, optional
 
-    :return: True if the all of the values are positive, otherwise False.
-    """
+    Raises
+    ------
+    :raises ValueError: If raise_exc is True and the value is falsy.
 
-    if all(v > 0 for v in values):
-        return True
-
-    if raise_exc:
-        value_names = ", ".join([repr(v) for v in values])
-
-        if exc_msg:
-            exc_msg = exc_msg.format(values=value_names)
-        else:
-            exc_msg = f"At least one of these values are not positive: {value_names}"
-
-        raise ValueError(exc_msg)
-    return False
-
-
-def check_truthy(*values, raise_exc=True, exc_msg=""):
-    """
-    checks.check_truthy
-    -------------------
-
-    Verifies the given values are truthy.
-    Either raises a ValueError or returns False depending on raise_exc.
-
-    :param values: The values to check.
-
-    :type values: Any
-
-    :param raise_exc: Whether to raise an exception, defaults to True
-    - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
-    :type raise_exc: bool, optional
-
-    :param exc_msg: A custom exception message if changed, defaults to ""
-    - Below is a list of supported fields to be used in an unformatted string:
-    - values: The checked values.
-    - Ex: exc_msg="{values} are not all truthy."
-
-    :type exc_msg: str, optional
-
-    :return: True if all of the values are truthy, otherwise False.
-
+    Return
+    ------
+    :return: True if the value is truthy, otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> check_truthy(10)
+    True
+    >>> check_truthy(0, raise_exc=False)
+    False
+    >>> check_truthy(0)
+    ValueError: 0 is falsy
+    ```
     """
 
-    # if all the values in values are truthy, return True
-    if all(values):
+    if value:
         return True
-
-    value_names = ", ".join([repr(v) for v in values])
 
     if exc_msg:
-        exc_msg = exc_msg.format(values=value_names)
+        exc_msg = exc_msg.format(value=repr(value))
     else:
-        exc_msg = f"At least one of these values are falsy: {value_names}."
+        exc_msg = f"{repr(value)} is falsy"
 
     if raise_exc:
         raise ValueError(exc_msg)
     return False
 
 
-def check_not_none(*values, raise_exc=True, exc_msg=""):
+def check_not_none(value, raise_exc=True, exc_msg=""):
     """
-    checks.check_not_none
-    ---------------------
+    check_not_none
+    ==============
+    Verifies the given value is not None.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
-    Verifies the given values are not None.
-    Either raises a ValueError or returns False depending on raise_exc.
-
-    :param values: The values to check.
-
-    :type values: Any
-
+    Parameters
+    ----------
+    :param value: The value to check.
+    :type value: Any
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
-    - Below is a list of supported fields to be used in an unformatted string:
-    - values: The checked values.
-    - Ex: exc_msg="{values} are not all not None."
-
     :type exc_msg: str, optional
 
+    Raises
+    ------
+    :raises ValueError: If raise_exc is True and the value is None.
+
+    Return
+    ------
     :return: True if all of the values are not None, otherwise False.
-
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> check_not_none(10)
+    True
+    >>> check_not_none(None, raise_exc=False)
+    False
+    >>> check_not_none(None)
+    ValueError: Unwanted None value
+    ```
     """
 
-    if all(v is not None for v in values):
+    if value is not None:
         return True
 
-    value_names = ", ".join([repr(v) for v in values])
-
-    if exc_msg:
-        exc_msg = exc_msg.format(values=value_names)
-    else:
-        exc_msg = f"At least one of these values are None: {value_names}."
-
     if raise_exc:
-        raise ValueError(exc_msg)
+        raise ValueError(exc_msg or "Unwanted None value")
     return False
 
 
 def check_length(value, /, min_length, max_length=-1, *, raise_exc=True, exc_msg=""):
     """
-    checks.check_length
-    -------------------
-
+    check_length
+    ============
     Verifies the given value has a length in the specified range provided.
-    Either raises a ValueError or returns False depending on raise_exc.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
+    Parameters
+    ----------
     :param value: The value to check.
-
     :type value: Sized
-
     :param min_length: The minimum length allowed (inclusive).
-
     :type min_length: int
-
     :param max_length: The maximum length allowed (inclusive), defaults to -1.
-    - If max_length is negative, there will be no upper length limit.
-
+    - If max_length is negative, there will be no upper length limit.\n
     :type max_length: int, optional
-
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - value: The checked value.
     - min: The minimum length.
     - max: The maximum length.
-    - Ex: exc_msg="len({value}) is not in the range ({min}, {max})."
-
+    - Ex: exc_msg="len({value}) is not in the range ({min}, {max})."\n
     :type exc_msg: str, optional
 
-    :return: True if the value's length is within the inclusive range, otherwise False.
+    Raises
+    ------
+    :raises ValueError: If raise_exc is True and the sized value's length is not in the allowed range.
 
+    Return
+    ------
+    :return: True if the value's length is within the inclusive range, otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> check_length([1, 2, 3], 2, 4)
+    True
+    >>> check_length([0, 1, 2, 3, 4], 1, 3, raise_exc=False)
+    False
+    >>> check_length([0, 1, 2, 3, 4], 1, 3)
+    ValueError: len([0, 1, 2, 3, 4] is not in the range (1, 3))
+    ```
     """
 
     # if the upper limit is not specified, only use a lower limit
@@ -464,100 +481,122 @@ def check_length(value, /, min_length, max_length=-1, *, raise_exc=True, exc_msg
     if exc_msg:
         exc_msg = exc_msg.format(value=repr(value), min=min_length, max=max_length)
     else:
-        exc_msg = (
-            f"len({repr(value)}) is not in the range ({min_length}, {max_length})."
-        )
+        exc_msg = f"len({repr(value)}) is not in the range ({min_length}, {max_length})"
 
     if raise_exc:
         raise ValueError(exc_msg)
     return False
 
 
-def check_regexes(string, *regexes, raise_exc=True, exc_msg=""):
+# pylint: disable=anomalous-backslash-in-string
+def check_regex(string, regex, raise_exc=True, exc_msg=""):
     """
-    checks.check_regexes
-    --------------------
+    check_regex
+    ===========
+    Verifies the given string matches the regex provided.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
-    Verifies the given string matches the regexes provided.
-    Either raises a ValueError or returns False depending on raise_exc.
-
+    Parameters
+    ----------
     :param string: The string to check.
-
     :type string: str
-
-    :param regexes: The regexes to compare to.
-
-    :type regexes: str
-
+    :param regex: The regex to compare to.
+    :type regex: str
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - string: The checked string.
-    - regexes: The regexes to match with.
-    - Ex: exc_msg="{string} does not match any of the regexes: {regexes}."
-
+    - regex: The regex to match with.
+    - Ex: exc_msg="{string} does not match the regex: {regex}."\n
     :type exc_msg: str, optional
 
-    :return: True if the string matches one of the regexes, otherwise False.
+    Raises
+    ------
+    :raises ValueError: If raise_exc is True and the string does not match the regex.
 
+    Return
+    ------
+    :return: True if the string matches the regex, otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> check_regex("name@example.com", r'^\S+@\S+\.\S+$')
+    True
+    >>> check_regex("hello", r'^\S+@\S+\.\S+$', raise_exc=False)
+    False
+    >>> check_regex("hello", r'^\S+@\S+\.\S+$')
+    ValueError: 'hello' does not match the regex: '^\\S+@\\S+\\.\\S+$'
+    ```
     """
 
-    for regex in regexes:
-        if re_match(regex, string):
-            return True
-
-    regex_names = ", ".join([repr(r) for r in regexes])
+    if re_match(regex, string):
+        return True
 
     if exc_msg:
-        exc_msg = exc_msg.format(string=repr(string), regexes=regex_names)
+        exc_msg = exc_msg.format(string=repr(string), regex=repr(regex))
     else:
-        exc_msg = f"{repr(string)} does not match one of the regexes: {regex_names}."
+        exc_msg = f"{repr(string)} does not match the regex: {repr(regex)}"
 
     if raise_exc:
         raise ValueError(exc_msg)
     return False
 
 
-def check_keys_in_dict(dictionary, *keys, raise_exc=True, exc_msg=""):
+def check_key_in_dict(dictionary, key_or_tuple, raise_exc=True, exc_msg=""):
     """
-    checks.check_keys_in_dict
-    -------------------------
+    check_key_in_dict
+    =================
+    Verifies the given dictionary contains the key(s) provided.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
-    Verifies the given dictionary contains the keys provided.
-    Either raises a KeyError or returns False depending on raise_exc.
-
+    Parameters
+    ----------
     :param dictionary: The dictionary to check.
-
     :type dictionary: Dict[Any, Any]
-
-    :param keys: The keys to search for.
-
-    :type keys: Any
-
+    :param key_or_tuple: The key to search for or a tuple of keys to search for.
+    :type key_or_tuple: Any | Tuple[Any, ...]
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - dict: The checked dictionary.
     - keys: The keys to search for.
-    - Ex: exc_msg="{dict} does not contain the keys: {keys}."
-
+    - Ex: exc_msg="{dict} does not contain the keys: {keys}."\n
     :type exc_msg: str, optional
 
-    :return: True if the dictionary contains each of the keys, otherwise False.
+    Raises
+    ------
+    :raises KeyError: If raise_exc is True and the key(s) is/are not in the dictionary.
 
+    Return
+    ------
+    :return: True if the dictionary contains each of the keys, otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> ages = {"Bob": 24, "Martha": 22}
+    >>> check_key_in_dict(ages, ("Bob", "Martha"))
+    True
+    >>> check_key_in_dict(ages, "Kevin", raise_exc=False)
+    False
+    >>> check_key_in_dict(ages, "Kevin")
+    KeyError: "{'Bob': 24, 'Martha': 22} does not contain the keys: 'Kevin'"
+    ```
     """
+
+    if isinstance(key_or_tuple, tuple):
+        keys = key_or_tuple
+    else:
+        keys = (key_or_tuple,)
 
     for k in keys:
         if k in dictionary.keys():
@@ -568,47 +607,62 @@ def check_keys_in_dict(dictionary, *keys, raise_exc=True, exc_msg=""):
     if exc_msg:
         exc_msg = exc_msg.format(dict=repr(dictionary), keys=key_names)
     else:
-        exc_msg = f"{repr(dictionary)} does not contain the keys: {key_names}."
+        exc_msg = f"{repr(dictionary)} does not contain the keys: {key_names}"
 
     if raise_exc:
         raise KeyError(exc_msg)
     return False
 
 
-def check_contains(iterable, *items, raise_exc=True, exc_msg=""):
+def check_contains(iterable, item_or_tuple, raise_exc=True, exc_msg=""):
     """
-    checks.check_contains
-    ---------------------
+    check_contains
+    ==============
+    Verifies the given iterable contains the item(s) provided.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
-    Verifies the given iterable contains the items provided.
-    Either raises a ValueError or returns False depending on raise_exc.
-
+    Parameters
+    ----------
     :param iterable: The iterable to check.
-
     :type iterable: Iterable
-
-    :param items: The items to search for.
-
-    :type items: Any
-
+    :param item_or_tuple: The item to search for or a tuple of items to search for.
+    :type item_or_tuple: Any | Tuple[Any, ...]
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - iter: The checked iterable.
     - items: The items to search for.
-    - Ex: exc_msg="{iter} does not contain the items: {items}."
-
+    - Ex: exc_msg="{iter} does not contain the items: {items}."\n
     :type exc_msg: str, optional
 
-    :return: True if the iterable contains each of the items, otherwise False.
+    Raises
+    ------
+    :raises: ValueError: If raise_exc is True and the iterable does not contain the item(s).
 
+    Return
+    ------
+    :return: True if the iterable contains the item(s), otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> check_contains((0, 1, 2, 3), 3)
+    True
+    >>> check_contains(('a', 'b', 'c', 'd'), 'e', raise_exc=False)
+    False
+    >>> check_contains(('a', 'b', 'c', 'd'), 'e')
+    ValueError: ('a', 'b', 'c', 'd') does not contain the items: 'e'
+    ```
     """
+
+    if isinstance(item_or_tuple, tuple):
+        items = item_or_tuple
+    else:
+        items = (item_or_tuple,)
 
     for i in items:
         if i in iterable:
@@ -619,92 +673,128 @@ def check_contains(iterable, *items, raise_exc=True, exc_msg=""):
     if exc_msg:
         exc_msg = exc_msg.format(iter=repr(iterable), items=item_names)
     else:
-        exc_msg = f"{repr(iterable)} does not contain the items: {item_names}."
+        exc_msg = f"{repr(iterable)} does not contain the items: {item_names}"
 
     if raise_exc:
         raise ValueError(exc_msg)
     return False
 
 
-def check_subclasses(superclass, *subclasses, raise_exc=True, exc_msg=""):
+def check_subclass(superclass, subclass_or_tuple, raise_exc=True, exc_msg=""):
     """
-    checks.check_subclasses
-    -----------------------
+    check_subclass
+    ==============
+    Verifies the given subclass(es) is/are (a) subclass(es) of the superclass.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
-    Verifies the given subclasses are all subclasses of the superclass.
-    Either raises a ValueError or returns False depending on raise_exc.
-
+    Parameters
+    ----------
     :param superclass: The superclass.
-
     :type superclass: Type
-
-    :param subclasses: The subclasses to check.
-
-    :type subclasses: Type
-
+    :param subclass_or_tuple: The subclass or a tuple of subclasses to check.
+    :type subclass_or_tuple: Type | Tuple[Type, ...]
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - super: The superclass.
     - subs: The subclasses.
-    - Ex: exc_msg="Not all of the classes: {subs} are subclasses of {super}."
-
+    - Ex: exc_msg="Not all of the classes: {subs} are subclasses of {super}."\n
     :type exc_msg: str, optional
 
-    :return: True if each of the subclasses are subclasses of the superclass, otherwise False.
+    Raises
+    ------
+    :raises ValueError: If the subclass(es) is/are not (a) subclass(es) of the superclass.
 
+    Return
+    ------
+    :return: True if the subclass(es) is/are (a) subclass(es) of the superclass, otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> check_subclass(Exception, TypeError)
+    True
+    >>> check_subclass(int, str, raise_exc=False)
+    False
+    >>> check_subclass(int, str)
+    ValueError: int is not a superclass of all the classes: str
+    ```
     """
+
+    if isinstance(subclass_or_tuple, tuple):
+        subclasses = subclass_or_tuple
+    else:
+        subclasses = (subclass_or_tuple,)
 
     if all(issubclass(sub, superclass) for sub in subclasses):
         return True
 
-    subclass_names = ", ".join([repr(sub) for sub in subclasses])
+    subclass_names = ", ".join([sub.__name__ for sub in subclasses])
 
     if exc_msg:
-        exc_msg = exc_msg.format(super=repr(superclass), subs=subclass_names)
+        exc_msg = exc_msg.format(super=superclass.__name__, subs=subclass_names)
     else:
-        exc_msg = f"{repr(superclass)} is not a superclass of all the classes: {subclass_names}."
+        exc_msg = f"{superclass.__name__} is not a superclass of all the classes: {subclass_names}"
 
     if raise_exc:
         raise ValueError(exc_msg)
     return False
 
 
-def check_callables(*objs, raise_exc=True, exc_msg=""):
+def check_callable(obj_or_tuple, raise_exc=True, exc_msg=""):
     """
-    checks.check_callables
-    ----------------------
+    check_callable
+    ==============
+    Verifies the given object(s) is/are callable.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
 
-    Verifies the given objects are callable.
-    Either raises a TypeError or returns False depending on raise_exc.
-
-    :param objs: The objects to check.
-
-    :type objs: object
-
+    Parameters
+    ----------
+    :param obj_or_tuple: The object or a tuple of objects to check.
+    :type obj_or_tuple: object | Tuple[object, ...]
     :param raise_exc: Whether to raise an exception, defaults to True
     - If True, the corresponding exception will be raised.
-    - If False, will return False instead of raising an exception.
-
+    - If False, will return False instead of raising an exception.\n
     :type raise_exc: bool, optional
-
     :param exc_msg: A custom exception message if changed, defaults to ""
     - Below is a list of supported fields to be used in an unformatted string:
     - objs: The checked objects.
-    - Ex: exc_msg="{objs} are not all callable."
-
+    - Ex: exc_msg="{objs} are not all callable."\n
     :type exc_msg: str, optional
 
-    :return: True if each of the objects are callable, otherwise False.
+    Raises
+    ------
+    :raises TypeError: If raise_exc is True and the object(s) is/are not callable.
 
+    Return
+    ------
+    :return: True if the object(s) is/are callable, otherwise False.
     :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> def func(*args, **kwargs):
+    ...     return None
+    ...
+    >>> check_callable(func)
+    True
+    >>> x = 5
+    >>> check_callable(x, raise_exc=False)
+    False
+    >>> check_callable(x)
+    TypeError: One of these objects is not callable: 5
+    ```
     """
+
+    if isinstance(obj_or_tuple, tuple):
+        objs = obj_or_tuple
+    else:
+        objs = (obj_or_tuple,)
 
     if all(callable(o) for o in objs):
         return True
@@ -714,7 +804,7 @@ def check_callables(*objs, raise_exc=True, exc_msg=""):
     if exc_msg:
         exc_msg = exc_msg.format(objs=obj_names)
     else:
-        exc_msg = f"At least one of these objects is not callable: {obj_names}."
+        exc_msg = f"One of these objects is not callable: {obj_names}"
 
     if raise_exc:
         raise TypeError(exc_msg)

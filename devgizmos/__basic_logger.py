@@ -1,17 +1,16 @@
 """
 basic_logger
 ============
-
 Module containing an already set up logger to skip the few set up lines of code needed when testing basic logging.
 
+Built-in Utilizations
+---------------------
 This module utilizes the following functionality from built-in modules/packages:
-
 logging
 - DEBUG
 - Formatter
 - Logger
-- StreamHandler
-
+- StreamHandler\n
 typing
 - Union
 """
@@ -19,36 +18,41 @@ typing
 from logging import DEBUG, Formatter, Logger, StreamHandler
 from typing import Union
 
-from .checks import check_types, check_values
+from .checks import check_type, check_value
 
 LoggingLevel = Union[int, str]
 LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
 
 
 class BasicLogger(Logger):
-    """The logger to use when quickly testing logging."""
+    """
+    BasicLogger
+    ===========
+    Logger for quickly testing/logging.
+    """
 
     def __init__(
         self, level=DEBUG, fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     ):
         """
-        Initializer for a BasicLogger object.
+        BasicLogger
+        ===========
+        Logger for quickly testing/logging.
 
+        Parameters
+        ----------
         :param level: The logging level, defaults to logging.DEBUG
-
         :type level: LoggingLevel, optional
-
         :param fmt: The logging format, defaults to "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
         :type fmt: str, optional
         """
 
         # type checks
-        check_types(level, LoggingLevel)
-        check_types(fmt, str)
+        check_type(level, LoggingLevel)
+        check_type(fmt, str)
 
         # value checks
-        check_values(level, *LOGGING_LEVELS)
+        check_value(level, LOGGING_LEVELS)
 
         super().__init__("BasicLogger", level)
 

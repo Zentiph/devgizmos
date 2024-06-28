@@ -1,58 +1,41 @@
 """
 decorators
 ==========
-
-
-Description
------------
-
 Module containing decorators such as timer, retry, benchmark, etc.
-
 
 Built-in Utilizations
 ---------------------
-
 This module utilizes the following functionality from built-in modules/packages:
-
 functools
 - lru_cache
-- wraps
-
+- wraps\n
 logging
 - ERROR
 - INFO
 - WARNING
-- Logger
-
+- Logger\n
 platform
-- system
-
+- system\n
 re
-- findall
-
+- findall\n
 signal (Unix)
 - SIGALRM
 - alarm
-- signal
-
+- signal\n
 statistics
-- mean
-
+- mean\n
 threading (Windows)
-- Thread
-
+- Thread\n
 time
 - perf_counter
 - perf_counter_ns
-- sleep
-
+- sleep\n
 typing
 - Any
 - Callable
 - TypeVar
 - Union
-- get_type_hints
-
+- get_type_hints\n
 warnings
 - warn
 """
@@ -62,7 +45,6 @@ from .__decorators import (
     UnsupportedOSError,
     benchmark,
     cache,
-    call_logger,
     conditional,
     decorate_all_methods,
     deprecated,

@@ -1,40 +1,46 @@
 # pylint: disable=all
 
-from typing import Any, Dict, Iterable, Sequence, Sized, Type, Union
+from typing import Any, Dict, Iterable, Optional, Sequence, Sized, Tuple, Type, Union
 
-def check_types(
+from .. import Number
+
+def check_type(
     value: Any,
     /,
-    *types: Type,
+    types_or_tuple: Union[Type, Tuple[Type, ...]],
     optional: bool = False,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
-def check_values(
-    value: Any, /, *values: Any, raise_exc: bool = True, exc_msg: str = ""
+def check_value(
+    value: Any,
+    /,
+    value_or_tuple: Union[Any, Tuple[Any, ...]],
+    raise_exc: bool = True,
+    exc_msg: str = "",
 ) -> bool: ...
 def check_in_range(
     value: Any,
     seq: Sequence,
     /,
-    start: int = -1,
-    end: int = -1,
+    start: Optional[int] = None,
+    end: Optional[int] = None,
     *,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
 def check_in_bounds(
-    value: Union[int, float],
-    lower: Union[int, float, None],
-    upper: Union[int, float, None],
+    value: Number,
+    lower: Optional[Number],
+    upper: Optional[Number],
     /,
     inclusive: bool = True,
     *,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
-def check_truthy(*values: Any, raise_exc: bool = True, exc_msg: str = "") -> bool: ...
-def check_not_none(*values: Any, raise_exc: bool = True, exc_msg: str = "") -> bool: ...
+def check_truthy(value: Any, raise_exc: bool = True, exc_msg: str = "") -> bool: ...
+def check_not_none(value: Any, raise_exc: bool = True, exc_msg: str = "") -> bool: ...
 def check_length(
     value: Sized,
     /,
@@ -44,21 +50,29 @@ def check_length(
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
-def check_regexes(
-    string: str, *regexes: str, raise_exc: bool = True, exc_msg: str = ""
+def check_regex(
+    string: str, regex: str, raise_exc: bool = True, exc_msg: str = ""
 ) -> bool: ...
-def check_keys_in_dict(
+def check_key_in_dict(
     dictionary: Dict[Any, Any],
-    *keys: Any,
+    key_or_tuple: Union[Any, Tuple[Any, ...]],
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
 def check_contains(
-    iterable: Iterable, *items: Any, raise_exc: bool = True, exc_msg: str = ""
+    iterable: Iterable,
+    item_or_tuple: Union[Any, Tuple[Any, ...]],
+    raise_exc: bool = True,
+    exc_msg: str = "",
 ) -> bool: ...
-def check_subclasses(
-    superclass: Type, *subclasses: Type, raise_exc: bool = True, exc_msg: str = ""
+def check_subclass(
+    superclass: Type,
+    subclass_or_tuple: Union[Type, Tuple[Type, ...]],
+    raise_exc: bool = True,
+    exc_msg: str = "",
 ) -> bool: ...
-def check_callables(
-    *objs: object, raise_exc: bool = True, exc_msg: str = ""
+def check_callable(
+    obj_or_tuple: Union[object, Tuple[object, ...]],
+    raise_exc: bool = True,
+    exc_msg: str = "",
 ) -> bool: ...

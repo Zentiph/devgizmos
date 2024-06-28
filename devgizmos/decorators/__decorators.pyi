@@ -17,7 +17,7 @@ F = TypeVar("F", bound=Callable[..., Any])
 Decorator = Callable[[F], F]
 DecoratedFunc = Decorator
 DecoratedCls = Callable[[Type], Type]
-LoggingLevel = Union[int, str]
+LoggingLevel = int
 
 class UnsupportedOSError(Exception): ...
 class ConditionError(Exception): ...
@@ -39,8 +39,8 @@ def benchmark(
     level: LoggingLevel = INFO,
 ) -> DecoratedFunc: ...
 def retry(
-    max_attempts: int = 3,
-    delay: Union[int, float] = 1,
+    max_attempts: int,
+    delay: Union[int, float],
     backoff_factor: Union[int, float] = 1,
     *,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
@@ -70,11 +70,6 @@ def deprecated(
     version: Union[int, float, str, None] = None,
     date: Optional[str] = None,
 ) -> DecoratedFunc: ...
-def call_logger(
-    fmt: str = "",
-    logger: Optional[Logger] = None,
-    level: LoggingLevel = INFO,
-) -> DecoratedFunc: ...
 def tracer(
     entry_fmt: str = "",
     exit_fmt: str = "",
@@ -88,8 +83,11 @@ def error_logger(
     level: LoggingLevel = ERROR,
 ) -> DecoratedFunc: ...
 def decorate_all_methods(
-    decorator: Decorator, *dec_args: Any, **dec_kwargs: Any
+    decorator: Decorator, *args: Any, **kwargs: Any
 ) -> DecoratedCls: ...
+@overload
+def rate_limit(interval: Union[int, float]) -> DecoratedFunc: ...
+@overload
 def rate_limit(calls: int, period: Union[int, float]) -> DecoratedFunc: ...
 def suppress(
     *exceptions: Type[Exception],
