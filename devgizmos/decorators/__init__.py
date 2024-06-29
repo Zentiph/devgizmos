@@ -54,7 +54,7 @@ from .__decorators import (
     rate_limit,
     retry,
     singleton,
-    suppress,
+    suppressor,
     timeout,
     timer,
     timer_rs,

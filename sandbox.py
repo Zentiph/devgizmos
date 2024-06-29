@@ -9,4 +9,10 @@ import devgizmos.decorators as decs
 
 logger = dgiz.BasicLogger()
 
-cks.check_in_range(10, range(0, 4))
+
+@decs.tracer(entry_fmt=None, exit_fmt=None)
+def test(*args):
+    return all(args)
+
+
+test()

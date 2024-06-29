@@ -50,9 +50,9 @@ def retry(
     max_attempts: int,
     delay: Union[int, float],
     backoff_factor: Union[int, float] = 1,
-    *,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     raise_last: bool = True,
+    *,
     success_fmt: Optional[str] = "",
     failure_fmt: Optional[str] = "",
     logger: Optional[logging.Logger] = None,
@@ -68,18 +68,20 @@ def timeout(
     failure_level: LoggingLevel = logging.WARNING,
 ) -> DecoratedFunc: ...
 def tracer(
-    entry_fmt: str = "",
-    exit_fmt: str = "",
+    *,
+    entry_fmt: Optional[str] = "",
+    exit_fmt: Optional[str] = "",
     logger: Optional[logging.Logger] = None,
     level: LoggingLevel = logging.INFO,
 ) -> DecoratedFunc: ...
 def error_logger(
-    fmt: str = "",
     suppress: bool = True,
+    *,
+    fmt: str = "",
     logger: Optional[logging.Logger] = None,
     level: LoggingLevel = logging.ERROR,
 ) -> DecoratedFunc: ...
-def suppress(
+def suppressor(
     *exceptions: Type[Exception],
     fmt: Optional[str] = "",
     logger: Optional[logging.Logger] = None,

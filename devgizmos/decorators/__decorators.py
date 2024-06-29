@@ -7,6 +7,7 @@ decorators.__decorators
 Module containing decorators.
 """
 
+# --imports-- #
 from collections import OrderedDict
 from functools import wraps
 from logging import ERROR, INFO, WARNING, Logger
@@ -33,6 +34,7 @@ elif system() == "Windows":
     from threading import Thread  # type: ignore
 
 
+# --consts-- #
 F = TypeVar("F", bound=Callable[..., Any])
 Decorator = Callable[[F], F]
 LoggingLevel = int
@@ -48,6 +50,7 @@ LOGGING_LEVELS = (
 )
 
 
+# --exceptions-- #
 class ConditionError(Exception):
     """
     ConditionError
@@ -65,7 +68,7 @@ class UnsupportedOSError(Exception):
     """
 
 
-# helper funcs
+# --helpers-- #
 def _print_msg(fmt, default, **kwargs):
     """
     _print_msg
@@ -153,6 +156,7 @@ def _handle_result_reporting(fmt, default, logger, level, **kwargs):
         _print_msg(fmt, default, **kwargs)
 
 
+# --decorators-- #
 def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
     """
     timer
@@ -514,9 +518,9 @@ def retry(
     max_attempts,
     delay,
     backoff_factor=1,
-    *,
     exceptions=(Exception,),
     raise_last=True,
+    *,
     success_fmt="",
     failure_fmt="",
     logger=None,
@@ -882,7 +886,7 @@ def timeout(
     return decorator
 
 
-def tracer(entry_fmt="", exit_fmt="", logger=None, level=INFO):
+def tracer(*, entry_fmt="", exit_fmt="", logger=None, level=INFO):
     """
     tracer
     ======
@@ -891,22 +895,22 @@ def tracer(entry_fmt="", exit_fmt="", logger=None, level=INFO):
     Parameters
     ----------
     :param entry_fmt: Used to enter a custom message format, defaults to "".
-    - Leave as an empty string to use the pre-made message.
+    - Leave as an empty string to use the pre-made message, or enter None for no message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - args: The arguments passed to the function.
     - kwargs: The keyword arguments passed to the function.
     - Ex: entry_fmt="Entering func {name} with args={args} and kwargs={kwargs}."\n
-    :type entry_fmt: str
+    :type entry_fmt: str | None, optional
     :param exit_fmt: Used to enter a custom message format, defaults to "".
-    - Leave as an empty string to use the pre-made message.
+    - Leave as an empty string to use the pre-made message, or enter None for no message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - args: The arguments passed to the function.
     - kwargs: The keyword arguments passed to the function.
     - returned: The return value of the function.
     - Ex: fmt="Exiting func {name} with args={args} and kwargs={kwargs}; Returned {returned}."\n
-    :type exit_fmt: str
+    :type exit_fmt: str | None, optional
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.\n
     :type logger: Logger | None, optional
@@ -935,40 +939,46 @@ def tracer(entry_fmt="", exit_fmt="", logger=None, level=INFO):
     """
 
     # type checks
-    check_type(entry_fmt, str)
-    check_type(exit_fmt, str)
+    check_type(entry_fmt, str, optional=True)
+    check_type(exit_fmt, str, optional=True)
     check_type(logger, Logger, optional=True)
 
     # value checks
     check_value(level, LOGGING_LEVELS)
 
+    if entry_fmt is None and exit_fmt is None:
+        warn(
+            "Both entry_fmt and exit_fmt are None. No logging will occur.",
+            UserWarning,
+        )
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            entry_fmt_kwargs = {
-                "name": func.__name__,
-                "args": args,
-                "kwargs": kwargs,
-            }
-            entry_default = (
-                f"[TRACER]: ENTERING FUNC {func.__name__} WITH {args=} AND {kwargs=}"
-            )
-            _handle_result_reporting(
-                entry_fmt, entry_default, logger, level, **entry_fmt_kwargs
-            )
+            if entry_fmt is not None:
+                entry_fmt_kwargs = {
+                    "name": func.__name__,
+                    "args": args,
+                    "kwargs": kwargs,
+                }
+                entry_default = f"[TRACER]: ENTERING FUNC {func.__name__} WITH {args=} AND {kwargs=}"
+                _handle_result_reporting(
+                    entry_fmt, entry_default, logger, level, **entry_fmt_kwargs
+                )
 
             result = func(*args, **kwargs)
 
-            exit_fmt_kwargs = {
-                "name": func.__name__,
-                "args": args,
-                "kwargs": kwargs,
-                "returned": result,
-            }
-            exit_default = f"[TRACER]: EXITING FUNC {func.__name__} WITH {args=} AND {kwargs=}; RETURNED {result}"
-            _handle_result_reporting(
-                exit_fmt, exit_default, logger, level, **exit_fmt_kwargs
-            )
+            if exit_fmt is not None:
+                exit_fmt_kwargs = {
+                    "name": func.__name__,
+                    "args": args,
+                    "kwargs": kwargs,
+                    "returned": result,
+                }
+                exit_default = f"[TRACER]: EXITING FUNC {func.__name__} WITH {args=} AND {kwargs=}; RETURNED {result}"
+                _handle_result_reporting(
+                    exit_fmt, exit_default, logger, level, **exit_fmt_kwargs
+                )
 
             return result
 
@@ -977,7 +987,7 @@ def tracer(entry_fmt="", exit_fmt="", logger=None, level=INFO):
     return decorator
 
 
-def error_logger(fmt="", suppress_=True, logger=None, level=ERROR):
+def error_logger(suppress=True, fmt="", logger=None, level=ERROR):
     """
     error_logger
     ============
@@ -1022,7 +1032,7 @@ def error_logger(fmt="", suppress_=True, logger=None, level=ERROR):
 
     # type checks
     check_type(fmt, str)
-    check_type(suppress_, bool)
+    check_type(suppress, bool)
     check_type(logger, Logger, optional=True)
 
     # value checks
@@ -1045,7 +1055,7 @@ def error_logger(fmt="", suppress_=True, logger=None, level=ERROR):
 
                 _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
-                if not suppress_:
+                if not suppress:
                     raise
 
                 return None
@@ -1055,9 +1065,9 @@ def error_logger(fmt="", suppress_=True, logger=None, level=ERROR):
     return decorator
 
 
-def suppress(*exceptions, fmt="", logger=None, level=INFO):
+def suppressor(*exceptions, fmt="", logger=None, level=INFO):
     """
-    suppress
+    suppressor
     ========
     Suppresses any of the given exceptions, returning None if they occur.
 
@@ -1090,12 +1100,12 @@ def suppress(*exceptions, fmt="", logger=None, level=INFO):
     Example Usage
     -------------
     ```python
-    >>> @suppress(ZeroDivisionError)
+    >>> @suppressor(ZeroDivisionError)
     ... def divide(x, y):
     ...     return x / y
     ...
     >>> divide(1, 0)  # will not raise an exception
-    [SUPPRESS]: SUPPRESSED ZeroDivisionError('division by zero') RAISED BY FUNC divide WITH args=(1, 0) AND kwargs={}
+    [SUPPRESSOR]: SUPPRESSED ZeroDivisionError('division by zero') RAISED BY FUNC divide WITH args=(1, 0) AND kwargs={}
     ```
     """
 
@@ -1121,7 +1131,7 @@ def suppress(*exceptions, fmt="", logger=None, level=INFO):
                         "kwargs": kwargs,
                     }
                     default = (
-                        f"[SUPPRESS]: SUPPRESSED {repr(e)} RAISED BY"
+                        f"[SUPPRESSOR]: SUPPRESSED {repr(e)} RAISED BY"
                         + f"FUNC {func.__name__} WITH {args=} AND {kwargs=}"
                     )
 
