@@ -7,7 +7,8 @@ decorators.__decorators
 Module containing decorators.
 """
 
-from functools import lru_cache, wraps
+from collections import OrderedDict
+from functools import wraps
 from logging import ERROR, INFO, WARNING, Logger
 from platform import system
 from re import findall
@@ -731,7 +732,7 @@ def timeout(
     return decorator
 
 
-def cache(maxsize=None):
+def cache(maxsize=None, *, type_specific=False):
     """
     cache
     =====
@@ -744,10 +745,14 @@ def cache(maxsize=None):
     :param maxsize: The maximum number of results to store in the cache using an LRU system, defaults to None.
     - Enter None for no size limitation.\n
     :type maxsize: int | None, optional
+    :param type_specific: Whether to cache results differently depending on differently
+    typed yet equal parameters, such as func(1) vs func(1.0), defaults to False.
+    :type type_specific: bool, optional
 
     Raises
     ------
     :raises TypeError: If maxsize is not an int or None.
+    :raises TypeError: If type_specific is not a bool.
     :raises ValueError: If maxsize is less than 1.
 
     Example Usage
@@ -771,25 +776,30 @@ def cache(maxsize=None):
     """
 
     check_type(maxsize, int, optional=True)
+    check_type(type_specific, bool)
 
     def decorator(func):
-        cache_ = {}
+        cache_ = OrderedDict()
 
-        # if a maxsize is specified, use LRU caching
-        if maxsize is not None:
-            check_in_bounds(maxsize, 1, None)
-
-            cached = lru_cache(maxsize)(func)
-            return wraps(func)(cached)
-
-        # otherwise use regular caching
         @wraps(func)
         def wrapper(*args, **kwargs):
-            key = (args, frozenset(kwargs.items()))
+            if type_specific:
+                key = (
+                    tuple((type(arg), arg) for arg in args),
+                    tuple((type(v), k, v) for k, v in kwargs.items()),
+                )
+            else:
+                key = (args, tuple(kwargs.items()))
+
             if key in cache_:
+                cache_.move_to_end(key)
                 return cache_[key]
 
             result = func(*args, **kwargs)
+
+            if maxsize is not None and len(cache_) >= maxsize:
+                cache_.popitem(last=False)
+
             cache_[key] = result
             return result
 

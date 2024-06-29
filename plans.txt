@@ -9,5 +9,6 @@ plans for devgizmos
 	- product (over args, or an iterable)
 	- ...
 4. add type verifying to checks.py
-5. lightweight version of the package
+5. lightweight version of the package (probably not any time soon)
 6. add support for self arg when class methods are decorated (print self or nothing instead of cls.__repr__())
+7. types module for custom types

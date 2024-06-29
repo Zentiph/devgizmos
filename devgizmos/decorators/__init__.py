@@ -6,8 +6,9 @@ Module containing decorators such as timer, retry, benchmark, etc.
 Built-in Utilizations
 ---------------------
 This module utilizes the following functionality from built-in modules/packages:
+collections
+- OrderedDict
 functools
-- lru_cache
 - wraps\n
 logging
 - ERROR
