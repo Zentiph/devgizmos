@@ -47,8 +47,6 @@ LOGGING_LEVELS = (
     50,  # CRITICAL, FATAL
 )
 
-# TODO: ALLOW fmt TO BE NONE FOR NO MESSAGE
-
 
 class ConditionError(Exception):
     """
@@ -81,6 +79,7 @@ def _print_msg(fmt, default, **kwargs):
     :param default: The default message.
     :type default: str
     :param kwargs: The kwargs to be formatted into the message.
+    :type kwargs: Any
     """
 
     msg = None
@@ -248,7 +247,69 @@ def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
     return decorator
 
 
-def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO):
+def timer_rs(unit="ns", precision=3):
+    """
+    timer_rs
+    ========
+    Acts like timer, but returns the stats.
+    Times how long function it is decorated to takes to run,
+    and returns a tuple containing the result and the time elapsed.
+
+    Parameter
+    ---------
+    :param unit: The unit of time to use, defaults to "ns".
+    - Supported units are "ns", "us", "ms", "s".\n
+    :type unit: Literal["ns", "us", "ms", "s"], optional
+    :param precision: The precision to use when rounding the time, defaults to 3
+    :type precision: int, optional
+
+    Raises
+    ------
+    :raises TypeError: If precision is not an int.
+    :raises ValueError: If unit is not 'ns', 'us', 'ms', or 's'.
+
+    Example Usage
+    -------------
+    ```python
+    >>> from time import sleep
+    >>>
+    >>> @timer_rs()
+    ... def perf_example():
+    ...     sleep(0.001)
+    ...
+    >>> perf_example()
+    (None, 1095800.0)
+    ```
+    """
+
+    # type checks
+    check_type(precision, int)
+
+    # value checks
+    check_value(unit, TIME_UNITS)
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            local_unit = unit.lower()
+            if local_unit not in TIME_UNITS:
+                local_unit = "ns"
+
+            start_time = perf_counter_ns()
+            result = func(*args, **kwargs)
+
+            delta = perf_counter_ns() - start_time
+            elapsed = delta / (1000 ** TIME_UNITS.index(local_unit))
+            rounded = round(elapsed, precision)
+
+            return result, rounded
+
+        return wrapper
+
+    return decorator
+
+
+def benchmark(trials=10, unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
     """
     benchmark
     =========
@@ -340,9 +401,9 @@ def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO
 
                 results.append(elapsed)
 
-            avg_time = round(mean(results), precision)
-            min_time = round(min(results), precision)
-            max_time = round(max(results), precision)
+            avg_time = float(round(mean(results), precision))
+            min_time = float(round(min(results), precision))
+            max_time = float(round(max(results), precision))
 
             fmt_kwargs = {
                 "name": func.__name__,
@@ -362,6 +423,87 @@ def benchmark(trials=10, unit="ns", precision=3, fmt="", logger=None, level=INFO
             _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
             return returned[0]
+
+        return wrapper
+
+    return decorator
+
+
+def benchmark_rs(trials=10, unit="ns", precision=3):
+    """
+    benchmark_rs
+    ============
+    Acts like benchmark, but returns the stats.
+    Runs the function multiple times and returns a tuple containing
+    the result along with the average, min, and max execution times.
+
+    Parameters
+    ----------
+    :param trials: The number of times to run the function, defaults to 10.
+    :type trials: int
+    :param unit: The unit of time to use, defaults to "ns".
+    - Supported units are "ns", "us", "ms", "s".\n
+    :type unit: Literal["ns", "us", "ms", "s"], optional
+    :param precision: The precision to use when rounding the time, defaults to 3
+    :type precision: int, optional
+
+    Raises
+    ------
+    :raises TypeError: If trials is not an int.
+    :raises TypeError: If precision is not an int.
+    :raises ValueError: If trials is less than 1.
+    :raises ValueError: If unit is not 'ns', 'us', 'ms', or 's'.
+
+    Example Usage
+    -------------
+    ```python
+    >>> from time import sleep
+    >>>
+    >>> @benchmark_rs()
+    ... def perf_example():
+    ...     sleep(0.001)
+    ...
+    >>> perf_example()
+    (None, 1121070.0, 1074200.0, 1266400.0)
+    ```
+    """
+
+    # type checks
+    check_type(trials, int)
+    check_type(precision, int)
+
+    # value checks
+    check_in_bounds(trials, 1, None)
+    check_value(unit, TIME_UNITS)
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            local_unit = unit.lower()
+            if local_unit not in TIME_UNITS:
+                local_unit = "ns"
+
+            results = []
+            returned = [None]
+
+            for i in range(trials):
+                start_time = perf_counter_ns()
+
+                if i == len(range(trials)) - 1:
+                    returned[0] = func(*args, **kwargs)
+                else:
+                    func(*args, **kwargs)
+
+                delta = perf_counter_ns() - start_time
+                elapsed = delta / (1000 ** TIME_UNITS.index(local_unit))
+
+                results.append(elapsed)
+
+            avg_time = float(round(mean(results), precision))
+            min_time = float(round(min(results), precision))
+            max_time = float(round(max(results), precision))
+
+            return returned[0], avg_time, min_time, max_time
 
         return wrapper
 
@@ -400,7 +542,7 @@ def retry(
     defaults to True
     :type raise_last: bool, optional
     :param success_fmt: Used to enter a custom success message format, defaults to "".
-    - Leave as an empty string to use the pre-made message.
+    - Leave as an empty string to use the pre-made message, or enter None for no message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - attempts: The number of attempts that ran.
@@ -410,9 +552,9 @@ def retry(
     - kwargs: The keyword arguments passed to the function.
     - returned: The return value of the function.
     - Ex: success_fmt="Func {name} took {attempts}/{max_attempts} attempts to run."\n
-    :type success_fmt: str, optional
+    :type success_fmt: str | None, optional
     :param failure_fmt: Used to enter a custom failure message format, defaults to "".
-    - Leave as an empty string to use the pre-made message.
+    - Leave as an empty string to use the pre-made message, or enter None for no message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - attempts: The current number of attempts.
@@ -422,7 +564,7 @@ def retry(
     - args: The arguments passed to the function.
     - kwargs: The keyword arguments passed to the function.
     - Ex: failure_fmt="Func {name} failed at attempt {attempts}/{max_attempts}."\n
-    :type failure_fmt: str, optional
+    :type failure_fmt: str | None, optional
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.\n
     :type logger: Logger | None, optional
@@ -466,8 +608,8 @@ def retry(
     check_type(exceptions, tuple)
     check_subclass(BaseException, *exceptions)
     check_type(raise_last, bool)
-    check_type(success_fmt, str)
-    check_type(failure_fmt, str)
+    check_type(success_fmt, str, optional=True)
+    check_type(failure_fmt, str, optional=True)
     check_type(logger, Logger, optional=True)
 
     # value checks
@@ -485,40 +627,48 @@ def retry(
                 try:
                     result = func(*args, **kwargs)
 
-                    fmt_kwargs = {
-                        "name": func.__name__,
-                        "attempts": attempts + 1,
-                        "max_attempts": max_attempts,
-                        "exceptions": exceptions,
-                        "args": args,
-                        "kwargs": kwargs,
-                        "returned": repr(result),
-                    }
-                    default = f"[RETRY]: {func.__name__} SUCCESSFULLY RAN AFTER {attempts + 1}/{max_attempts} ATTEMPTS"
+                    if success_fmt is not None:
+                        fmt_kwargs = {
+                            "name": func.__name__,
+                            "attempts": attempts + 1,
+                            "max_attempts": max_attempts,
+                            "exceptions": exceptions,
+                            "args": args,
+                            "kwargs": kwargs,
+                            "returned": repr(result),
+                        }
+                        default = (
+                            f"[RETRY]: {func.__name__} SUCCESSFULLY RAN"
+                            + f"AFTER {attempts + 1}/{max_attempts} ATTEMPTS"
+                        )
 
-                    _handle_result_reporting(
-                        success_fmt, default, logger, level, **fmt_kwargs
-                    )
+                        _handle_result_reporting(
+                            success_fmt, default, logger, level, **fmt_kwargs
+                        )
 
                     return result
 
                 except exceptions as e:
                     attempts += 1
 
-                    fmt_kwargs = {
-                        "name": func.__name__,
-                        "attempts": attempts,
-                        "max_attempts": max_attempts,
-                        "exceptions": exceptions,
-                        "raised": repr(e),
-                        "args": args,
-                        "kwargs": kwargs,
-                    }
-                    default = f"[RETRY]: {func.__name__} FAILED AT ATTEMPT {attempts}/{max_attempts}; RAISED {repr(e)}"
+                    if failure_fmt is not None:
+                        fmt_kwargs = {
+                            "name": func.__name__,
+                            "attempts": attempts,
+                            "max_attempts": max_attempts,
+                            "exceptions": exceptions,
+                            "raised": repr(e),
+                            "args": args,
+                            "kwargs": kwargs,
+                        }
+                        default = (
+                            f"[RETRY]: {func.__name__} FAILED"
+                            + f"AT ATTEMPT {attempts}/{max_attempts}; RAISED {repr(e)}"
+                        )
 
-                    _handle_result_reporting(
-                        failure_fmt, default, logger, level, **fmt_kwargs
-                    )
+                        _handle_result_reporting(
+                            failure_fmt, default, logger, level, **fmt_kwargs
+                        )
 
                     if attempts >= max_attempts and raise_last:
                         raise
@@ -556,19 +706,19 @@ def timeout(
     :param cutoff: The cutoff time, in seconds.
     :type cutoff: int | float
     :param success_fmt: Used to enter a custom success message format if changed, defaults to "".
-    - Leave as an empty string to use the pre-made message.
+    - Leave as an empty string to use the pre-made message, or enter None for no message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - cutoff: The cutoff time.\n
-    :type success_fmt: str, optional
+    :type success_fmt: str | None, optional
     :param failure_fmt: Used to enter a custom failure message format if changed, defaults to "".
-    - Leave as an empty string to use the pre-made message.
+    - Leave as an empty string to use the pre-made message, or enter None for no message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - cutoff: The cutoff time.
     - args: The arguments passed to the function.
     - kwargs: The keyword arguments passed to the function.\n
-    :type failure_fmt: str, optional
+    :type failure_fmt: str | None, optional
     :param logger: The logger to use if desired, defaults to None.
     - If a logger is used, the result message will not be printed and will instead be passed to the logger.\n
     :type logger: Logger | None, optional
@@ -632,36 +782,36 @@ def timeout(
                     result = func(*args, **kwargs)
                     alarm(0)
 
-                    fmt_kwargs = {
-                        "name": func.__name__,
-                        "cutoff": cutoff,
-                        "args": args,
-                        "kwargs": kwargs,
-                    }
-                    default = f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
+                    if success_fmt is not None:
+                        fmt_kwargs = {
+                            "name": func.__name__,
+                            "cutoff": cutoff,
+                            "args": args,
+                            "kwargs": kwargs,
+                        }
+                        default = f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
 
-                    _handle_result_reporting(
-                        success_fmt, default, logger, success_level, **fmt_kwargs
-                    )
+                        _handle_result_reporting(
+                            success_fmt, default, logger, success_level, **fmt_kwargs
+                        )
 
                     return result
 
                 except TimeoutError:
                     alarm(0)
 
-                    fmt_kwargs = {
-                        "name": func.__name__,
-                        "cutoff": cutoff,
-                        "args": args,
-                        "kwargs": kwargs,
-                    }
-                    default = (
-                        f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS"
-                    )
+                    if failure_fmt is not None:
+                        fmt_kwargs = {
+                            "name": func.__name__,
+                            "cutoff": cutoff,
+                            "args": args,
+                            "kwargs": kwargs,
+                        }
+                        default = f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS"
 
-                    _handle_result_reporting(
-                        failure_fmt, default, logger, failure_level, **fmt_kwargs
-                    )
+                        _handle_result_reporting(
+                            failure_fmt, default, logger, failure_level, **fmt_kwargs
+                        )
 
                     raise
 
@@ -688,19 +838,18 @@ def timeout(
                 if thread.is_alive():
                     thread.join()
 
-                    fmt_kwargs = {
-                        "name": func.__name__,
-                        "cutoff": cutoff,
-                        "args": args,
-                        "kwargs": kwargs,
-                    }
-                    default = (
-                        f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS"
-                    )
+                    if failure_fmt is not None:
+                        fmt_kwargs = {
+                            "name": func.__name__,
+                            "cutoff": cutoff,
+                            "args": args,
+                            "kwargs": kwargs,
+                        }
+                        default = f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS"
 
-                    _handle_result_reporting(
-                        failure_fmt, default, logger, failure_level, **fmt_kwargs
-                    )
+                        _handle_result_reporting(
+                            failure_fmt, default, logger, failure_level, **fmt_kwargs
+                        )
 
                     raise TimeoutError(default)
 
@@ -709,15 +858,16 @@ def timeout(
                     # pylint: disable=raising-bad-type
                     raise result[0]
 
-                fmt_kwargs = {
-                    "name": func.__name__,
-                    "cutoff": cutoff,
-                }
-                default = f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
+                if success_fmt is not None:
+                    fmt_kwargs = {
+                        "name": func.__name__,
+                        "cutoff": cutoff,
+                    }
+                    default = f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
 
-                _handle_result_reporting(
-                    success_fmt, default, logger, success_level, **fmt_kwargs
-                )
+                    _handle_result_reporting(
+                        success_fmt, default, logger, success_level, **fmt_kwargs
+                    )
 
                 return result[0]
 
@@ -726,228 +876,6 @@ def timeout(
                 "The detected OS is not Unix or Windows."
                 + "If this is an unexpected issue, open an issue or send an email."
             )
-
-        return wrapper
-
-    return decorator
-
-
-def cache(maxsize=None, *, type_specific=False):
-    """
-    cache
-    =====
-    Caches the output of the decorated function and instantly returns it
-    when given the same args and kwargs later.
-    Uses LRU caching if a maxsize is provided.
-
-    Parameters
-    ----------
-    :param maxsize: The maximum number of results to store in the cache using an LRU system, defaults to None.
-    - Enter None for no size limitation.\n
-    :type maxsize: int | None, optional
-    :param type_specific: Whether to cache results differently depending on differently
-    typed yet equal parameters, such as func(1) vs func(1.0), defaults to False.
-    :type type_specific: bool, optional
-
-    Raises
-    ------
-    :raises TypeError: If maxsize is not an int or None.
-    :raises TypeError: If type_specific is not a bool.
-    :raises ValueError: If maxsize is less than 1.
-
-    Example Usage
-    -------------
-    ```python
-    >>> from random import random
-    >>>
-    >>> @cache()
-    ... def random_results(*args):
-    ...     return random()
-    ...
-    >>> random_results()
-    0.6741799332584445
-    >>> random_results()
-    0.6741799332584445
-    >>> random_results(2)
-    0.8902874918377771
-    >>> random_results(2)
-    0.8902874918377771
-    ```
-    """
-
-    check_type(maxsize, int, optional=True)
-    check_type(type_specific, bool)
-
-    def decorator(func):
-        cache_ = OrderedDict()
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            if type_specific:
-                key = (
-                    tuple((type(arg), arg) for arg in args),
-                    tuple((type(v), k, v) for k, v in kwargs.items()),
-                )
-            else:
-                key = (args, tuple(kwargs.items()))
-
-            if key in cache_:
-                cache_.move_to_end(key)
-                return cache_[key]
-
-            result = func(*args, **kwargs)
-
-            if maxsize is not None and len(cache_) >= maxsize:
-                cache_.popitem(last=False)
-
-            cache_[key] = result
-            return result
-
-        return wrapper
-
-    return decorator
-
-
-def singleton():
-    """
-    singleton
-    =========
-    Ensures only one instance of a class can exist at once.
-
-    Example Usage
-    -------------
-    ```python
-    >>> @singleton()
-    ... class Single:
-    ...     def __init__(self, x):
-    ...             self.x = x
-    ...
-    >>> s1 = Single(1)
-    >>> s2 = Single(2)
-    >>> s1.x
-    1
-    >>> s2.x
-    1
-    >>> s1 is s2
-    True
-    ```
-    """
-
-    instances = {}
-
-    def decorator(cls):
-        @wraps(cls)
-        def wrapper(*args, **kwargs):
-            if cls not in instances:
-                instances[cls] = cls(*args, **kwargs)
-            return instances[cls]
-
-        return wrapper
-
-    return decorator
-
-
-def type_checker():
-    """
-    type_checker
-    ============
-    Ensures the arguments passed to the decorated function are of the correct type based on the type hints.
-
-    Raises
-    ------
-    :raises TypeError: If the args or kwargs passed do not match the function's type hints.
-    :raises TypeError: If the return value does not match the function's type hints.
-
-    Example Usage
-    -------------
-    >>> @type_checker()
-    ... def typed_fun(a: int, b: float) -> str:
-    ...     return str(a + b)
-    ...
-    >>> typed_fun(2, 1.0)
-    '3.0'
-    >>> typed_fun(3.2, 5)
-    TypeError: Argument 'a' must be type 'int'
-    """
-
-    def decorator(func):
-        hints = get_type_hints(func)
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            for name, value in zip(func.__code__.co_varnames, args):
-                if name in hints and not isinstance(value, hints[name]):
-                    raise TypeError(
-                        f"Argument '{name}' must be type '{hints[name].__name__}'"
-                    )
-
-            for name, value in kwargs.items():
-                if name in hints and not isinstance(value, hints[name]):
-                    raise TypeError(
-                        f"Argument '{name}' must be type '{hints[name].__name__}'"
-                    )
-
-            result = func(*args, **kwargs)
-
-            if "return" in hints and not isinstance(result, hints["return"]):
-                raise TypeError(
-                    f"Return value must be type '{hints['return'].__name__}'"
-                )
-            return result
-
-        return wrapper
-
-    return decorator
-
-
-def deprecated(reason, version=None, date=None):
-    """
-    deprecated
-    ==========
-    Creates a DeprecationWarning to show the decorated function or class is deprecated.
-
-    Parameters
-    ----------
-    :param reason: The reason for deprecation.
-    :type reason: str
-    :param version: The version number of the function, defaults to None.
-    :type version: int | float | str | None, optional
-    :param date: The date of removal.
-    :type date: str | None, optional
-
-    Raises
-    ------
-    :raises TypeError: If reason is not a str.
-    :raises TypeError: If version is not an int, float, str, or None.
-    :raises TypeError: If date is not a str or None.
-
-    Example Usage
-    -------------
-    >>> @deprecated("We found a better way to do this", "v1.0.3")
-    ... def old_func(*args, **kwargs):
-    ...     return all(args)
-    ...
-    >>> old_func(1, 2)
-    <stdin>:1: DeprecationWarning: old_func is deprecated: We found a better way to do this (Ver: v1.0.3)
-    True
-    """
-
-    # type checks
-    check_type(reason, str)
-    check_type(version, (int, float, str), optional=True)
-    check_type(date, str, optional=True)
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            msg = f"{func.__name__} is deprecated: {reason}"
-            if version:
-                msg += f" (Ver: {version})"
-            if date:
-                msg += f" (Removal: {date})"
-
-            warn(msg, DeprecationWarning, stacklevel=2)
-            return func(*args, **kwargs)
 
         return wrapper
 
@@ -1127,56 +1055,139 @@ def error_logger(fmt="", suppress_=True, logger=None, level=ERROR):
     return decorator
 
 
-def decorate_all_methods(decorator, *args, **kwargs):
+def suppress(*exceptions, fmt="", logger=None, level=INFO):
     """
-    decorate_all_methods
-    ====================
-    Decorates all the methods in a class with the given decorator,
-    ignoring magic/dunder methods.
+    suppress
+    ========
+    Suppresses any of the given exceptions, returning None if they occur.
 
     Parameters
     ----------
-    :param decorator: The decorator to apply to each method.
-    :type decorator: Decorator
-    :param args: The arguments passed to the decorator.
-    :type args: Any
-    :param kwargs: The keyword arguments passed to the decorator.
-    :type kwargs: Any
+    :param exceptions: The exceptions to suppress if they occurs.
+    :type exceptions: Type[Exception]
+    :param fmt: Used to enter a custom message format, defaults to "".
+    - Leave as an empty string to use the pre-made message, or enter None for no message.
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - raised: The error raised.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - Ex: fmt="Func {name} was called with args={args} and kwargs={kwargs} and raised {raised}."\n
+    :type fmt: str | None, optional
+    :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.\n
+    :type logger: Logger | None, optional
+    :param level: The logging level to use, defaults to logging.ERROR (20).
+    :type level: LoggingLevel, optional
 
     Raises
     ------
-    :raises TypeError: If decorator is not callable.
+    :raises TypeError: If any of the exceptions are not a subclass of BaseException.
+    :raises TypeError: If fmt is not a str.
+    :raises TypeError: If logger is not a logging.Logger.
+    :raises ValueError: If level is not a level from logging.
 
     Example Usage
     -------------
-    >>> @decorate_all_methods(tracer, exit_fmt=None)
-    ... class MyClass:
-    ...     def __init__(self, a):
-    ...             self.a = a
-    ...     def __repr__(self):
-    ...             return f"MyClass(a={self.a})"
-    ...     def add_to_a(self, x):
-    ...             self.a += x
+    ```python
+    >>> @suppress(ZeroDivisionError)
+    ... def divide(x, y):
+    ...     return x / y
     ...
-    >>> cls = MyClass(1)
-    >>> cls.add_to_a(2)
-    [TRACER]: ENTERING add_to_a WITH args=(MyClass(a=3), 2) AND kwargs={}
+    >>> divide(1, 0)  # will not raise an exception
+    [SUPPRESS]: SUPPRESSED ZeroDivisionError('division by zero') RAISED BY FUNC divide WITH args=(1, 0) AND kwargs={}
+    ```
     """
 
     # type checks
-    check_callable(decorator)
+    check_subclass(BaseException, *exceptions)
+    check_type(fmt, str)
+    check_type(logger, Logger, optional=True)
 
-    def decorator_(cls):
-        for attr_name, attr_value in cls.__dict__.items():
-            if callable(attr_value) and not (
-                attr_name.startswith("__") and attr_name.endswith("__")
-            ):
-                attr_value = decorator(*args, **kwargs)(attr_value)
-                setattr(cls, attr_name, attr_value)
+    # value checks
+    check_value(level, LOGGING_LEVELS)
 
-        return cls
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except exceptions as e:
+                if fmt is not None:
+                    fmt_kwargs = {
+                        "name": func.__name__,
+                        "raised": repr(e),
+                        "args": args,
+                        "kwargs": kwargs,
+                    }
+                    default = (
+                        f"[SUPPRESS]: SUPPRESSED {repr(e)} RAISED BY"
+                        + f"FUNC {func.__name__} WITH {args=} AND {kwargs=}"
+                    )
 
-    return decorator_
+                    _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+
+                return None
+
+        return wrapper
+
+    return decorator
+
+
+def conditional(condition, *, raise_exc=False):
+    """
+    conditional
+    ===========
+    Executes the decorated function only if the condition is met.
+
+    Parameters
+    ----------
+    :param condition: The condition to meet.
+    :type condition: Callable[..., bool]
+    :param raise_exc: Whether to raise an exception if the condition is not met, defaults to False.
+    :type raise_exc: bool, optional
+
+    Raises
+    ------
+    :raises TypeError: If condition is not callable.
+    :raises TypeError: If raise_exc is not a bool.
+    :raises ConditionError: If the condition is not met and raise_exc is True.
+
+    Example Usage
+    -------------
+    ```python
+    >>> @conditional(lambda x: x > 0, raise_exc=True)
+    ... def positives_only(x):
+    ...     return x
+    ...
+    >>> positives_only(1)
+    1
+    >>> positives_only(-1)
+    ConditionError: Condition was not met: <lambda> args=(-1,) kwargs={}
+    ```
+    """
+
+    # type checks
+    if not callable(condition):
+        raise TypeError("'condition' must be callable")
+    check_type(raise_exc, bool)
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if condition(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            if raise_exc:
+                raise ConditionError(
+                    f"Condition was not met: {condition.__name__} {args=} {kwargs=}"
+                )
+
+            return None
+
+        return wrapper
+
+    return decorator
 
 
 def rate_limit(*args):
@@ -1267,131 +1278,274 @@ def rate_limit(*args):
     return decorator
 
 
-def suppress(*exceptions, fmt="", logger=None, level=INFO):
+def cache(maxsize=None, *, type_specific=False):
     """
-    suppress
-    ========
-    Suppresses any of the given exceptions, returning None if they occur.
+    cache
+    =====
+    Caches the output of the decorated function and instantly returns it
+    when given the same args and kwargs later.
+    Uses LRU caching if a maxsize is provided.
 
     Parameters
     ----------
-    :param exceptions: The exceptions to suppress if they occurs.
-    :type exceptions: Type[Exception]
-    :param fmt: Used to enter a custom message format, defaults to "".
-    - Leave as an empty string to use the pre-made message.
-    - Enter an unformatted string with the following fields to include their values
-    - name: The name of the function.
-    - raised: The error raised.
-    - args: The arguments passed to the function.
-    - kwargs: The keyword arguments passed to the function.
-    - Ex: fmt="Func {name} was called with args={args} and kwargs={kwargs} and raised {raised}."\n
-    :type fmt: str, optional
-    :param logger: The logger to use if desired, defaults to None.
-    - If a logger is used, the result message will not be printed and will instead be passed to the logger.\n
-    :type logger: Logger | None, optional
-    :param level: The logging level to use, defaults to logging.ERROR (20).
-    :type level: LoggingLevel, optional
+    :param maxsize: The maximum number of results to store in the cache using an LRU system, defaults to None.
+    - Enter None for no size limitation.\n
+    :type maxsize: int | None, optional
+    :param type_specific: Whether to cache results differently depending on differently
+    typed yet equal parameters, such as func(1) vs func(1.0), defaults to False.
+    :type type_specific: bool, optional
 
     Raises
     ------
-    :raises TypeError: If any of the exceptions are not a subclass of BaseException.
-    :raises TypeError: If fmt is not a str.
-    :raises TypeError: If logger is not a logging.Logger.
-    :raises ValueError: If level is not a level from logging.
+    :raises TypeError: If maxsize is not an int or None.
+    :raises TypeError: If type_specific is not a bool.
+    :raises ValueError: If maxsize is less than 1.
 
     Example Usage
     -------------
     ```python
-    >>> @suppress(ZeroDivisionError)
-    ... def divide(x, y):
-    ...     return x / y
+    >>> from random import random
+    >>>
+    >>> @cache()
+    ... def random_results(*args):
+    ...     return random()
     ...
-    >>> divide(1, 0)  # will not raise an exception
-    [SUPPRESS]: SUPPRESSED ZeroDivisionError('division by zero') RAISED BY FUNC divide WITH args=(1, 0) AND kwargs={}
+    >>> random_results()
+    0.6741799332584445
+    >>> random_results()
+    0.6741799332584445
+    >>> random_results(2)
+    0.8902874918377771
+    >>> random_results(2)
+    0.8902874918377771
     ```
     """
 
-    # type checks
-    check_subclass(BaseException, *exceptions)
-    check_type(fmt, str)
-    check_type(logger, Logger, optional=True)
-
-    # value checks
-    check_value(level, LOGGING_LEVELS)
+    check_type(maxsize, int, optional=True)
+    check_type(type_specific, bool)
 
     def decorator(func):
+        cache_ = OrderedDict()
+
         @wraps(func)
         def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except exceptions as e:
-                fmt_kwargs = {
-                    "name": func.__name__,
-                    "raised": repr(e),
-                    "args": args,
-                    "kwargs": kwargs,
-                }
-                default = f"[SUPPRESS]: SUPPRESSED {repr(e)} RAISED BY FUNC {func.__name__} WITH {args=} AND {kwargs=}"
+            if type_specific:
+                key = (
+                    tuple((type(arg), arg) for arg in args),
+                    tuple((type(v), k, v) for k, v in kwargs.items()),
+                )
+            else:
+                key = (args, tuple(kwargs.items()))
 
-                _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+            if key in cache_:
+                cache_.move_to_end(key)
+                return cache_[key]
 
-                return None
+            result = func(*args, **kwargs)
+
+            if maxsize is not None and len(cache_) >= maxsize:
+                cache_.popitem(last=False)
+
+            cache_[key] = result
+            return result
 
         return wrapper
 
     return decorator
 
 
-def conditional(condition, *, raise_exc=False):
+def deprecated(reason, version=None, date=None):
     """
-    conditional
-    ===========
-    Executes the decorated function only if the condition is met.
+    deprecated
+    ==========
+    Creates a DeprecationWarning to show the decorated function or class is deprecated.
 
     Parameters
     ----------
-    :param condition: The condition to meet.
-    :type condition: Callable[..., bool]
-    :param raise_exc: Whether to raise an exception if the condition is not met, defaults to False.
-    :type raise_exc: bool, optional
+    :param reason: The reason for deprecation.
+    :type reason: str
+    :param version: The version number of the function, defaults to None.
+    :type version: int | float | str | None, optional
+    :param date: The date of removal.
+    :type date: str | None, optional
 
     Raises
     ------
-    :raises TypeError: If condition is not callable.
-    :raises TypeError: If raise_exc is not a bool.
-    :raises ConditionError: If the condition is not met and raise_exc is True.
+    :raises TypeError: If reason is not a str.
+    :raises TypeError: If version is not an int, float, str, or None.
+    :raises TypeError: If date is not a str or None.
 
     Example Usage
     -------------
-    ```python
-    >>> @conditional(lambda x: x > 0, raise_exc=True)
-    ... def positives_only(x):
-    ...     return x
+    >>> @deprecated("We found a better way to do this", "v1.0.3")
+    ... def old_func(*args, **kwargs):
+    ...     return all(args)
     ...
-    >>> positives_only(1)
-    1
-    >>> positives_only(-1)
-    ConditionError: Condition was not met: <lambda> args=(-1,) kwargs={}
-    ```
+    >>> old_func(1, 2)
+    <stdin>:1: DeprecationWarning: old_func is deprecated: We found a better way to do this (Ver: v1.0.3)
+    True
     """
 
     # type checks
-    if not callable(condition):
-        raise TypeError("'condition' must be callable")
-    check_type(raise_exc, bool)
+    check_type(reason, str)
+    check_type(version, (int, float, str), optional=True)
+    check_type(date, str, optional=True)
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if condition(*args, **kwargs):
-                return func(*args, **kwargs)
+            msg = f"{func.__name__} is deprecated: {reason}"
+            if version:
+                msg += f" (Ver: {version})"
+            if date:
+                msg += f" (Removal: {date})"
 
-            if raise_exc:
-                raise ConditionError(
-                    f"Condition was not met: {condition.__name__} {args=} {kwargs=}"
+            warn(msg, DeprecationWarning, stacklevel=2)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def decorate_all_methods(decorator, *args, **kwargs):
+    """
+    decorate_all_methods
+    ====================
+    Decorates all the methods in a class with the given decorator,
+    ignoring magic/dunder methods.
+
+    Parameters
+    ----------
+    :param decorator: The decorator to apply to each method.
+    :type decorator: Decorator
+    :param args: The arguments passed to the decorator.
+    :type args: Any
+    :param kwargs: The keyword arguments passed to the decorator.
+    :type kwargs: Any
+
+    Raises
+    ------
+    :raises TypeError: If decorator is not callable.
+
+    Example Usage
+    -------------
+    >>> @decorate_all_methods(tracer, exit_fmt=None)
+    ... class MyClass:
+    ...     def __init__(self, a):
+    ...             self.a = a
+    ...     def __repr__(self):
+    ...             return f"MyClass(a={self.a})"
+    ...     def add_to_a(self, x):
+    ...             self.a += x
+    ...
+    >>> cls = MyClass(1)
+    >>> cls.add_to_a(2)
+    [TRACER]: ENTERING add_to_a WITH args=(MyClass(a=3), 2) AND kwargs={}
+    """
+
+    # type checks
+    check_callable(decorator)
+
+    def decorator_(cls):
+        for attr_name, attr_value in cls.__dict__.items():
+            if callable(attr_value) and not (
+                attr_name.startswith("__") and attr_name.endswith("__")
+            ):
+                attr_value = decorator(*args, **kwargs)(attr_value)
+                setattr(cls, attr_name, attr_value)
+
+        return cls
+
+    return decorator_
+
+
+def singleton():
+    """
+    singleton
+    =========
+    Ensures only one instance of a class can exist at once.
+
+    Example Usage
+    -------------
+    ```python
+    >>> @singleton()
+    ... class Single:
+    ...     def __init__(self, x):
+    ...             self.x = x
+    ...
+    >>> s1 = Single(1)
+    >>> s2 = Single(2)
+    >>> s1.x
+    1
+    >>> s2.x
+    1
+    >>> s1 is s2
+    True
+    ```
+    """
+
+    instances = {}
+
+    def decorator(cls):
+        @wraps(cls)
+        def wrapper(*args, **kwargs):
+            if cls not in instances:
+                instances[cls] = cls(*args, **kwargs)
+            return instances[cls]
+
+        return wrapper
+
+    return decorator
+
+
+def type_checker():
+    """
+    type_checker
+    ============
+    Ensures the arguments passed to the decorated function are of the correct type based on the type hints.
+
+    Raises
+    ------
+    :raises TypeError: If the args or kwargs passed do not match the function's type hints.
+    :raises TypeError: If the return value does not match the function's type hints.
+
+    Example Usage
+    -------------
+    >>> @type_checker()
+    ... def typed_fun(a: int, b: float) -> str:
+    ...     return str(a + b)
+    ...
+    >>> typed_fun(2, 1.0)
+    '3.0'
+    >>> typed_fun(3.2, 5)
+    TypeError: Argument 'a' must be type 'int'
+    """
+
+    def decorator(func):
+        hints = get_type_hints(func)
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for name, value in zip(func.__code__.co_varnames, args):
+                if name in hints and not isinstance(value, hints[name]):
+                    raise TypeError(
+                        f"Argument '{name}' must be type '{hints[name].__name__}'"
+                    )
+
+            for name, value in kwargs.items():
+                if name in hints and not isinstance(value, hints[name]):
+                    raise TypeError(
+                        f"Argument '{name}' must be type '{hints[name].__name__}'"
+                    )
+
+            result = func(*args, **kwargs)
+
+            if "return" in hints and not isinstance(result, hints["return"]):
+                raise TypeError(
+                    f"Return value must be type '{hints['return'].__name__}'"
                 )
-
-            return None
+            return result
 
         return wrapper
 

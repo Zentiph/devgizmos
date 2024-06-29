@@ -45,6 +45,7 @@ from .__decorators import (
     ConditionError,
     UnsupportedOSError,
     benchmark,
+    benchmark_rs,
     cache,
     conditional,
     decorate_all_methods,
@@ -56,6 +57,7 @@ from .__decorators import (
     suppress,
     timeout,
     timer,
+    timer_rs,
     tracer,
     type_checker,
 )

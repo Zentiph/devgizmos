@@ -30,13 +30,21 @@ def timer(
     logger: Optional[logging.Logger] = None,
     level: LoggingLevel = logging.INFO,
 ) -> DecoratedFunc: ...
+def timer_rs(
+    unit: Literal["ns", "us", "ms", "s"] = "ns",
+    precision: int = 3,
+) -> DecoratedFunc: ...
 def benchmark(
     trials: int = 10,
     unit: Literal["ns", "us", "ms", "s"] = "ns",
     precision: int = 3,
+    *,
     fmt: str = "",
     logger: Optional[logging.Logger] = None,
     level: LoggingLevel = logging.INFO,
+) -> DecoratedFunc: ...
+def benchmark_rs(
+    trials: int = 10, unit: Literal["ns", "us", "ms", "s"] = "ns", precision: int = 3
 ) -> DecoratedFunc: ...
 def retry(
     max_attempts: int,
@@ -45,30 +53,19 @@ def retry(
     *,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     raise_last: bool = True,
-    success_fmt: str = "",
-    failure_fmt: str = "",
+    success_fmt: Optional[str] = "",
+    failure_fmt: Optional[str] = "",
     logger: Optional[logging.Logger] = None,
     level: LoggingLevel = logging.INFO,
 ) -> DecoratedFunc: ...
 def timeout(
     cutoff: Union[int, float],
     *,
-    success_fmt: str = "",
-    failure_fmt: str = "",
+    success_fmt: Optional[str] = "",
+    failure_fmt: Optional[str] = "",
     logger: Optional[logging.Logger] = None,
     success_level: LoggingLevel = logging.INFO,
     failure_level: LoggingLevel = logging.WARNING,
-) -> DecoratedFunc: ...
-@overload
-def cache(*, type_specific: bool = False) -> DecoratedFunc: ...
-@overload
-def cache(maxsize: int, *, type_specific: bool = False) -> DecoratedFunc: ...
-def singleton() -> DecoratedCls: ...
-def type_checker() -> DecoratedFunc: ...
-def deprecated(
-    reason: str,
-    version: Optional[Union[int, float, str]] = None,
-    date: Optional[str] = None,
 ) -> DecoratedFunc: ...
 def tracer(
     entry_fmt: str = "",
@@ -82,19 +79,30 @@ def error_logger(
     logger: Optional[logging.Logger] = None,
     level: LoggingLevel = logging.ERROR,
 ) -> DecoratedFunc: ...
-def decorate_all_methods(
-    decorator: Decorator, *args: Any, **kwargs: Any
-) -> DecoratedCls: ...
-@overload
-def rate_limit(interval: Union[int, float]) -> DecoratedFunc: ...
-@overload
-def rate_limit(calls: int, period: Union[int, float]) -> DecoratedFunc: ...
 def suppress(
     *exceptions: Type[Exception],
-    fmt: str = "",
+    fmt: Optional[str] = "",
     logger: Optional[logging.Logger] = None,
     level: LoggingLevel = logging.INFO,
 ) -> DecoratedFunc: ...
 def conditional(
     condition: Callable[..., bool], *, raise_exc: bool = False
 ) -> DecoratedFunc: ...
+@overload
+def rate_limit(interval: Union[int, float]) -> DecoratedFunc: ...
+@overload
+def rate_limit(calls: int, period: Union[int, float]) -> DecoratedFunc: ...
+@overload
+def cache(*, type_specific: bool = False) -> DecoratedFunc: ...
+@overload
+def cache(maxsize: int, *, type_specific: bool = False) -> DecoratedFunc: ...
+def deprecated(
+    reason: str,
+    version: Optional[Union[int, float, str]] = None,
+    date: Optional[str] = None,
+) -> DecoratedFunc: ...
+def decorate_all_methods(
+    decorator: Decorator, *args: Any, **kwargs: Any
+) -> DecoratedCls: ...
+def singleton() -> DecoratedCls: ...
+def type_checker() -> DecoratedFunc: ...
