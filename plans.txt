@@ -1,7 +1,11 @@
 plans for devgizmos
 
 1. more decorators
-	- more
+	- (MAYBE) Circuit Breaker: Prevents a function from being called repeatedly if it keeps failing.
+	- Fallback: Allows specifying an alternative function to be called if the main function fails.
+	- (MAYBE) Data Validation: Validates the input data before allowing the function to execute.
+	- (MAYBE) Throttling: Ensures that a function is called at most once in a specified time period.
+	- (MAYBE) Logging: General logging of function calls and parameters, similar to error_logger but for all calls, not just errors.
 2. interp stuff
 3. arithmetic package
 	- need to check if already in math module

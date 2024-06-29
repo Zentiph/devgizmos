@@ -6,6 +6,8 @@ Module containing decorators such as timer, retry, benchmark, etc.
 Built-in Utilizations
 ---------------------
 This module utilizes the following functionality from built-in modules/packages:
+asyncio
+- sleep\n
 collections
 - OrderedDict
 functools
@@ -44,6 +46,7 @@ warnings
 from .__decorators import (
     ConditionError,
     UnsupportedOSError,
+    async_retry,
     benchmark,
     benchmark_rs,
     cache,
@@ -51,6 +54,8 @@ from .__decorators import (
     decorate_all_methods,
     deprecated,
     error_logger,
+    immutable,
+    lazy_property,
     rate_limit,
     retry,
     singleton,

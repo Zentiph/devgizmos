@@ -3,11 +3,11 @@
 """
 decorators.__decorators
 =======================
-
 Module containing decorators.
 """
 
 # --imports-- #
+from asyncio import sleep as async_sleep
 from collections import OrderedDict
 from functools import wraps
 from logging import ERROR, INFO, WARNING, Logger
@@ -517,7 +517,7 @@ def benchmark_rs(trials=10, unit="ns", precision=3):
 def retry(
     max_attempts,
     delay,
-    backoff_factor=1,
+    backoff_strategy=None,
     exceptions=(Exception,),
     raise_last=True,
     *,
@@ -538,8 +538,11 @@ def retry(
     :type max_attempts: int, optional
     :param delay: The time in seconds to wait after each retry.
     :type delay: int, optional
-    :param backoff_factor: The amount to multiply the delay by after each attempt.
-    :type backoff_factor: int | float
+    :param backoff_strategy: A function to determine the delay after each attempt, or None for no strategy.
+    - The function should take delay as the first argument, and the attempt number as the second argument.
+    - The function should return an int or float for the new delay time.
+    - The delay will be updated BEFORE sleeping during each attempt loop.\n
+    :type backoff_strategy: Callable[[int | float, int], int | float]
     :param exceptions: A tuple of the exceptions to catch and retry on, defaults to (Exception,)
     :type exceptions: Tuple[Type[BaseException], ...], optional
     :param raise_last: Whether to raise the final exception raised when all attempts fail,
@@ -579,7 +582,8 @@ def retry(
     ------
     :raise TypeError: If max_attempts is not an int.
     :raise TypeError: If delay is not an int or float.
-    :raise TypeError: If backoff_factor is not an int or float.
+    :raise TypeError: If backoff_strategy is not callable or None.
+    :raise TypeError: If backoff_strategy does not return an int or float.
     :raise TypeError: If exceptions is not a tuple.
     :raise TypeError: If an item inside exceptions is not a subclass of BaseException.
     :raise TypeError: If raise_last is not a bool.
@@ -608,7 +612,8 @@ def retry(
     # type checks
     check_type(max_attempts, int)
     check_type(delay, int, float)
-    check_type(backoff_factor, int, float)
+    if backoff_strategy is not None:
+        check_callable(backoff_strategy)
     check_type(exceptions, tuple)
     check_subclass(BaseException, *exceptions)
     check_type(raise_last, bool)
@@ -666,7 +671,7 @@ def retry(
                             "kwargs": kwargs,
                         }
                         default = (
-                            f"[RETRY]: {func.__name__} FAILED"
+                            f"[RETRY]: {func.__name__} FAILED "
                             + f"AT ATTEMPT {attempts}/{max_attempts}; RAISED {repr(e)}"
                         )
 
@@ -677,8 +682,199 @@ def retry(
                     if attempts >= max_attempts and raise_last:
                         raise
 
+                    if backoff_strategy:
+                        delay_ = backoff_strategy(delay_, attempts)
+
                     sleep(delay_)
-                    delay_ *= backoff_factor
+
+            return None
+
+        return wrapper
+
+    return decorator
+
+
+def async_retry(
+    max_attempts,
+    delay,
+    backoff_strategy=None,
+    exceptions=(Exception,),
+    raise_last=True,
+    *,
+    success_fmt="",
+    failure_fmt="",
+    logger=None,
+    level=INFO,
+):
+    """
+    async_retry
+    =====
+    Retries an async function if it fails up until the number of attempts is reached.
+
+    Parameters
+    ----------
+    :param max_attempts: The maximum number of times to attempt running the decorated function,
+    including the first time.
+    :type max_attempts: int, optional
+    :param delay: The time in seconds to wait after each retry.
+    :type delay: int, optional
+    :param backoff_strategy: A function to determine the delay after each attempt, or None for no strategy.
+    - The function should take delay as the first argument, and the attempt number as the second argument.
+    - The function should return an int or float for the new delay time.
+    - The delay will be updated BEFORE sleeping during each attempt loop.\n
+    :type backoff_strategy: Callable[[int | float, int], int | float]
+    :param exceptions: A tuple of the exceptions to catch and retry on, defaults to (Exception,)
+    :type exceptions: Tuple[Type[BaseException], ...], optional
+    :param raise_last: Whether to raise the final exception raised when all attempts fail,
+    defaults to True
+    :type raise_last: bool, optional
+    :param success_fmt: Used to enter a custom success message format, defaults to "".
+    - Leave as an empty string to use the pre-made message, or enter None for no message.
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - attempts: The number of attempts that ran.
+    - max_attempts: The maximum number of attempts allotted.
+    - exceptions: The exceptions to be caught.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - returned: The return value of the function.
+    - Ex: success_fmt="Func {name} took {attempts}/{max_attempts} attempts to run."\n
+    :type success_fmt: str | None, optional
+    :param failure_fmt: Used to enter a custom failure message format, defaults to "".
+    - Leave as an empty string to use the pre-made message, or enter None for no message.
+    - Enter an unformatted string with the following fields to include their values
+    - name: The name of the function.
+    - attempts: The current number of attempts.
+    - max_attempts: The maximum number of attempts allotted.
+    - exceptions: The exceptions to be caught.
+    - raised: The exception raised.
+    - args: The arguments passed to the function.
+    - kwargs: The keyword arguments passed to the function.
+    - Ex: failure_fmt="Func {name} failed at attempt {attempts}/{max_attempts}."\n
+    :type failure_fmt: str | None, optional
+    :param logger: The logger to use if desired, defaults to None.
+    - If a logger is used, the result message will not be printed and will instead be passed to the logger.\n
+    :type logger: Logger | None, optional
+    :param level: The logging level to use, defaults to logging.INFO (20).
+    :type level: LoggingLevel, optional
+
+    Raises
+    ------
+    :raise TypeError: If max_attempts is not an int.
+    :raise TypeError: If delay is not an int or float.
+    :raise TypeError: If backoff_strategy is not callable or None.
+    :raise TypeError: If backoff_strategy does not return an int or float.
+    :raise TypeError: If exceptions is not a tuple.
+    :raise TypeError: If an item inside exceptions is not a subclass of BaseException.
+    :raise TypeError: If raise_last is not a bool.
+    :raise TypeError: If success_fmt is not a str.
+    :raise TypeError: If failure_fmt is not a str.
+    :raise TypeError: If logger is not a logging.Logger.
+    :raise ValueError: If max_attempts is less than 1.
+    :raise ValueError: If delay is less than 0.
+    :raise ValueError: If level is not a level from logging.
+
+    Example Usage
+    -------------
+    ```python
+    >>> from asyncio import run, sleep
+    >>>
+    >>> async def raiser():
+    ...     await sleep(1)
+    ...     raise TypeError
+    ...
+    >>> @async_retry(3, 1)
+    ... async def risky(condition):
+    ...     if condition:
+    ...         return True
+    ...     else:
+    ...         await raiser()
+    ...
+    >>> run(risky(False))
+    [RETRY]: risky FAILED AT ATTEMPT 1/3; RAISED TypeError()
+    [RETRY]: risky FAILED AT ATTEMPT 2/3; RAISED TypeError()
+    [RETRY]: risky FAILED AT ATTEMPT 3/3; RAISED TypeError()
+    TypeError
+    ```
+    """
+
+    # type checks
+    check_type(max_attempts, int)
+    check_type(delay, int, float)
+    if backoff_strategy is not None:
+        check_callable(backoff_strategy)
+    check_type(exceptions, tuple)
+    check_subclass(BaseException, *exceptions)
+    check_type(raise_last, bool)
+    check_type(success_fmt, str, optional=True)
+    check_type(failure_fmt, str, optional=True)
+    check_type(logger, Logger, optional=True)
+
+    # value checks
+    check_in_bounds(max_attempts, 1, None)
+    check_in_bounds(delay, 0, None)
+    check_value(level, LOGGING_LEVELS)
+
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            attempts = 0
+            delay_ = delay
+
+            while attempts < max_attempts:
+                try:
+                    result = await func(*args, **kwargs)
+
+                    if success_fmt is not None:
+                        fmt_kwargs = {
+                            "name": func.__name__,
+                            "attempts": attempts + 1,
+                            "max_attempts": max_attempts,
+                            "exceptions": exceptions,
+                            "args": args,
+                            "kwargs": kwargs,
+                            "returned": repr(result),
+                        }
+                        default = (
+                            f"[RETRY]: {func.__name__} SUCCESSFULLY RAN"
+                            + f"AFTER {attempts + 1}/{max_attempts} ATTEMPTS"
+                        )
+
+                        _handle_result_reporting(
+                            success_fmt, default, logger, level, **fmt_kwargs
+                        )
+
+                    return result
+
+                except exceptions as e:
+                    attempts += 1
+
+                    if failure_fmt is not None:
+                        fmt_kwargs = {
+                            "name": func.__name__,
+                            "attempts": attempts,
+                            "max_attempts": max_attempts,
+                            "exceptions": exceptions,
+                            "raised": repr(e),
+                            "args": args,
+                            "kwargs": kwargs,
+                        }
+                        default = (
+                            f"[RETRY]: {func.__name__} FAILED "
+                            + f"AT ATTEMPT {attempts}/{max_attempts}; RAISED {repr(e)}"
+                        )
+
+                        _handle_result_reporting(
+                            failure_fmt, default, logger, level, **fmt_kwargs
+                        )
+
+                    if attempts >= max_attempts and raise_last:
+                        raise
+
+                    if backoff_strategy:
+                        delay_ = backoff_strategy(delay_, attempts)
+
+                    await async_sleep(delay_)
 
             return None
 
@@ -1364,6 +1560,73 @@ def cache(maxsize=None, *, type_specific=False):
     return decorator
 
 
+# pylint: disable=invalid-name
+class lazy_property:
+    """
+    lazy_property
+    =============
+    Transforms the decorated method into a property that is only computed once,
+    and is then cached as an attribute.
+
+    Example Usage
+    -------------
+    ```python
+    >>> class Circle:
+    ...     def __init__(self, radius):
+    ...         self.radius = radius
+    ...     @lazy_property
+    ...     def area(self):
+    ...         print("Computing area")
+    ...         return 3.14159 * self.radius ** 2
+    ...
+    >>> c = Circle(10)
+    >>> print(c.area)
+    Computing area
+    314.159
+    >>> print(c.area)
+    314.159
+    ```
+    """
+
+    def __init__(self, func):
+        """
+        lazy_property
+        =============
+        Transforms the decorated method into a property that is only computed once,
+        and is then cached as an attribute.
+
+        Example Usage
+        -------------
+        ```python
+        >>> class Circle:
+        ...     def __init__(self, radius):
+        ...         self.radius = radius
+        ...     @lazy_property
+        ...     def area(self):
+        ...         print("Computing area")
+        ...         return 3.14159 * self.radius ** 2
+        ...
+        >>> c = Circle(10)
+        >>> print(c.area)
+        Computing area
+        314.159
+        >>> print(c.area)
+        314.159
+        ```
+        """
+
+        self.func = func
+        self.__doc__ = getattr(func, "__doc__")
+        self.name = func.__name__
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        value = self.func(instance)
+        setattr(instance, self.name, value)
+        return value
+
+
 def deprecated(reason, version=None, date=None):
     """
     deprecated
@@ -1443,11 +1706,11 @@ def decorate_all_methods(decorator, *args, **kwargs):
     >>> @decorate_all_methods(tracer, exit_fmt=None)
     ... class MyClass:
     ...     def __init__(self, a):
-    ...             self.a = a
+    ...         self.a = a
     ...     def __repr__(self):
-    ...             return f"MyClass(a={self.a})"
+    ...         return f"MyClass(a={self.a})"
     ...     def add_to_a(self, x):
-    ...             self.a += x
+    ...         self.a += x
     ...
     >>> cls = MyClass(1)
     >>> cls.add_to_a(2)
@@ -1470,6 +1733,54 @@ def decorate_all_methods(decorator, *args, **kwargs):
     return decorator_
 
 
+def immutable(cls):
+    """
+    immutable
+    =========
+    Enforces immutability onto the decorated object.
+
+    Raises
+    ------
+    :raises AttributeError: If an attempt is made to edit the immutable object's attributes.
+
+    Example Usage
+    -------------
+    ```python
+    >>> @immutable
+    ... class Point2D:
+    ...     def __init__(self, x, y):
+    ...         self.x = x
+    ...         self.y = y
+    ...
+    >>> pt = Point2D(3, 5)
+    >>> pt.x = 2
+    AttributeError: Cannot modify attribute 'x' of immutable instance
+    ```
+    """
+
+    class ImmutableInstance(cls):
+        """
+        ImmutableInstance
+        =================
+        Copies the decorated class and makes it immutable.
+        """
+
+        __is_frozen = False
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.__is_frozen = True
+
+        def __setattr__(self, key, value):
+            if self.__is_frozen:
+                raise AttributeError(
+                    f"Cannot modify attribute '{key}' of immutable instance"
+                )
+            super().__setattr__(key, value)
+
+    return ImmutableInstance
+
+
 def singleton():
     """
     singleton
@@ -1482,7 +1793,7 @@ def singleton():
     >>> @singleton()
     ... class Single:
     ...     def __init__(self, x):
-    ...             self.x = x
+    ...         self.x = x
     ...
     >>> s1 = Single(1)
     >>> s2 = Single(2)

@@ -1,7 +1,7 @@
 """
-__types
-=======
-Contains various custom types.
+types.__types
+=============
+Module containing custom types.
 """
 
 from typing import Union

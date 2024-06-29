@@ -9,6 +9,5 @@ Documentation
 devgizmos's documentation can be found [here](https://docs.python.org/).
 """
 
-from . import checks, decorators
+from . import checks, decorators, types
 from .__basic_logger import BasicLogger
-from .__types import Number
