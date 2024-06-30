@@ -1082,6 +1082,56 @@ def timeout(
     return decorator
 
 
+def fallback(fallback_func, *args, **kwargs):
+    """
+    fallback
+    ========
+    If the decorated function fails, the fallback function will be executed.
+
+    Parameters
+    ----------
+    :param fallback_func: The fallback function.
+    :type fallback_func: Callable[..., Any]
+    :param args: The args to pass to the fallback function.
+    :type args: Any
+    :param kwargs: The kwargs to pass to the fallback function.
+    :type kwargs: Any
+
+    Raises
+    ------
+    :raise TypeError: If func is not callable.
+
+    Example Usage
+    -------------
+    ```python
+    >>> def failure_handler():
+    ...     print("An error occurred. Suppressing...")
+    ...
+    >>> @fallback(failure_handler)
+    ... def risky():
+    ...     raise TypeError
+    ...
+    >>> risky()
+    An error occurred. Suppressing...
+    ```
+    """
+
+    # type checks
+    check_callable(fallback_func)
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*w_args, **w_kwargs):
+            try:
+                return func(*w_args, **w_kwargs)
+            except Exception:
+                return fallback_func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def tracer(*, entry_fmt="", exit_fmt="", logger=None, level=INFO):
     """
     tracer

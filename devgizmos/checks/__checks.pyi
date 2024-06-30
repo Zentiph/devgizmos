@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, Iterable, Optional, Sequence, Sized, Tuple, Type, Union
 
-from .. import Number
+from ..types import Number
 
 def check_type(
     value: Any,

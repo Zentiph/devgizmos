@@ -17,19 +17,17 @@ from typing import (
     overload,
 )
 
-# generic types
+from ..types import Decorator, Number
+
 T = TypeVar("T")  # generic type
 C = TypeVar("C")  # generic class instance type
 
 LoggingLevel = int
 
-# specific types
-F = TypeVar("F", bound=Callable[..., Any])
-Decorator = Callable[[F], F]
 DecoratedFunc = Decorator
 DecoratedCls = Callable[[Type], Type]
 
-BackoffFunc = Callable[[Union[int, float], int], Union[int, float]]
+BackoffFunc = Callable[[Number, int], Number]
 
 # base class to enforce type hints for lazy_property decorator
 class SupportsLazyProperty(Protocol):
@@ -64,7 +62,7 @@ def benchmark_rs(
 ) -> DecoratedFunc: ...
 def retry(
     max_attempts: int,
-    delay: Union[int, float],
+    delay: Number,
     backoff_strategy: Optional[BackoffFunc] = None,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     raise_last: bool = True,
@@ -76,7 +74,7 @@ def retry(
 ) -> DecoratedFunc: ...
 def async_retry(
     max_attempts: int,
-    delay: Union[int, float],
+    delay: Number,
     backoff_strategy: Optional[BackoffFunc] = None,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     raise_last: bool = True,
@@ -87,13 +85,16 @@ def async_retry(
     level: LoggingLevel = logging.INFO,
 ) -> DecoratedFunc: ...
 def timeout(
-    cutoff: Union[int, float],
+    cutoff: Number,
     *,
     success_fmt: Optional[str] = "",
     failure_fmt: Optional[str] = "",
     logger: Optional[logging.Logger] = None,
     success_level: LoggingLevel = logging.INFO,
     failure_level: LoggingLevel = logging.WARNING,
+) -> DecoratedFunc: ...
+def fallback(
+    fallback_func: Callable[..., Any], *args: Any, **kwargs: Any
 ) -> DecoratedFunc: ...
 def tracer(
     *,
@@ -119,9 +120,9 @@ def conditional(
     condition: Callable[..., bool], *, raise_exc: bool = False
 ) -> DecoratedFunc: ...
 @overload
-def rate_limit(interval: Union[int, float]) -> DecoratedFunc: ...
+def rate_limit(interval: Number) -> DecoratedFunc: ...
 @overload
-def rate_limit(calls: int, period: Union[int, float]) -> DecoratedFunc: ...
+def rate_limit(calls: int, period: Number) -> DecoratedFunc: ...
 @overload
 def cache(*, type_specific: bool = False) -> DecoratedFunc: ...
 @overload

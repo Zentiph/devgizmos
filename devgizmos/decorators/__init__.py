@@ -54,6 +54,7 @@ from .__decorators import (
     decorate_all_methods,
     deprecated,
     error_logger,
+    fallback,
     immutable,
     lazy_property,
     rate_limit,
