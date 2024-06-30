@@ -17,7 +17,7 @@ from typing import (
     overload,
 )
 
-from ..types import Decorator, Number
+from ..types import Decorator, Num
 
 T = TypeVar("T")  # generic type
 C = TypeVar("C")  # generic class instance type
@@ -27,7 +27,7 @@ LoggingLevel = int
 DecoratedFunc = Decorator
 DecoratedCls = Callable[[Type], Type]
 
-BackoffFunc = Callable[[Number, int], Number]
+BackoffFunc = Callable[[Num, int], Num]
 
 # base class to enforce type hints for lazy_property decorator
 class SupportsLazyProperty(Protocol):
@@ -62,7 +62,7 @@ def benchmark_rs(
 ) -> DecoratedFunc: ...
 def retry(
     max_attempts: int,
-    delay: Number,
+    delay: Num,
     backoff_strategy: Optional[BackoffFunc] = None,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     raise_last: bool = True,
@@ -74,7 +74,7 @@ def retry(
 ) -> DecoratedFunc: ...
 def async_retry(
     max_attempts: int,
-    delay: Number,
+    delay: Num,
     backoff_strategy: Optional[BackoffFunc] = None,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     raise_last: bool = True,
@@ -85,7 +85,7 @@ def async_retry(
     level: LoggingLevel = logging.INFO,
 ) -> DecoratedFunc: ...
 def timeout(
-    cutoff: Number,
+    cutoff: Num,
     *,
     success_fmt: Optional[str] = "",
     failure_fmt: Optional[str] = "",
@@ -120,9 +120,9 @@ def conditional(
     condition: Callable[..., bool], *, raise_exc: bool = False
 ) -> DecoratedFunc: ...
 @overload
-def rate_limit(interval: Number) -> DecoratedFunc: ...
+def rate_limit(interval: Num) -> DecoratedFunc: ...
 @overload
-def rate_limit(calls: int, period: Number) -> DecoratedFunc: ...
+def rate_limit(calls: int, period: Num) -> DecoratedFunc: ...
 @overload
 def cache(*, type_specific: bool = False) -> DecoratedFunc: ...
 @overload

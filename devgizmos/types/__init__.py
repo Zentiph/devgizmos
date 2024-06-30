@@ -10,4 +10,4 @@ typing
 - Union
 """
 
-from .__types import Char, Decorator, Function, JsonData, Number
+from .__types import Char, Decorator, Function, JsonData, Num, Number

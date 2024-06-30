@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, Iterable, Optional, Sequence, Sized, Tuple, Type, Union
 
-from ..types import Number
+from ..types import Num
 
 def check_type(
     value: Any,
@@ -30,9 +30,9 @@ def check_in_range(
     exc_msg: str = "",
 ) -> bool: ...
 def check_in_bounds(
-    value: Number,
-    lower: Optional[Number],
-    upper: Optional[Number],
+    value: Num,
+    lower: Optional[Num],
+    upper: Optional[Num],
     /,
     inclusive: bool = True,
     *,

@@ -1,13 +1,13 @@
 # pylint: disable=all
 
-from logging import DEBUG, Logger
+import logging
 from typing import Union
 
-LoggingLevel = Union[int, str]
+LoggingLevel = int
 
-class BasicLogger(Logger):
+class BasicLogger(logging.Logger):
     def __init__(
         self,
-        level: LoggingLevel = DEBUG,
+        level: LoggingLevel = logging.DEBUG,
         fmt: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     ) -> None: ...

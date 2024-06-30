@@ -16,11 +16,10 @@ typing
 """
 
 from logging import DEBUG, Formatter, Logger, StreamHandler
-from typing import Union
 
 from .checks import check_type, check_value
 
-LoggingLevel = Union[int, str]
+LoggingLevel = int
 LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
 
 
