@@ -16,7 +16,6 @@ typing
 - Any
 - Callable
 - Dict
-- Generic
 - TypeVar
 - Union
 """

@@ -2,7 +2,6 @@
 
 from collections.abc import Buffer
 from typing import (
-    Generic,
     Iterable,
     Literal,
     Optional,
@@ -14,10 +13,7 @@ from typing import (
     SupportsInt,
     Tuple,
     TypeAlias,
-    TypeVar,
-    TypeVarTuple,
     Union,
-    Unpack,
     overload,
 )
 

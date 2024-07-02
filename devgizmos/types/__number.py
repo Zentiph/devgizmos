@@ -6,25 +6,11 @@ Contains the custom Number type.
 
 from math import ceil, floor, trunc
 from re import match as re_match
-from typing import Generic, TypeVar, Union
 
-from ..regex import COMPLEX_EXACT, FLOAT_EXACT, INT_EXACT
-
-T = TypeVar(
-    "T",
-    int,
-    float,
-    complex,
-    Union[int, float],
-    Union[int, complex],
-    Union[float, complex],
-    Union[int, float, complex],
-)
+from ..regex import COMPLEX_EXACT, COMPLEX_PARENS_EXACT, FLOAT_EXACT, INT_EXACT
 
 
-# TODO: add support for type-hint like structures such as
-# Number[int] for ints, Number[float] for floats, Number[int, float] for ints or floats, etc.
-class Number(Generic[T]):
+class Number:
     """
     Number
     ======
@@ -116,6 +102,21 @@ class Number(Generic[T]):
                     float(complex_match.group(1)),
                     complex_match.group(2),
                     float(complex_match.group(3)),
+                )
+                if sign == "-":
+                    imag = -imag
+
+                instance = super().__new__(cls)
+                instance._val = complex(real, imag)
+                instance._num_type = complex
+                return instance
+
+            complex_parens_match = re_match(COMPLEX_PARENS_EXACT, obj)
+            if complex_parens_match:
+                real, sign, imag = (
+                    float(complex_parens_match.group(1)),
+                    complex_parens_match.group(2),
+                    float(complex_parens_match.group(3)),
                 )
                 if sign == "-":
                     imag = -imag
