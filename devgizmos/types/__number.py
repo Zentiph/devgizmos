@@ -18,12 +18,17 @@ class Number:
     A Number instance will only be expressed as complex if Number.imag is not 0.
     """
 
+    # pylint: disable=too-many-branches
     def __new__(cls, obj, base=10, /, *, preserve_type=False):
         """
         Number
         ======
         Represents a general number.
-        A Number instance will only be expressed as complex if Number.imag is not 0.
+        Accepts any object with an __int__, __float__, or __complex__ method,
+        or a convertible str, bytes, or bytearray.
+
+        For custom object to Number implementations, define a __number__ method.
+        If a __number__ method is found, that implementation will take priority.
 
         Parameters
         ----------
@@ -55,20 +60,45 @@ class Number:
         Example Usage
         -------------
         ```python
-        >>> num = Number(3)
-        >>> num + num
+        >>> int_num = Number(3)
+        >>> int_num + int_num
         6
-        >>> num2 = Number(4.2)
-        >>> num2.is_integer()
+        >>> float_num = Number(4.2)
+        >>> float_num.is_integer()
         False
-        >>> num3 = Number((1+2j))
-        >>> num3.conjugate()
+        >>> complex_num = Number((1+2j))
+        >>> complex_num.conjugate()
         (1-2j)
-        >>> num4 = Number("ff", 16)
-        >>> print(num4)
+        >>> base_16_num = Number("ff", 16)
+        >>> print(base_16_num)
         255
+        >>> class A:
+        ...     def __init__(self, x):
+        ...         self.x = x
+        ...     def __number__(self): # custom number conversion implementation
+        ...         return Number(self.x + 3)
+        ...
+        >>> a = A(3)
+        >>> n = Number(a)
+        >>> print(n)
+        6
         ```
         """
+
+        # ConvertibleToNumber implementation
+        # (obj has __number__ method)
+        if hasattr(obj, "__number__"):
+            custom_val = obj.__number__()
+            if not isinstance(custom_val, (int, float, complex, Number)):
+                raise TypeError(
+                    "__number__() implementation must return an "
+                    + f"'int', 'float', 'complex', or 'Number' value, not '{type(custom_val).__name__}'"
+                )
+
+            instance = super().__new__(cls)
+            instance._val = custom_val
+            instance._num_type = type(custom_val)
+            return instance
 
         if base != 0 and not 2 <= base <= 36:
             raise ValueError("Number() base must be >= 2 and <= 36, or 0")
@@ -128,7 +158,7 @@ class Number:
 
             raise ValueError(f"invalid literal for Number(): '{obj}'")
 
-        # SupportsNumber implementation
+        # SupportsNumType implementation
         # (obj has an __int__, __float__, or __complex__ method)
         if not (
             hasattr(obj, "__int__")

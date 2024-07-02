@@ -1,10 +1,12 @@
 # pylint: disable=all
 
+from abc import abstractmethod
 from collections.abc import Buffer
 from typing import (
     Iterable,
     Literal,
     Optional,
+    Protocol,
     Self,
     SupportsBytes,
     SupportsIndex,
@@ -21,23 +23,28 @@ from .__types import NumOrComplex
 
 ReadableBuffer: TypeAlias = Buffer
 
-ConvertibleToNumber: TypeAlias = Union[SupportsInt, SupportsFloat, SupportsComplex]
+class _HasNumberDunder(Protocol):
+    @abstractmethod
+    def __number__(self) -> Number:
+        pass
+
+ConvertibleToNumber: TypeAlias = _HasNumberDunder
 
 class Number:
     @overload
-    def __new__(cls, obj: SupportsInt, /) -> Number: ...
-    @overload
-    def __new__(cls, obj: SupportsFloat, /) -> Number: ...
-    @overload
-    def __new__(cls, obj: SupportsComplex, /) -> Number: ...
-    @overload
     def __new__(
-        cls, obj: ConvertibleToNumber = ..., /, *, preserve_type: bool = False
+        cls,
+        obj: Union[SupportsInt, SupportsFloat, SupportsComplex] = ...,
+        /,
+        *,
+        preserve_type: bool = False,
     ) -> Number: ...
     @overload
     def __new__(
         cls, obj: Union[str, bytes, bytearray], base: SupportsIndex = 10, /
     ) -> Number: ...
+    @overload
+    def __new__(cls, obj: ConvertibleToNumber = ..., /) -> Number: ...
     def as_integer_ratio(self) -> Tuple[int, int]: ...
     def hex(self) -> str: ...
     def is_integer(self) -> bool: ...
