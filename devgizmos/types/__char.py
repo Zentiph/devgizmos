@@ -17,11 +17,15 @@ class Char:
         Char
         ====
         Represents a single character string.
+        Accepts any object with a __str__ method.
+
+        For custom object to Char implementations, define a __char__ method.
+        If a __char__ method is found, that implementation will take priority.
 
         Parameters
         ----------
         :param obj: The object to convert to a Char. The object must have a __str__ method.
-        :type obj: Any
+        :type obj: ConvertibleToStr | ConvertibleToChar
 
         Raises
         ------
@@ -45,6 +49,20 @@ class Char:
         TypeError: Char() argument must have a length of 1, not 2
         ```
         """
+
+        # ConvertibleToChar implementation
+        # (obj has __char__ method)
+        if hasattr(obj, "__char__"):
+            custom_val = obj.__char__()
+            if not isinstance(custom_val, (str, Char)):
+                raise TypeError(
+                    "__char__() implementation must return a 'str' or 'Char' value, "
+                    + f"not '{type(custom_val).__name__}'"
+                )
+
+            instance = super().__new__(cls)
+            instance._val = custom_val
+            return instance
 
         if not hasattr(obj, "__str__"):
             raise TypeError("Char() argument must have a '__str__' method")

@@ -20,7 +20,7 @@ class _HasStrDunder(Protocol):
 
 class _HasCharDunder(Protocol):
     @abstractmethod
-    def __char__(self) -> Char:
+    def __char__(self) -> Union[Char, str]:
         pass
 
 ConvertibleToStr: TypeAlias = _HasStrDunder
