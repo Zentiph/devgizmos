@@ -25,7 +25,7 @@ ReadableBuffer: TypeAlias = Buffer
 
 class _HasNumberDunder(Protocol):
     @abstractmethod
-    def __number__(self) -> Number:
+    def __number__(self) -> Union[Number, int, float, complex]:
         pass
 
 ConvertibleToNumber: TypeAlias = _HasNumberDunder

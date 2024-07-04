@@ -15,7 +15,6 @@ class Number:
     Number
     ======
     Represents a general number.
-    A Number instance will only be expressed as complex if Number.imag is not 0.
     """
 
     # pylint: disable=too-many-branches
