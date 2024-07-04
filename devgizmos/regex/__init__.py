@@ -17,4 +17,5 @@ from .__regexes import (
     FLOAT_EXACT,
     INT,
     INT_EXACT,
+    EMAIL,
 )
