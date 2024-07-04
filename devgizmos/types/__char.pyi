@@ -1,9 +1,35 @@
 # pylint: disable=all
 
-from typing import Iterable, Iterator, Literal, Self, SupportsIndex, Tuple
+from abc import abstractmethod
+from typing import (
+    Iterable,
+    Iterator,
+    Literal,
+    Protocol,
+    Self,
+    SupportsIndex,
+    Union,
+    Tuple,
+    TypeAlias,
+)
+
+class _HasStrDunder(Protocol):
+    @abstractmethod
+    def __str__(self) -> str:
+        pass
+
+class _HasCharDunder(Protocol):
+    @abstractmethod
+    def __char__(self) -> Char:
+        pass
+
+ConvertibleToStr: TypeAlias = _HasStrDunder
+ConvertibleToChar: TypeAlias = _HasCharDunder
 
 class Char:
-    def __new__(cls, obj: object = ..., /) -> Self: ...
+    def __new__(
+        cls, obj: Union[ConvertibleToStr, ConvertibleToChar] = ..., /
+    ) -> Self: ...
     def capitalize(self) -> "Char": ...
     def casefold(self) -> "Char": ...
     def encode(self, encoding: str = "utf-8", errors: str = "strict") -> bytes: ...
