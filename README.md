@@ -7,6 +7,7 @@ Features
 - decorators
 - various checkers such as check_type(), check_value(), check_in_bounds(), etc.
 - context managers
+- interpolation
 - regexes
 - custom types (classes) such as Number(), Char(), etc.
 - custom types (TypeAliases) such as Num, Chr, etc.
@@ -18,6 +19,13 @@ Clone this repository:
 git clone https://github.com/Zentiph/devgizmos
 ```
 devgizmos is not currently available via PyPI, but is planned to be in the future.
+
+Quick Start
+-----------
+TODO
+```python
+# TODO
+```
 
 Documentation
 -------------
