@@ -64,7 +64,7 @@ def retry(
     max_attempts: int,
     delay: Num,
     backoff_strategy: Optional[BackoffFunc] = None,
-    exceptions: Tuple[Type[Exception], ...] = (Exception,),
+    exceptions: Tuple[Type[BaseException], ...] = (Exception,),
     raise_last: bool = True,
     *,
     success_fmt: Optional[str] = "",
@@ -76,7 +76,7 @@ def async_retry(
     max_attempts: int,
     delay: Num,
     backoff_strategy: Optional[BackoffFunc] = None,
-    exceptions: Tuple[Type[Exception], ...] = (Exception,),
+    exceptions: Tuple[Type[BaseException], ...] = (Exception,),
     raise_last: bool = True,
     *,
     success_fmt: Optional[str] = "",
@@ -111,7 +111,7 @@ def error_logger(
     level: LoggingLevel = logging.ERROR,
 ) -> DecoratedFunc: ...
 def suppressor(
-    *exceptions: Type[Exception],
+    *exceptions: Type[BaseException],
     fmt: Optional[str] = "",
     logger: Optional[logging.Logger] = None,
     level: LoggingLevel = logging.INFO,

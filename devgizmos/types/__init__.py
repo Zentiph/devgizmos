@@ -1,7 +1,7 @@
 """
 types
 =====
-Module containing custom types such as Number, etc.
+Package containing custom types such as Number, Char, etc along with type hint types.
 
 Built-in Utilizations
 ---------------------

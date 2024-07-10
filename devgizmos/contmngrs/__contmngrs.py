@@ -11,10 +11,16 @@ from random import getstate
 from random import seed as rand_seed
 from random import setstate
 from tempfile import NamedTemporaryFile, mkdtemp
-from time import perf_counter_ns
+from time import perf_counter_ns, sleep
 
 from .._internal import LOGGING_LEVELS, TIME_UNITS, handle_result_reporting
-from ..checks import check_type, check_value
+from ..checks import (
+    check_callable,
+    check_in_bounds,
+    check_subclass,
+    check_type,
+    check_value,
+)
 
 
 @contextmanager
@@ -232,6 +238,8 @@ def change_dir(path):
     ```
     """
 
+    check_type(path, str)
+
     orig_dir = getcwd()
     chdir(path)
     try:
@@ -241,10 +249,10 @@ def change_dir(path):
 
 
 @contextmanager
-def set_env(**env_vars):
+def change_env(**env_vars):
     """
-    set_env
-    =======
+    change_env
+    ==========
     Context manager that temporarily sets environment variables.
 
     Parameters
@@ -261,7 +269,7 @@ def set_env(**env_vars):
     ```python
     >>> from os import environ
     >>>
-    >>> with set_env(PATH="/tmp"):
+    >>> with change_env(PATH="/tmp"):
     ...     print(environ["PATH"])
     ...
     /tmp
@@ -295,19 +303,88 @@ def suppress(*exceptions):
     Parameters
     ----------
     :param exceptions: The exceptions provided to be suppress.
-    :type exceptions: Exception
+    :type exceptions: Type[BaseException]
 
     Example Usage
     -------------
     ```python
-    >>> with suppressor(FileNotFoundError):
+    >>> with suppress(FileNotFoundError):
     ...     open("example_file.txt")
     ...
+    >>>
     (No traceback, exception suppressed)
     ```
     """
+
+    check_subclass(BaseException, exceptions)
 
     try:
         yield
     except exceptions:
         pass
+
+
+@contextmanager
+def retry_on(exc, /, *, max_attempts=3, delay=1, backoff_strategy=None):
+    """
+    retry_on
+    ========
+    Context manager that retries a section of code if a specific exception is raised.
+
+    Parameters
+    ----------
+    :param exc: The exception to retry on.
+    :type exc: Type[BaseException]
+    :param max_attempts: The maximum number of times to attempt to run the code, defaults to 3.
+    :type max_attempts: int, optional
+    :param delay: The starting delay in seconds, defaults to 1.
+    :type delay: int, optional
+    :param backoff_strategy: A function to determine the delay after each attempt, or None for no strategy.
+    - The function should take delay as the first argument, and the attempt number as the second argument.
+    - The function should return an int or float for the new delay time.
+    - The delay will be updated BEFORE sleeping during each attempt loop.\n
+    :type backoff_strategy: Callable[[int | float, int], int | float], optional
+
+    Example Usage
+    -------------
+    ```python
+    >>> from random import random
+    >>>
+    >>> def risky():
+    ...     if random() > 0.5:
+    ...             raise TypeError
+    ...     else:
+    ...             return 1
+    ...
+    >>>
+    >>> with retry_on(TypeError):
+    ...     risky()
+    ...
+    1
+    ```
+    """
+
+    # type checks
+    check_subclass(BaseException, exc)
+    check_type(max_attempts, int)
+    check_type(delay, (int, float))
+    if backoff_strategy is not None:
+        check_callable(backoff_strategy)
+
+    # value checks
+    check_in_bounds(max_attempts, 1, None)
+    check_in_bounds(delay, 0, None, inclusive=False)
+
+    attempt = 1
+    while attempt <= max_attempts:
+        try:
+            yield
+            break
+
+        except exc:
+            if attempt == max_attempts:
+                raise
+
+            if backoff_strategy is not None:
+                delay = backoff_strategy(delay, attempt)
+            sleep(delay)

@@ -1222,7 +1222,7 @@ def suppressor(*exceptions, fmt="", logger=None, level=INFO):
     Parameters
     ----------
     :param exceptions: The exceptions to suppress if they occurs.
-    :type exceptions: Type[Exception]
+    :type exceptions: Type[BaseException]
     :param fmt: Used to enter a custom message format, defaults to "".
     - Leave as an empty string to use the pre-made message, or enter None for no message.
     - Enter an unformatted string with the following fields to include their values

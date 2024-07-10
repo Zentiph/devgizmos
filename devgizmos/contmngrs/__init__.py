@@ -26,6 +26,16 @@ tempfile
 - mkdtemp\n
 time
 - perf_counter_ns
+- sleep
 """
 
-from .__contmngrs import change_dir, seed, set_env, tempdir, tempfile, timer
+from .__contmngrs import (
+    change_dir,
+    change_env,
+    retry_on,
+    seed,
+    suppress,
+    tempdir,
+    tempfile,
+    timer,
+)
