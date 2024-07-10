@@ -283,3 +283,31 @@ def set_env(**env_vars):
     finally:
         environ.clear()
         environ.update(orig_env)
+
+
+@contextmanager
+def suppress(*exceptions):
+    """
+    suppress
+    ========
+    Context manager that suppresses specified exceptions depending on the user.
+
+    Parameters
+    ----------
+    :param exceptions: The exceptions provided to be suppress.
+    :type exceptions: Exception
+
+    Example Usage
+    -------------
+    ```python
+    >>> with suppressor(FileNotFoundError):
+    ...     open("example_file.txt")
+    ...
+    (No traceback, exception suppressed)
+    ```
+    """
+
+    try:
+        yield
+    except exceptions:
+        pass
