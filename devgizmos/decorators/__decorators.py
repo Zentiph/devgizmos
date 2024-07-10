@@ -12,12 +12,16 @@ from collections import OrderedDict
 from functools import wraps
 from logging import ERROR, INFO, WARNING, Logger
 from platform import system
-from re import findall
 from statistics import mean
 from time import perf_counter, perf_counter_ns, sleep
 from typing import Any, Callable, TypeVar, get_type_hints
 from warnings import warn
 
+from .._internal import (
+    LOGGING_LEVELS,
+    TIME_UNITS,
+    handle_result_reporting,
+)
 from ..checks import (
     check_callable,
     check_in_bounds,
@@ -39,16 +43,6 @@ F = TypeVar("F", bound=Callable[..., Any])
 Decorator = Callable[[F], F]
 LoggingLevel = int
 
-TIME_UNITS = ("ns", "us", "ms", "s")
-LOGGING_LEVELS = (
-    0,  # NOTSET
-    10,  # DEBUG
-    20,  # INFO
-    30,  # WARNING, WARN
-    40,  # ERROR
-    50,  # CRITICAL, FATAL
-)
-
 
 # --exceptions-- #
 class ConditionError(Exception):
@@ -68,94 +62,6 @@ class UnsupportedOSError(Exception):
     """
 
 
-# --helpers-- #
-def _print_msg(fmt, default, **kwargs):
-    """
-    _print_msg
-    ==========
-    Helper function used to print messages.
-
-    Parameters
-    ----------
-    :param fmt: The format for the message.
-    :type fmt: str
-    :param default: The default message.
-    :type default: str
-    :param kwargs: The kwargs to be formatted into the message.
-    :type kwargs: Any
-    """
-
-    msg = None
-    if fmt:
-        msg = fmt.format(**kwargs)
-    elif fmt == "":
-        msg = default
-
-    if msg:
-        print(msg)
-
-
-def _handle_logging(fmt, default, logger=None, level=INFO, **values):
-    """
-    _handle_logging
-    ===============
-    Helper function used to handle logging operations.
-
-    Parameters
-    ----------
-    :param fmt: The message format.
-    :type fmt: str
-    :param default: The default message format.
-    :type default: str
-    :param logger: The logger to use.
-    :type logger: Logger | None, optional
-    :param level: The logging level to use, defaults to logging.INFO (20).
-    :type level: LoggingLevel, optional
-    :param values: The names and values to place in the message using '%s' formatting.
-    :type values: Any
-    """
-
-    if fmt == "":
-        fmt = default
-
-    # finds all values inside brackets but
-    # doesn't go deeper than 1 layer
-    # to prevent it from finding dicts
-    str_vars = findall(r"\{(\w+)\}", fmt)
-    logging_formatter = fmt
-
-    for str_var in str_vars:
-        logging_formatter = logging_formatter.replace(f"{{{str_var}}}", "%s")
-
-    args = tuple(values[str_var] for str_var in str_vars)
-
-    logger.log(level, logging_formatter, *args)
-
-
-def _handle_result_reporting(fmt, default, logger, level, **kwargs):
-    """
-    _handle_result_reporting
-    ========================
-    Handles result reporting for decorators.
-
-    Parameters
-    ----------
-    :param fmt: The message format.
-    :type fmt: str
-    :param default: The default message.
-    :type default: str
-    :param logger: The logger to use.
-    :type logger: Logger | None
-    :param level: The logging level.
-    :type level: LoggingLevel
-    """
-
-    if logger is not None:
-        _handle_logging(fmt, default, logger, level, **kwargs)
-    else:
-        _print_msg(fmt, default, **kwargs)
-
-
 # --decorators-- #
 def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
     """
@@ -163,8 +69,8 @@ def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
     =====
     Times how long function it is decorated to takes to run.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     :param unit: The unit of time to use, defaults to "ns".
     - Supported units are "ns", "us", "ms", "s".\n
     :type unit: Literal["ns", "us", "ms", "s"], optional
@@ -222,8 +128,6 @@ def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
         @wraps(func)
         def wrapper(*args, **kwargs):
             local_unit = unit.lower()
-            if local_unit not in TIME_UNITS:
-                local_unit = "ns"
 
             start_time = perf_counter_ns()
             result = func(*args, **kwargs)
@@ -242,7 +146,7 @@ def timer(unit="ns", precision=3, *, fmt="", logger=None, level=INFO):
             }
             default = f"[TIMER]: {func.__name__} RAN IN {rounded} {local_unit}"
 
-            _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+            handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
             return result
 
@@ -259,8 +163,8 @@ def timer_rs(unit="ns", precision=3):
     Times how long function it is decorated to takes to run,
     and returns a tuple containing the result and the time elapsed.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     :param unit: The unit of time to use, defaults to "ns".
     - Supported units are "ns", "us", "ms", "s".\n
     :type unit: Literal["ns", "us", "ms", "s"], optional
@@ -296,8 +200,6 @@ def timer_rs(unit="ns", precision=3):
         @wraps(func)
         def wrapper(*args, **kwargs):
             local_unit = unit.lower()
-            if local_unit not in TIME_UNITS:
-                local_unit = "ns"
 
             start_time = perf_counter_ns()
             result = func(*args, **kwargs)
@@ -424,7 +326,7 @@ def benchmark(trials=10, unit="ns", precision=3, *, fmt="", logger=None, level=I
                 f"AVG: {avg_time} {local_unit}, MIN: {min_time} {local_unit}, MAX: {max_time} {local_unit}"
             )
 
-            _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+            handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
             return returned[0]
 
@@ -651,7 +553,7 @@ def retry(
                             + f"AFTER {attempts + 1}/{max_attempts} ATTEMPTS"
                         )
 
-                        _handle_result_reporting(
+                        handle_result_reporting(
                             success_fmt, default, logger, level, **fmt_kwargs
                         )
 
@@ -675,7 +577,7 @@ def retry(
                             + f"AT ATTEMPT {attempts}/{max_attempts}; RAISED {repr(e)}"
                         )
 
-                        _handle_result_reporting(
+                        handle_result_reporting(
                             failure_fmt, default, logger, level, **fmt_kwargs
                         )
 
@@ -840,7 +742,7 @@ def async_retry(
                             + f"AFTER {attempts + 1}/{max_attempts} ATTEMPTS"
                         )
 
-                        _handle_result_reporting(
+                        handle_result_reporting(
                             success_fmt, default, logger, level, **fmt_kwargs
                         )
 
@@ -864,7 +766,7 @@ def async_retry(
                             + f"AT ATTEMPT {attempts}/{max_attempts}; RAISED {repr(e)}"
                         )
 
-                        _handle_result_reporting(
+                        handle_result_reporting(
                             failure_fmt, default, logger, level, **fmt_kwargs
                         )
 
@@ -991,7 +893,7 @@ def timeout(
                         }
                         default = f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
 
-                        _handle_result_reporting(
+                        handle_result_reporting(
                             success_fmt, default, logger, success_level, **fmt_kwargs
                         )
 
@@ -1009,7 +911,7 @@ def timeout(
                         }
                         default = f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS"
 
-                        _handle_result_reporting(
+                        handle_result_reporting(
                             failure_fmt, default, logger, failure_level, **fmt_kwargs
                         )
 
@@ -1047,7 +949,7 @@ def timeout(
                         }
                         default = f"[TIMEOUT]: {func.__name__} TIMED OUT AFTER {cutoff} SECONDS"
 
-                        _handle_result_reporting(
+                        handle_result_reporting(
                             failure_fmt, default, logger, failure_level, **fmt_kwargs
                         )
 
@@ -1065,7 +967,7 @@ def timeout(
                     }
                     default = f"[TIMEOUT]: {func.__name__} SUCCESSFULLY RAN IN UNDER {cutoff} SECONDS"
 
-                    _handle_result_reporting(
+                    handle_result_reporting(
                         success_fmt, default, logger, success_level, **fmt_kwargs
                     )
 
@@ -1208,7 +1110,7 @@ def tracer(*, entry_fmt="", exit_fmt="", logger=None, level=INFO):
                     "kwargs": kwargs,
                 }
                 entry_default = f"[TRACER]: ENTERING FUNC {func.__name__} WITH {args=} AND {kwargs=}"
-                _handle_result_reporting(
+                handle_result_reporting(
                     entry_fmt, entry_default, logger, level, **entry_fmt_kwargs
                 )
 
@@ -1222,7 +1124,7 @@ def tracer(*, entry_fmt="", exit_fmt="", logger=None, level=INFO):
                     "returned": result,
                 }
                 exit_default = f"[TRACER]: EXITING FUNC {func.__name__} WITH {args=} AND {kwargs=}; RETURNED {result}"
-                _handle_result_reporting(
+                handle_result_reporting(
                     exit_fmt, exit_default, logger, level, **exit_fmt_kwargs
                 )
 
@@ -1299,7 +1201,7 @@ def error_logger(suppress=True, fmt="", logger=None, level=ERROR):
                 }
                 default = f"[ERROR]: {func.__name__} RAISED {repr(e)} WITH {args=} AND {kwargs=}"
 
-                _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+                handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
                 if not suppress:
                     raise
@@ -1381,7 +1283,7 @@ def suppressor(*exceptions, fmt="", logger=None, level=INFO):
                         + f"FUNC {func.__name__} WITH {args=} AND {kwargs=}"
                     )
 
-                    _handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
+                    handle_result_reporting(fmt, default, logger, level, **fmt_kwargs)
 
                 return None
 
