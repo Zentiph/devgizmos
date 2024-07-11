@@ -3,6 +3,7 @@
 import logging
 from abc import abstractmethod
 from typing import Callable, ContextManager, Protocol, Literal, Optional, Type, Union
+import cProfile
 
 from ..types import Num
 
@@ -40,3 +41,4 @@ def retry_on(
     delay: Union[int, float] = 1,
     backoff_strategy: Optional[BackoffFunc] = None,
 ): ...
+def profile(output_file: Optional[str] = None) -> ContextManager[cProfile.Profile]: ...

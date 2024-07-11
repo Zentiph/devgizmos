@@ -4,6 +4,8 @@ contmngrs.__contmngrs
 Module containing context managers.
 """
 
+import cProfile
+import pstats
 from contextlib import contextmanager
 from logging import INFO, Logger
 from os import chdir, environ, getcwd, remove, rmdir
@@ -12,6 +14,7 @@ from random import seed as rand_seed
 from random import setstate
 from tempfile import NamedTemporaryFile, mkdtemp
 from time import perf_counter_ns, sleep
+from io import StringIO
 
 from .._internal import LOGGING_LEVELS, TIME_UNITS, handle_result_reporting
 from ..checks import (
@@ -388,3 +391,50 @@ def retry_on(exc, /, *, max_attempts=3, delay=1, backoff_strategy=None):
             if backoff_strategy is not None:
                 delay = backoff_strategy(delay, attempt)
             sleep(delay)
+
+
+@contextmanager
+def profile(output_file=None):
+    """
+    profile
+    =======
+    Context manager that is used to measure and analyze the performance of a block of code.
+
+    Parameters
+    ----------
+    :param output_file: The file to save the profile data to, defaults to None.
+    :type output_file: str, optional
+
+    Example Usage
+    -------------
+    ```python
+    >>> with profile() as pr:
+    ...     for i in range(100000):
+    ...         pass
+    ...
+    >>> pr.print_stats()
+    >>> # to save a file:
+    >>> with profile("profile_output.prof"):
+    ...     for i in range(100000):
+    ...         pass
+    ...
+    >>> # Load and analyze a saved profile:
+    >>> import pstats
+    >>> p = pstats.Stats("profile_output.prof")
+    >>> p.sort_stats(pstats.SortKey.CUMULATIVE).print_stats(10)
+    ```
+    """
+    pr = cProfile.Profile()
+    pr.enable()
+
+    try:
+        yield pr
+    finally:
+        if not output_file:
+            s = StringIO()
+            ps = pstats.Stats(pr, stream=s).sort_stats(pstats.SortKey.CUMULATIVE)
+            ps.print_stats()
+            print(s.getvalue())
+
+        if output_file:
+            pr.dump_stats(output_file)
