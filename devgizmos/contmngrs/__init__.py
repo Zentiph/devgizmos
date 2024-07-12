@@ -32,6 +32,7 @@ time
 from .__contmngrs import (
     change_dir,
     change_env,
+    lock_handler,
     profile,
     retry_on,
     seed,

@@ -1,9 +1,10 @@
 # pylint: disable=all
 
+import cProfile
 import logging
 from abc import abstractmethod
 from typing import Callable, ContextManager, Protocol, Literal, Optional, Type, Union
-import cProfile
+from threading import Lock
 
 from ..types import Num
 
@@ -42,3 +43,4 @@ def retry_on(
     backoff_strategy: Optional[BackoffFunc] = None,
 ): ...
 def profile(output_file: Optional[str] = None) -> ContextManager[cProfile.Profile]: ...
+def lock_handler(lock: Lock) -> ContextManager[None]: ...

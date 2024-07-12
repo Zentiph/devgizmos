@@ -4,17 +4,17 @@ contmngrs.__contmngrs
 Module containing context managers.
 """
 
-import cProfile
-import pstats
 from contextlib import contextmanager
+import cProfile
+from io import StringIO
 from logging import INFO, Logger
 from os import chdir, environ, getcwd, remove, rmdir
+import pstats
 from random import getstate
 from random import seed as rand_seed
 from random import setstate
 from tempfile import NamedTemporaryFile, mkdtemp
 from time import perf_counter_ns, sleep
-from io import StringIO
 
 from .._internal import LOGGING_LEVELS, TIME_UNITS, handle_result_reporting
 from ..checks import (
@@ -438,3 +438,33 @@ def profile(output_file=None):
 
         if output_file:
             pr.dump_stats(output_file)
+
+
+@contextmanager
+def lock_handler(lock):
+    """
+    lock_handler
+    ============
+    Context manager that handles acquiring and releasing a lock.
+
+    Parameters
+    ----------
+    :param lock: The lock that is being managed.
+    :type lock: threading.Lock
+
+    Example Usage
+    -------------
+    ```python
+    >>> from threading import Lock
+    >>> my_lock = Lock()
+    >>> with lock_manager(lock):
+    ...     print("Lock acquired")
+    ...
+    Lock acquired
+    ```
+    """
+    lock.acquire()
+    try:
+        yield
+    finally:
+        lock.release()
