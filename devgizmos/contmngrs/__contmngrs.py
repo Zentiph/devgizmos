@@ -15,6 +15,7 @@ from random import seed as rand_seed
 from random import setstate
 from tempfile import NamedTemporaryFile, mkdtemp
 from time import perf_counter_ns, sleep
+from threading import Lock
 
 from .._internal import LOGGING_LEVELS, TIME_UNITS, handle_result_reporting
 from ..checks import (
@@ -463,6 +464,10 @@ def lock_handler(lock):
     Lock acquired
     ```
     """
+
+    # type check
+    check_type(lock, Lock)
+
     lock.acquire()
     try:
         yield
