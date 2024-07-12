@@ -8,6 +8,9 @@ Built-in Utilizations
 This module utilizes the following functionality from built-in modules/packages:\n
 contextlib
 - contextmanager\n
+cProfile\n
+io
+- StringIO\n
 logging
 - INFO
 - Logger\n
@@ -17,6 +20,7 @@ os
 - getcwd
 - remove
 - rmdir\n
+pstats\n
 random
 - getstate
 - seed
@@ -26,7 +30,9 @@ tempfile
 - mkdtemp\n
 time
 - perf_counter_ns
-- sleep
+- sleep\n
+threading
+- Lock
 """
 
 from .__contmngrs import (
