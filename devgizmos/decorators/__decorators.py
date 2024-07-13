@@ -1823,3 +1823,35 @@ def type_checker():
         return wrapper
 
     return decorator
+
+
+# pylint: disable=invalid-name
+class circuit_breaker:
+    """
+    circuit_breaker
+    ===============
+    Prevents a function from being called repeatedly if it keeps failing.
+
+    Parameters
+    ----------
+    :param failure_threshold: the attempts before the function freezes.
+    :type failure_threshold: int
+    :param recovery_time: the amount of time to allow the function to recover.
+    :type recovery_time: int
+
+    Example Usage
+    -------------
+    ```python
+    >>> @circuit_breaker(failure_threshold=3, recovery_time=5)
+    >>> def risky():
+    ...     raise Exception("An error occurred!")
+    ...
+    >>> # test the function
+    >>> for i in range(5):
+    ...     try:
+    ...         risky()
+    ...     except Exception as e:
+    ...         print(e)
+    ...         time.sleep(1)
+    """
+    # im losing braincells, i'll do this later or you can do it, dnc!!!!

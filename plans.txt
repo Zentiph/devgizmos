@@ -16,3 +16,4 @@ plans for devgizmos
 6. add support for self arg when class methods are decorated (print self or nothing instead of cls.__repr__())
 7. Chr TypeAlias
 8. add ConvertibleTo ___ Protocols to types package and a check version of them to checks module
+9. parallel execution ulti?
