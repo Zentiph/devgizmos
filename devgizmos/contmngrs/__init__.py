@@ -9,8 +9,6 @@ This module utilizes the following functionality from built-in modules/packages:
 contextlib
 - contextmanager\n
 cProfile\n
-io
-- StringIO\n
 logging
 - INFO
 - Logger\n
@@ -20,7 +18,6 @@ os
 - getcwd
 - remove
 - rmdir\n
-pstats\n
 random
 - getstate
 - seed
@@ -33,6 +30,7 @@ time
 - sleep\n
 threading
 - Lock
+- Thread
 """
 
 from .__contmngrs import (
@@ -46,4 +44,5 @@ from .__contmngrs import (
     tempdir,
     tempfile,
     timer,
+    thread_manager,
 )

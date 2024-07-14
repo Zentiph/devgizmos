@@ -6,16 +6,14 @@ Module containing context managers.
 
 from contextlib import contextmanager
 import cProfile
-from io import StringIO
 from logging import INFO, Logger
 from os import chdir, environ, getcwd, remove, rmdir
-import pstats
 from random import getstate
 from random import seed as rand_seed
 from random import setstate
 from tempfile import NamedTemporaryFile, mkdtemp
 from time import perf_counter_ns, sleep
-from threading import Lock
+from threading import Lock, Thread
 
 from .._internal import LOGGING_LEVELS, TIME_UNITS, handle_result_reporting
 from ..checks import (
@@ -484,3 +482,45 @@ def lock_handler(lock):
         yield
     finally:
         lock.release()
+
+
+@contextmanager
+def thread_manager(target, *args, **kwargs):
+    """
+    thread_manager
+    ==============
+    Context manager that ensures that threads are properly started and terminated.
+
+    Parameters
+    ----------
+    :param target: A function or method that is being threaded.
+    :type target: Callable[..., Any]
+    :param args: The arguments passed to the function.
+    :type args: Tuple[Any]
+    :param kwargs: The keyword arguments passed to the function.
+    :type kwargs: Any
+
+    Example Usage
+    -------------
+    ```python
+    >>> import time
+    >>> def worker():
+    ...     print("Thread is working!")
+    ...     time.sleep(2)
+    ...     print("Thread is finishing.")
+    ...
+    >>> with thread_manager(worker):
+    ...     print("Main thread is doing work.")
+    ...
+    Thread is working!
+    Main thread is doing work.
+    Thread is finishing.
+    ```
+    """
+    thread = Thread(target=target, args=args, kwargs=kwargs)
+    thread.start()
+
+    try:
+        yield thread
+    finally:
+        thread.join()

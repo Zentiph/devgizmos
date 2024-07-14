@@ -3,8 +3,18 @@
 import cProfile
 import logging
 from abc import abstractmethod
-from typing import Callable, ContextManager, Protocol, Literal, Optional, Type, Union
-from threading import Lock
+from typing import (
+    Callable,
+    ContextManager,
+    Protocol,
+    Literal,
+    Optional,
+    Type,
+    Union,
+    Any,
+    Tuple,
+)
+from threading import Lock, Thread
 
 from ..types import Num
 
@@ -44,3 +54,6 @@ def retry_on(
 ): ...
 def profile(output_file: Optional[str] = None) -> ContextManager[cProfile.Profile]: ...
 def lock_handler(lock: Lock) -> ContextManager[None]: ...
+def thread_manager(
+    target: Callable[..., Any], *args: Tuple[Any], **kwargs: Any
+) -> Thread: ...
