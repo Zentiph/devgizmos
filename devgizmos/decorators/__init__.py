@@ -62,8 +62,6 @@ from .__decorators import (
     singleton,
     suppressor,
     timeout,
-    timer,
-    timer_rs,
     tracer,
     type_checker,
 )

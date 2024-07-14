@@ -36,18 +36,6 @@ class SupportsLazyProperty(Protocol):
 class UnsupportedOSError(Exception): ...
 class ConditionError(Exception): ...
 
-def timer(
-    unit: Literal["ns", "us", "ms", "s"] = "ns",
-    precision: int = 3,
-    *,
-    fmt: str = "",
-    logger: Optional[logging.Logger] = None,
-    level: LoggingLevel = logging.INFO,
-) -> DecoratedFunc: ...
-def timer_rs(
-    unit: Literal["ns", "us", "ms", "s"] = "ns",
-    precision: int = 3,
-) -> DecoratedFunc: ...
 def benchmark(
     trials: int = 10,
     unit: Literal["ns", "us", "ms", "s"] = "ns",

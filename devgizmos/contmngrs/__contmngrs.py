@@ -399,7 +399,7 @@ def profile(output_file=None):
     """
     profile
     =======
-    Context manager that is used to measure and analyze the performance of a block of code.
+    Context manager used to measure and analyze the performance of a block of code.
 
     Parameters
     ----------
@@ -409,36 +409,47 @@ def profile(output_file=None):
     Example Usage
     -------------
     ```python
-    >>> with profile() as pr:
-    ...     for i in range(100000):
+    >>> with profile() as prof:
+    ...     for i in range(1_000_000_000):
     ...         pass
     ...
-    >>> pr.print_stats()
-    >>> # to save a file:
+    >>> prof.print_stats()
+            13 function calls in 0.000 seconds
+
+    Ordered by: standard name
+
+    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+         1    0.000    0.000    0.000    0.000 <stdin>:1(<module>)
+       ...      ...      ...      ...      ... ...
+
+
+    >>>
+    >>> # saving to a file:
     >>> with profile("profile_output.prof"):
-    ...     for i in range(100000):
+    ...     for i in range(1_000_000_000):
     ...         pass
     ...
     >>> # Load and analyze a saved profile:
     >>> import pstats
-    >>> p = pstats.Stats("profile_output.prof")
-    >>> p.sort_stats(pstats.SortKey.CUMULATIVE).print_stats(10)
+    >>> stats = pstats.Stats("profile_output.prof")
+    >>> stats.sort_stats(pstats.SortKey.CUMULATIVE).print_stats(10)
     ```
     """
-    pr = cProfile.Profile()
-    pr.enable()
+
+    prof = cProfile.Profile()
+    prof.enable()
 
     try:
-        yield pr
+        yield prof
     finally:
-        if not output_file:
-            s = StringIO()
-            ps = pstats.Stats(pr, stream=s).sort_stats(pstats.SortKey.CUMULATIVE)
-            ps.print_stats()
-            print(s.getvalue())
+        # if not output_file:
+        # s = StringIO()
+        # ps = pstats.Stats(prof, stream=s).sort_stats(pstats.SortKey.CUMULATIVE)
+        # ps.print_stats()
+        # print(s.getvalue())
 
         if output_file:
-            pr.dump_stats(output_file)
+            prof.dump_stats(output_file)
 
 
 @contextmanager
