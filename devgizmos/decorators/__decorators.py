@@ -1727,7 +1727,7 @@ def periodic_running_task(interval):
     """
     periodic_running_task
     =====================
-    Runs a decorated function periodically within a specified interval.
+    Runs a decorated function periodically within a specified interval through a background thread.
 
     Parameters
     ----------
