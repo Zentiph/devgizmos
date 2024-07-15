@@ -14,7 +14,7 @@ from logging import ERROR, INFO, WARNING, Logger
 from platform import system
 from statistics import mean
 from time import perf_counter, perf_counter_ns, sleep
-from typing import Any, Callable, TypeVar, get_type_hints
+from typing import Any, Callable, TypeVar, get_type_hints, Union
 from warnings import warn
 
 from .._internal import (
@@ -35,7 +35,7 @@ if system() in ("Darwin", "Linux"):
     from signal import SIGALRM, alarm, signal  # type: ignore
 elif system() == "Windows":
     # pylint: disable=no-name-in-module
-    from threading import Thread  # type: ignore
+    from threading import Thread, Event  # type: ignore
 
 
 # --consts-- #
@@ -1672,34 +1672,75 @@ def type_checker():
     return decorator
 
 
-# pylint: disable=invalid-name
-class circuit_breaker:
+class PeriodicTask:
     """
-    circuit_breaker
-    ===============
-    Prevents a function from being called repeatedly if it keeps failing.
+    PeriodicTask
+    ============
+    The main functionality of the decorator, periodic_running_task.
 
-    Parameters
-    ----------
-    :param failure_threshold: the attempts before the function freezes.
-    :type failure_threshold: int
-    :param recovery_time: the amount of time to allow the function to recover.
-    :type recovery_time: int
-
-    Example Usage
-    -------------
-    ```python
-    >>> @circuit_breaker(failure_threshold=3, recovery_time=5)
-    >>> def risky():
-    ...     raise Exception("An error occurred!")
-    ...
-    >>> # test the function
-    >>> for i in range(5):
-    ...     try:
-    ...         risky()
-    ...     except Exception as e:
-    ...         print(e)
-    ...         time.sleep(1)
+    :param interval: The time in seconds between each function call.
+    :type interval: Union[int, float]
+    :param func: The function being modified by the decorator.
+    :type func: F
+    :param args: The arguments passed to the function.
+    :type args: Tuple[Any, ...]
+    :param kwargs: The keyword arguments passed to the function.
+    :type kwargs: Any
     """
 
-    # im losing braincells, i'll do this later or you can do it, dnc!!!!
+    def __init__(self, interval, func, *args, **kwargs):
+        """The Constructor method."""
+        # typecheck
+        check_type(interval, Union[int, float])
+
+        self.interval = interval
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+        self.stop_event = Event()
+        self.thread = Thread(target=self._target)
+        self.thread.daemon = True  # background thread
+
+    def _target(self):
+        """The thread's target, a private function only used in PeriodicTask."""
+        while not self.stop_event.is_set():
+            try:
+                self.func(*self.args, **self.kwargs)
+            except Exception as e:
+                print(f"Error occured during a periodic task: {e}")
+
+            sleep(self.interval)
+
+    def start(self):
+        """Starts the threading process."""
+        self.thread.start()
+
+    def stop(self):
+        """A manual function that allows the user to stop the function."""
+        self.stop_event.set()
+        self.thread.join()
+
+
+def periodic_running_task(interval):
+    """
+    periodic_running_task
+    =====================
+    Runs a decorated function periodically within a specified interval.
+
+    :param interval: The time in seconds between each function call.
+    :type interval: Union[int, float]
+    """
+    # typecheck
+    check_type(interval, Union[int, float])
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            task = PeriodicTask(interval, func, *args, **kwargs)
+            task.start()
+            wrapper.stop = task.stop
+            return task
+
+        return wrapper
+
+    return decorator

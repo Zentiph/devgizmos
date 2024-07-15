@@ -57,6 +57,7 @@ from .__decorators import (
     fallback,
     immutable,
     lazy_property,
+    periodic_running_task,
     rate_limit,
     retry,
     singleton,
