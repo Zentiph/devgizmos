@@ -28,7 +28,8 @@ signal (Unix)
 statistics
 - mean\n
 threading (Windows)
-- Thread\n
+- Thread
+- Event\n
 time
 - perf_counter
 - perf_counter_ns
