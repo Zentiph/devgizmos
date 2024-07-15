@@ -1678,6 +1678,8 @@ class PeriodicTask:
     ============
     The main functionality of the decorator, periodic_running_task.
 
+    Parameters
+    ----------
     :param interval: The time in seconds between each function call.
     :type interval: Union[int, float]
     :param func: The function being modified by the decorator.
@@ -1727,8 +1729,29 @@ def periodic_running_task(interval):
     =====================
     Runs a decorated function periodically within a specified interval.
 
+    Parameters
+    ----------
     :param interval: The time in seconds between each function call.
     :type interval: Union[int, float]
+
+    Example Usage
+    -------------
+    ```python
+    >>> import time
+    >>> @periodic_running_task(2)
+    ... def my_task():
+    ...     print("Task is running...")
+    ...
+    >>> TASK_INSTANCE = my_task()
+    ... try:
+    ...     time.sleep(4)
+    ... finally:
+    >>>     TASK_INSTANCE.stop() # Stop the periodic task
+    ...     print("Task has stopped.")
+    Task is running...
+    Task is running...
+    Task has stopped.
+    ```
     """
     # typecheck
     check_type(interval, Union[int, float])
