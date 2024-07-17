@@ -43,6 +43,5 @@ from .__contmngrs import (
     suppress,
     tempdir,
     tempfile,
-    timer,
     thread_manager,
 )

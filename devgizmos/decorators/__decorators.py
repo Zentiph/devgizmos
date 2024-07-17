@@ -16,7 +16,6 @@ from time import perf_counter, sleep
 from typing import Any, Callable, TypeVar, get_type_hints, Union
 from warnings import warn
 
-from .._internal import LOGGING_LEVELS, handle_result_reporting
 from ..checks import (
     check_callable,
     check_in_bounds,
