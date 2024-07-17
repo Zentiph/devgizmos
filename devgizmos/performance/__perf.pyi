@@ -2,22 +2,21 @@
 
 import logging
 from types import TracebackType
-from typing import Literal, Optional, Self, Type, Union
+from typing import Any, Callable, Literal, Optional, Self, Type, TypeVar
 
-from ..types import Decorator
+from ..types import Function
 
+F = TypeVar("F", bound=Callable[..., Any])
 LoggingLevel = int
-DecoratedFunc = Decorator
+
+class TimerNotStartedError(Exception): ...
+class TimerReactivationError(Exception): ...
 
 class Timer:
     def __init__(
         self,
         unit: Literal["ns", "us", "ms", "s"] = "ns",
         precision: int = 3,
-        *,
-        fmt: str = "",
-        logger: Optional[logging.Logger] = None,
-        level: LoggingLevel = logging.INFO,
     ) -> None: ...
     def __enter__(self) -> Self: ...
     def __exit__(
@@ -26,15 +25,11 @@ class Timer:
         value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> None: ...
+    def __call__(self, func: F, /) -> F: ...
+    @property
     def elapsed(self) -> float: ...
+    def start(self) -> None: ...
+    def stop(self) -> None: ...
     def pause(self) -> None: ...
     def resume(self) -> None: ...
-
-def dectimer(
-    unit: Literal["ns", "us", "ms", "s"] = "ns",
-    precision: int = 3,
-    *,
-    fmt: str = "",
-    logger: Optional[logging.Logger] = None,
-    level: LoggingLevel = logging.INFO,
-) -> DecoratedFunc: ...
+    def reset(self) -> None: ...
