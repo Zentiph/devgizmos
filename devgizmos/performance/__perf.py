@@ -5,10 +5,11 @@ Module containing performance related functionality.
 """
 
 from functools import wraps
+from statistics import mean
 from time import perf_counter_ns
 
 from .._internal import TIME_UNITS
-from ..checks import check_type, check_value
+from ..checks import check_in_bounds, check_type, check_value
 
 
 class TimerNotStartedError(Exception):
@@ -111,8 +112,8 @@ class Timer:
         self.__unit = unit
         self.__precision = precision
 
-        self.__initial_time = 0.0  # placeholder, see __enter__
-        self.__last_unpaused = 0.0  # placeholder, see __enter__
+        self.__initial_time = 0.0  # placeholder
+        self.__last_unpaused = 0.0  # placeholder
         self.__elapsed_time = 0.0
 
         self.__started = False
@@ -225,3 +226,126 @@ class Timer:
         self.__elapsed_time = 0.0
         self.__initial_time = 0.0
         self.__last_unpaused = 0.0
+
+
+class Benchmark:
+    """Class for benchmarking code."""
+
+    def __init__(self, trials=10, unit="ns", precision=3):
+        """
+        Benchmark
+        =========
+        Class to be used as a decorator that runs code multiple times
+        and reports the average, minimum, and maximum execution times.
+
+        Parameters
+        ----------
+        :param trials: The number of times to run the code, defaults to 10.
+        :type trials: int
+        :param unit: The unit of time to use, defaults to "ns".
+        - Supported units are "ns", "us", "ms", "s".\n
+        :type unit: Literal["ns", "us", "ms", "s"], optional
+        :param precision: The precision to use when rounding the time, defaults to 3
+        :type precision: int, optional
+
+        Raises
+        ------
+        :raises TypeError: If trials is not an int.
+        :raises TypeError: If precision is not an int.
+        :raises ValueError: If trials is less than 1.
+        :raises ValueError: If unit is not 'ns', 'us', 'ms', or 's'.
+
+        Example Usage
+        -------------
+        ```python
+        >>> benchmark = Benchmark(unit="ms")
+        >>>
+        >>> @benchmark
+        ... def perf_test():
+        ...     for _ in range(100_000):
+        ...             pass
+        ...
+        >>> perf_test()
+        >>>
+        >>> benchmark.average
+        1.671
+        >>> benchmark.minimum
+        1.522
+        >>> benchmark.maximum
+        1.813
+        ```
+        """
+
+        # type checks
+        check_type(trials, int)
+        check_type(precision, int)
+
+        unit = unit.lower()
+        # value checks
+        check_in_bounds(trials, 1, None)
+        check_value(unit, TIME_UNITS)
+
+        self.__trials = trials
+        self.__unit = unit
+        self.__precision = precision
+
+        self.__avg = 0.0  # placeholder
+        self.__min = 0.0  # placeholder
+        self.__max = 0.0  # placeholder
+
+    def __call__(self, func, /):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            results = []
+            returned = None
+
+            for i in range(self.__trials):
+                start_time = perf_counter_ns()
+
+                if i == len(range(self.__trials)) - 1:
+                    returned = func(*args, **kwargs)
+                else:
+                    func(*args, **kwargs)
+
+                delta = perf_counter_ns() - start_time
+                elapsed = delta / (1000 ** TIME_UNITS.index(self.__unit))
+
+                results.append(elapsed)
+
+            self.__avg = float(round(mean(results), self.__precision))
+            self.__min = float(round(min(results), self.__precision))
+            self.__max = float(round(max(results), self.__precision))
+
+            return returned
+
+        return wrapper
+
+    @property
+    def average(self):
+        """
+        Benchmark.average
+        =================
+        Returns the average time it took the code to execute.
+        """
+
+        return self.__avg
+
+    @property
+    def minimum(self):
+        """
+        Benchmark.minimum
+        =================
+        Returns the minimum time it took the code to execute.
+        """
+
+        return self.__min
+
+    @property
+    def maximum(self):
+        """
+        Benchmark.maximum
+        =================
+        Returns the maximum time it took the code to execute.
+        """
+
+        return self.__max

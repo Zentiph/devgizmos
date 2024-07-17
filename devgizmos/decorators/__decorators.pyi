@@ -37,18 +37,6 @@ class SupportsLazyProperty(Protocol):
 class UnsupportedOSError(Exception): ...
 class ConditionError(Exception): ...
 
-def benchmark(
-    trials: int = 10,
-    unit: Literal["ns", "us", "ms", "s"] = "ns",
-    precision: int = 3,
-    *,
-    fmt: str = "",
-    logger: Optional[logging.Logger] = None,
-    level: LoggingLevel = logging.INFO,
-) -> DecoratedFunc: ...
-def benchmark_rs(
-    trials: int = 10, unit: Literal["ns", "us", "ms", "s"] = "ns", precision: int = 3
-) -> DecoratedFunc: ...
 def retry(
     max_attempts: int,
     delay: Num,

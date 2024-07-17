@@ -48,8 +48,6 @@ from .__decorators import (
     ConditionError,
     UnsupportedOSError,
     async_retry,
-    benchmark,
-    benchmark_rs,
     cache,
     conditional,
     decorate_all_methods,
