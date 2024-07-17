@@ -12,16 +12,11 @@ from collections import OrderedDict
 from functools import wraps
 from logging import ERROR, INFO, WARNING, Logger
 from platform import system
-from statistics import mean
-from time import perf_counter, perf_counter_ns, sleep
+from time import perf_counter, sleep
 from typing import Any, Callable, TypeVar, get_type_hints, Union
 from warnings import warn
 
-from .._internal import (
-    LOGGING_LEVELS,
-    TIME_UNITS,
-    handle_result_reporting,
-)
+from .._internal import LOGGING_LEVELS, handle_result_reporting
 from ..checks import (
     check_callable,
     check_in_bounds,
