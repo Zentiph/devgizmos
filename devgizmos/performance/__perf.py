@@ -19,11 +19,17 @@ BIN_MEM_UNITS = ("b", "kib", "mib", "gib")
 
 
 class NotStartedError(Exception):
-    """Exception to raise if one of a class's methods is called before its start() method has been called."""
+    """
+    NotStartedError
+    ===============
+    Exception to raise if one of a class's methods is called before its start() method has been called.
+    """
 
 
 class ReactivationError(Exception):
     """
+    ReactivationError
+    =================
     Exception to raise if a class's start() is called when
     its start() method has been previously called and before its stop() method has been called.
     """
@@ -455,8 +461,8 @@ class MemoryProfiler:
         else:
             self.__unit_type = "bin"
 
-        self.__start_mem = None # placeholder
-        self.__end_mem = None # placeholder
+        self.__start_mem = None  # placeholder
+        self.__end_mem = None  # placeholder
 
         self.__running = False
 

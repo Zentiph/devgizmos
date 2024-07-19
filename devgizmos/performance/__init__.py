@@ -17,4 +17,11 @@ tracemalloc
 - take_snapshot\n
 """
 
-from .__perf import Benchmark, MemoryProfiler, NotStartedError, ReactivationError, Timer
+from .__perf import (
+    Benchmark,
+    MemoryProfiler,
+    NotStartedError,
+    ReactivationError,
+    Timer,
+    Timeout,
+)
