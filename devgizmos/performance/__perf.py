@@ -403,20 +403,9 @@ class MemoryProfiler:
         >>> for _ in range(100_000):
         ...     pass
         ...
-        >>> # pause it
-        >>> mp.pause()
         >>> # get the memory used
         >>> mp.memory_used
         9.544
-        >>> # resume it
-        >>> mp.resume()
-        >>> for _ in range(100_000):
-        ...     pass
-        ...
-        >>> # end the profiling
-        >>> mp.stop()
-        >>> mp.memory_used
-        8.919
         ```
 
         Example Usage (Context Manager)
@@ -466,10 +455,9 @@ class MemoryProfiler:
         else:
             self.__unit_type = "bin"
 
-        self.__start_mem = 0
-        self.__end_mem = 0
+        self.__start_mem = None # placeholder
+        self.__end_mem = None # placeholder
 
-        self.__paused = False
         self.__running = False
 
     def __enter__(self):
@@ -523,41 +511,6 @@ class MemoryProfiler:
         tm_stop()
         self.__running = False
 
-    def pause(self):
-        """
-        MemoryProfiler.pause()
-        ======================
-        Pauses memory profiling.
-        """
-
-        if not self.__running:
-            raise NotStartedError(
-                "MemoryProfiler must be started to use 'MemoryProfiler.pause()'."
-                + "To start the MemoryProfiler, use 'MemoryProfiler.start()'."
-            )
-
-        if not self.__paused:
-            self.__end_mem = take_snapshot()
-            tm_stop()
-            self.__paused = True
-
-    def resume(self):
-        """
-        MemoryProfiler.resume()
-        =======================
-        Resumes memory profiling.
-        """
-
-        if not self.__running:
-            raise NotStartedError(
-                "MemoryProfiler must be started to use 'MemoryProfiler.resume()'."
-                + "To start the MemoryProfiler, use 'MemoryProfiler.start()'."
-            )
-
-        if self.__paused:
-            tm_start()
-        self.__paused = False
-
     @property
     def memory_used(self):
         """
@@ -566,7 +519,7 @@ class MemoryProfiler:
         Returns the memory usage of the profiled code.
         """
 
-        if self.__running and not self.__paused:
+        if self.__running:
             self.__end_mem = take_snapshot()
 
         comparison = self.__end_mem.compare_to(self.__start_mem, "lineno")
