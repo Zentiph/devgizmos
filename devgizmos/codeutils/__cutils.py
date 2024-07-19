@@ -8,7 +8,7 @@ from functools import wraps
 from inspect import currentframe
 from platform import system
 
-from ..checks import check_in_bounds, check_subclass, check_type
+from ..checks import check_callable, check_in_bounds, check_subclass, check_type
 
 if system() in ("Darwin", "Linux"):
     # pylint: disable=no-name-in-module
@@ -142,3 +142,110 @@ class Timeout:
             return result[0]
 
         return wrapper
+
+
+class Fallback:
+    """Class that falls back to a provided function if its code fails."""
+
+    def __init__(self, func, *args, **kwargs):
+        """
+        Fallback
+        ========
+        Class for falling back to the provided function if its code fails.
+        Can be used as a context manager and a decorator.
+
+        Parameters
+        ----------
+        :param func: The function to run if the code fails.
+        :type func: Callable[..., Any]
+        :param args: The args to pass to func.
+        :type args: Any
+        :param kwargs: The kwargs to pass to func.
+        :type kwargs: Any
+
+        Raises
+        ------
+        :raises TypeError: If func is not callable.
+
+        Example Usage (Context Manager)
+        -------------------------------
+        ```python
+
+        ```
+
+        Example Usage (Decorator)
+        -------------------------
+        ```python
+
+        ```
+        """
+
+        # type checks
+        check_callable(func)
+
+        self.__func = func
+        self.__args = args
+        self.__kwargs = kwargs
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type_, value, traceback):
+        pass
+
+    def __call__(self, func, /):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            pass
+
+        return wrapper
+
+
+def fallback(fallback_func, *args, **kwargs):
+    """
+    fallback
+    ========
+    If the decorated function fails, the fallback function will be executed.
+
+    Parameters
+    ----------
+    :param fallback_func: The fallback function.
+    :type fallback_func: Callable[..., Any]
+    :param args: The args to pass to the fallback function.
+    :type args: Any
+    :param kwargs: The kwargs to pass to the fallback function.
+    :type kwargs: Any
+
+    Raises
+    ------
+    :raise TypeError: If func is not callable.
+
+    Example Usage
+    -------------
+    ```python
+    >>> def failure_handler():
+    ...     print("An error occurred. Suppressing...")
+    ...
+    >>> @fallback(failure_handler)
+    ... def risky():
+    ...     raise TypeError
+    ...
+    >>> risky()
+    An error occurred. Suppressing...
+    ```
+    """
+
+    # type checks
+    check_callable(fallback_func)
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*w_args, **w_kwargs):
+            try:
+                return func(*w_args, **w_kwargs)
+            except Exception:
+                return fallback_func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
