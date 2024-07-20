@@ -61,18 +61,6 @@ def async_retry(
     logger: Optional[logging.Logger] = None,
     level: LoggingLevel = logging.INFO,
 ) -> DecoratedFunc: ...
-def timeout(
-    cutoff: Num,
-    *,
-    success_fmt: Optional[str] = "",
-    failure_fmt: Optional[str] = "",
-    logger: Optional[logging.Logger] = None,
-    success_level: LoggingLevel = logging.INFO,
-    failure_level: LoggingLevel = logging.WARNING,
-) -> DecoratedFunc: ...
-def fallback(
-    fallback_func: Callable[..., Any], *args: Any, **kwargs: Any
-) -> DecoratedFunc: ...
 def tracer(
     *,
     entry_fmt: Optional[str] = "",
@@ -120,17 +108,3 @@ def decorate_all_methods(
 def immutable(cls: Type[T]) -> DecoratedCls: ...
 def singleton() -> DecoratedCls: ...
 def type_checker() -> DecoratedFunc: ...
-
-class PeriodicTask:
-    def __init__(
-        self,
-        interval: Union[int, float],
-        func: F,
-        *args: Tuple[Any, ...],
-        **kwargs: Any,
-    ) -> None: ...
-    def _target(self) -> None: ...
-    def start(self) -> None: ...
-    def stop(self) -> None: ...
-
-def periodic_running_task(interval: Union[int, float]) -> DecoratedFunc: ...
