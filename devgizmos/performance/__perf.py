@@ -16,6 +16,7 @@ from ..checks import check_in_bounds, check_type, check_value
 TIME_UNITS = ("ns", "us", "ms", "s")
 DEC_MEM_UNITS = ("b", "kb", "mb", "gb")
 BIN_MEM_UNITS = ("b", "kib", "mib", "gib")
+MEM_UNITS = BIN_MEM_UNITS + DEC_MEM_UNITS
 
 
 class NotStartedError(Exception):
@@ -160,6 +161,11 @@ class Timer:
         Timer.elapsed
         =============
         Returns the time elapsed so far.
+
+        Return
+        ------
+        :return: The time elapsed.
+        :rtype: int | float
         """
 
         if not self.__paused:
@@ -246,6 +252,80 @@ class Timer:
         self.__elapsed_time = 0.0
         self.__initial_time = 0.0
         self.__last_unpaused = 0.0
+
+    @property
+    def unit(self):
+        """
+        Timer.unit
+        ==========
+        Returns the unit being used by the Timer.
+
+        Return
+        ------
+        :return: The unit being used by the Timer.
+        :rtype: Literal["ns", "us", "ms", "s"]
+        """
+
+        return self.__unit
+
+    @unit.setter
+    def unit(self, u, /):
+        """
+        Timer.unit()
+        ============
+        Sets the unit for the Timer.
+
+        Parameters
+        ----------
+        :param u: The new unit.
+        :type u: Literal["ns", "us", "ms", "s"]
+
+        Raises
+        ------
+        :raises ValueError: If u is not "ns", "us", "ms", or "s".
+        """
+
+        # value checks
+        check_value(u, TIME_UNITS)
+
+        self.__unit = u
+
+    @property
+    def precision(self):
+        """
+        Timer.precision
+        ===============
+        Returns the precision being used by the Timer.
+
+        Return
+        ------
+        :return: The precision being used by the Timer.
+        :rtype: int
+        """
+
+        return self.__precision
+
+    @precision.setter
+    def precision(self, p, /):
+        """
+        Timer.precision()
+        =================
+        Sets the precision for the Timer.
+
+        Parameters
+        ----------
+        :param p: The new precision.
+        :type p: int
+
+        Raises
+        ------
+        :raises ValueError: If p is not an int.
+        """
+
+        # type checks
+        check_value(p, int)
+
+        self.__precision = p
 
 
 class Benchmark:
@@ -348,6 +428,11 @@ class Benchmark:
         Benchmark.average
         =================
         Returns the average time it took the code to execute.
+
+        Return
+        ------
+        :return: The average time.
+        :rtype: float
         """
 
         return self.__avg
@@ -358,6 +443,11 @@ class Benchmark:
         Benchmark.minimum
         =================
         Returns the minimum time it took the code to execute.
+
+        Return
+        ------
+        :return: The minimum time.
+        :rtype: float
         """
 
         return self.__min
@@ -368,9 +458,129 @@ class Benchmark:
         Benchmark.maximum
         =================
         Returns the maximum time it took the code to execute.
+
+        Return
+        ------
+        :return: The maximum time.
+        :rtype: float
         """
 
         return self.__max
+
+    @property
+    def trials(self):
+        """
+        Benchmark.trials
+        ================
+        Returns the number of trials the Benchmark will run.
+
+        Return
+        ------
+        :return: The number of trials to be run.
+        :rtype: int
+        """
+
+        return self.__trials
+
+    @trials.setter
+    def trials(self, t, /):
+        """
+        Benchmark.trials()
+        ==================
+        Sets the number of trials the Benchmark will run.
+
+        Parameters
+        ----------
+        :param t: The new number of trials to run.
+        :type t: int
+
+        Raises
+        ------
+        :raises TypeError: If t is not an int.
+        :raises ValueError: If t is less than or equal to 0.
+        """
+
+        # type checks
+        check_type(t, int)
+
+        # value checks
+        check_in_bounds(t, 1, None)
+
+        self.__trials = t
+
+    @property
+    def unit(self):
+        """
+        Benchmark.unit
+        ==============
+        Returns the unit being used by the Benchmark.
+
+        Return
+        ------
+        :return: The unit being used by the Benchmark.
+        :rtype: Literal["ns", "us", "ms", "s"]
+        """
+
+        return self.__unit
+
+    @unit.setter
+    def unit(self, u, /):
+        """
+        Benchmark.unit()
+        ================
+        Sets the unit for the Benchmark.
+
+        Parameters
+        ----------
+        :param u: The new unit.
+        :type u: Literal["ns", "us", "ms", "s"]
+
+        Raises
+        ------
+        :raises ValueError: If u is not "ns", "us", "ms", or "s".
+        """
+
+        # value checks
+        check_value(u, TIME_UNITS)
+
+        self.__unit = u
+
+    @property
+    def precision(self):
+        """
+        Benchmark.precision
+        ===================
+        Returns the precision being used by the Benchmark.
+
+        Return
+        ------
+        :return: The precision being used by the Benchmark.
+        :rtype: int
+        """
+
+        return self.__precision
+
+    @precision.setter
+    def precision(self, p, /):
+        """
+        Benchmark.precision()
+        =====================
+        Sets the precision for the Benchmark.
+
+        Parameters
+        ----------
+        :param p: The new precision.
+        :type p: int
+
+        Raises
+        ------
+        :raises ValueError: If p is not an int.
+        """
+
+        # type checks
+        check_value(p, int)
+
+        self.__precision = p
 
 
 class MemoryProfiler:
@@ -451,7 +661,7 @@ class MemoryProfiler:
 
         unit = unit.lower()
         # value checks
-        check_value(unit, DEC_MEM_UNITS + BIN_MEM_UNITS)
+        check_value(unit, MEM_UNITS)
 
         self.__unit = unit
         self.__precision = precision
@@ -523,6 +733,11 @@ class MemoryProfiler:
         MemoryProfiler.memory_used
         ==========================
         Returns the memory usage of the profiled code.
+
+        Return
+        ------
+        :return: The memory used, rounded using the MemoryProfiler's unit.
+        :rtype: int | float
         """
 
         if self.__running:
@@ -537,3 +752,77 @@ class MemoryProfiler:
         rounded = round(converted, self.__precision)
 
         return rounded
+
+    @property
+    def unit(self):
+        """
+        MemoryProfiler.unit
+        ===================
+        Returns the unit being used by the MemoryProfiler.
+
+        Return
+        ------
+        :return: The unit being used by the MemoryProfiler.
+        :rtype: Literal["b", "kb", "mb", "gb", "kib", "mib", "gib"]
+        """
+
+        return self.__unit
+
+    @unit.setter
+    def unit(self, u, /):
+        """
+        MemoryProfiler.unit()
+        =====================
+        Sets the unit for the MemoryProfiler.
+
+        Parameters
+        ----------
+        :param u: The new unit.
+        :type u: Literal["b", "kb", "mb", "gb", "kib", "mib", "gib"]
+
+        Raises
+        ------
+        :raises ValueError: If u is not "b", "kb", "mb", "gb", "kib", "mib", or "gib".
+        """
+
+        # value checks
+        check_value(u, MEM_UNITS)
+
+        self.__unit = u
+
+    @property
+    def precision(self):
+        """
+        MemoryProfiler.precision
+        ========================
+        Returns the precision being used by the MemoryProfiler.
+
+        Return
+        ------
+        :return: The precision being used by the MemoryProfiler.
+        :rtype: int
+        """
+
+        return self.__precision
+
+    @precision.setter
+    def precision(self, p, /):
+        """
+        MemoryProfiler.precision()
+        ==========================
+        Sets the precision for the MemoryProfiler.
+
+        Parameters
+        ----------
+        :param p: The new precision.
+        :type p: int
+
+        Raises
+        ------
+        :raises ValueError: If p is not an int.
+        """
+
+        # type checks
+        check_value(p, int)
+
+        self.__precision = p

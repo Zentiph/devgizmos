@@ -12,14 +12,7 @@ math
 - trunc
 re
 - match
-typing
-- Any
-- Callable
-- Dict
-- TypeVar
-- Union
 """
 
 from .__char import Char
 from .__number import Number
-from .__types import Decorator, Function, JsonData, Num, NumOrComplex

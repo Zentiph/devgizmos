@@ -4,9 +4,11 @@ codeutils.__cutils
 Module containing function inspection/controlling utility.
 """
 
+from abc import abstractmethod
 from functools import wraps
 from inspect import currentframe
 from platform import system
+from typing import Protocol
 
 from ..checks import check_callable, check_in_bounds, check_subclass, check_type
 
@@ -144,61 +146,115 @@ class Timeout:
         return wrapper
 
 
-class Fallback:
-    """Class that falls back to a provided function if its code fails."""
+class BaseFailureHandler(Protocol):
+    """Base class for FailureManager handlers."""
 
-    def __init__(self, func, *args, **kwargs):
+    @abstractmethod
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def __call__(self):
+        pass
+
+
+class FailureManager:
+    """Class for handling code failures."""
+
+    def __init__(self, handler=None, exceptions=(Exception,)):
         """
-        Fallback
-        ========
-        Class for falling back to the provided function if its code fails.
-        Can be used as a context manager and a decorator.
+        FailureManager
+        ==============
+        Class that handles code failures using the handler provided.
 
-        Parameters
-        ----------
-        :param func: The function to run if the code fails.
-        :type func: Callable[..., Any]
-        :param args: The args to pass to func.
-        :type args: Any
-        :param kwargs: The kwargs to pass to func.
-        :type kwargs: Any
-
-        Raises
-        ------
-        :raises TypeError: If func is not callable.
-
-        Example Usage (Context Manager)
-        -------------------------------
-        ```python
-
-        ```
-
-        Example Usage (Decorator)
-        -------------------------
-        ```python
-
-        ```
+        :param handler: The handler to use when handling failures, or None for no handler, defaults to None
+        :type handler: FailureHandler, optional
+        :param exceptions: The exceptions to activate the FailureManager for.
+        :type exceptions: Tuple[Type[BaseException], ...]
         """
 
         # type checks
-        check_callable(func)
+        check_subclass(BaseFailureHandler, handler)
+        check_type(exceptions, tuple)
+        check_subclass(BaseException, exceptions)
 
-        self.__func = func
-        self.__args = args
-        self.__kwargs = kwargs
+        self.__handler = handler
+        self.__exceptions = exceptions
 
-    def __enter__(self):
-        pass
+    @property
+    def handler(self):
+        """
+        FailureManager.handler
+        ======================
+        Returns the FailureManager's handler.
 
-    def __exit__(self, type_, value, traceback):
-        pass
+        Return
+        ------
+        :return: The handler.
+        :rtype: BaseFailureHandler
+        """
 
-    def __call__(self, func, /):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            pass
+        return self.__handler
 
-        return wrapper
+    @handler.setter
+    def handler(self, h, /):
+        """
+        FailureManager.handler()
+        ========================
+        Sets the FailureManager's handler.
+
+        Parameters
+        ----------
+        :param h: The new handler.
+        :type h: BaseFailureHandler
+
+        Raises
+        ------
+        :raises TypeError: If h is not an instance of BaseFailureHandler.
+        """
+
+        # type checks
+        check_subclass(BaseFailureHandler, h)
+
+        self.__handler = h
+
+    @property
+    def exceptions(self):
+        """
+        FailureManager.exceptions
+        =========================
+        Returns the exceptions being watched for by the FailureManager.
+
+        Return
+        ------
+        :return: The exceptions being watched for.
+        :rtype: Tuple[Type[BaseException], ...]
+        """
+
+        return self.__exceptions
+
+    @exceptions.setter
+    def exceptions(self, excs):
+        """
+        FailureManager.exceptions()
+        ===========================
+        Sets the exceptions for the FailureManager to watch.
+
+        Parameters
+        ----------
+        :param excs: The exceptions to watch for.
+        :type excs: Tuple[Type[BaseException], ...]
+
+        Raises
+        ------
+        :raises TypeError: If excs is not a Tuple of BaseException instances.
+        """
+
+        # type checks
+        check_type(excs, tuple)
+        check_subclass(BaseException, excs)
+
+        self.__exceptions = excs
 
 
 def fallback(fallback_func, *args, **kwargs):

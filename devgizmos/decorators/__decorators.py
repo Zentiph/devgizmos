@@ -10,10 +10,9 @@ Module containing decorators.
 from asyncio import sleep as async_sleep
 from collections import OrderedDict
 from functools import wraps
-from logging import ERROR, INFO, WARNING, Logger
-from platform import system
+from logging import ERROR, INFO, Logger
 from time import perf_counter, sleep
-from typing import Any, Callable, TypeVar, get_type_hints, Union
+from typing import Any, Callable, TypeVar, get_type_hints
 from warnings import warn
 
 from ..checks import (
@@ -23,14 +22,6 @@ from ..checks import (
     check_type,
     check_value,
 )
-
-if system() in ("Darwin", "Linux"):
-    # pylint: disable=no-name-in-module
-    from signal import SIGALRM, alarm, signal  # type: ignore
-elif system() == "Windows":
-    # pylint: disable=no-name-in-module
-    from threading import Thread, Event  # type: ignore
-
 
 # --consts-- #
 F = TypeVar("F", bound=Callable[..., Any])
