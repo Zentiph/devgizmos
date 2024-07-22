@@ -9,7 +9,7 @@ Mainly used for type and value checking function parameters.
 from re import match as re_match
 
 
-def check_type(value, /, type_or_tuple, optional=False, raise_exc=True, exc_msg=""):
+def check_type(value, type_or_tuple, /, optional=False, *, raise_exc=True, exc_msg=""):
     """
     check_type
     ==========
@@ -78,7 +78,7 @@ def check_type(value, /, type_or_tuple, optional=False, raise_exc=True, exc_msg=
     return False
 
 
-def check_value(value, /, value_or_tuple, raise_exc=True, exc_msg=""):
+def check_value(value, value_or_tuple, /, *, raise_exc=True, exc_msg=""):
     """
     check_values
     ============
@@ -320,7 +320,7 @@ def check_in_bounds(
     return True
 
 
-def check_truthy(value, raise_exc=True, exc_msg=""):
+def check_truthy(value, *, raise_exc=True, exc_msg=""):
     """
     check_truthy
     ============
@@ -375,7 +375,7 @@ def check_truthy(value, raise_exc=True, exc_msg=""):
     return False
 
 
-def check_not_none(value, raise_exc=True, exc_msg=""):
+def check_not_none(value, *, raise_exc=True, exc_msg=""):
     """
     check_not_none
     ==============
@@ -489,7 +489,7 @@ def check_length(value, /, min_length, max_length=-1, *, raise_exc=True, exc_msg
 
 
 # pylint: disable=anomalous-backslash-in-string
-def check_regex(string, regex, raise_exc=True, exc_msg=""):
+def check_regex(string, regex, /, *, raise_exc=True, exc_msg=""):
     """
     check_regex
     ===========
@@ -547,7 +547,7 @@ def check_regex(string, regex, raise_exc=True, exc_msg=""):
     return False
 
 
-def check_key_in_dict(dictionary, key_or_tuple, raise_exc=True, exc_msg=""):
+def check_key_in_dict(dictionary, key_or_tuple, /, *, raise_exc=True, exc_msg=""):
     """
     check_key_in_dict
     =================
@@ -614,7 +614,7 @@ def check_key_in_dict(dictionary, key_or_tuple, raise_exc=True, exc_msg=""):
     return False
 
 
-def check_contains(iterable, item_or_tuple, raise_exc=True, exc_msg=""):
+def check_contains(iterable, item_or_tuple, /, *, raise_exc=True, exc_msg=""):
     """
     check_contains
     ==============
@@ -680,7 +680,7 @@ def check_contains(iterable, item_or_tuple, raise_exc=True, exc_msg=""):
     return False
 
 
-def check_subclass(superclass, subclass_or_tuple, raise_exc=True, exc_msg=""):
+def check_subclass(superclass, subclass_or_tuple, /, *, raise_exc=True, exc_msg=""):
     """
     check_subclass
     ==============
@@ -745,7 +745,7 @@ def check_subclass(superclass, subclass_or_tuple, raise_exc=True, exc_msg=""):
     return False
 
 
-def check_callable(obj_or_tuple, raise_exc=True, exc_msg=""):
+def check_callable(obj_or_tuple, /, *, raise_exc=True, exc_msg=""):
     """
     check_callable
     ==============
@@ -805,6 +805,63 @@ def check_callable(obj_or_tuple, raise_exc=True, exc_msg=""):
         exc_msg = exc_msg.format(objs=obj_names)
     else:
         exc_msg = f"One of these objects is not callable: {obj_names}"
+
+    if raise_exc:
+        raise TypeError(exc_msg)
+    return False
+
+
+def check_no_duplicates(obj, /, *, raise_exc=True, exc_msg=""):
+    """
+    check_no_duplicates
+    ===================
+    Verifies the given object has no duplicate items inside.
+    Returns a boolean if raise_exc is False, otherwise raises an exception.
+
+    Parameters
+    ----------
+    :param obj: The object to check.
+    :type obj: object
+    :param raise_exc: Whether to raise an exception, defaults to True
+    - If True, the corresponding exception will be raised.
+    - If False, will return False instead of raising an exception.\n
+    :type raise_exc: bool, optional
+    :param exc_msg: A custom exception message if changed, defaults to ""
+    - Below is a list of supported fields to be used in an unformatted string:
+    - obj: The checked object.
+    - Ex: exc_msg="{obj} contains duplicates."\n
+    :type exc_msg: str, optional
+
+    Raises
+    ------
+    :raises ValueError: If raise_exc is True and the object contains duplicate items.
+
+    Return
+    ------
+    :return: True if the object does not contain duplicates, otherwise False.
+    :rtype: bool
+
+    Example Usage
+    -------------
+    ```python
+    >>> l1 = [1, 2, 3, 4]
+    >>> check_no_duplicates(l1)
+    True
+    >>> l2 = [1, 2, 3, 1]
+    >>> check_no_duplicates(l2, raise_exc=False)
+    False
+    >>> check_no_duplicates(l2)
+    ValueError: [1, 2, 3, 1] contains duplicate items
+    ```
+    """
+
+    if len(obj) == len(set(obj)):
+        return True
+
+    if exc_msg:
+        exc_msg = exc_msg.format(obj=repr(obj))
+    else:
+        exc_msg = f"{repr(obj)} contains duplicate items"
 
     if raise_exc:
         raise TypeError(exc_msg)

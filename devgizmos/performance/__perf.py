@@ -94,29 +94,38 @@ class Timer:
         Example Usage (Context Manager)
         -------------------------------
         ```python
+        >>> # enter the context manager
         >>> with Timer("ms") as t:
         ...     for _ in range(100_000):
         ...             pass
+        ...     # pause the timer to ignore this for loop
         ...     t.pause()
         ...     for _ in range(100_000):
         ...             pass
+        ...     # resume it
         ...     t.resume()
         ...
+        >>> # get the time elapsed
         >>> t.elapsed
-        3.306
+        1.947
         ```
 
         Example Usage (Decorator)
         -------------------------
         ```python
+        >>> # create the timer object
         >>> tmr = Timer("ms")
         >>>
+        >>> # decorate a function with it
         >>> @tmr
         ... def perf_test():
         ...     for _ in range(100_000):
         ...             pass
         ...
+        >>> # call the function
         >>> perf_test()
+        >>>
+        >>> # get the time elapsed
         >>> tmr.elapsed
         1.837
         ```
@@ -619,6 +628,8 @@ class MemoryProfiler:
         >>> for _ in range(100_000):
         ...     pass
         ...
+        >>> # stop it
+        >>> mp.stop()
         >>> # get the memory used
         >>> mp.memory_used
         9.544
@@ -627,14 +638,19 @@ class MemoryProfiler:
         Example Usage (Context Manager)
         -------------------------------
         ```python
+        >>> # enter the context manager block
         >>> with MemoryProfiler() as mp:
         ...     for _ in range(100_000):
         ...             pass
+        ...     # get the memory used up to this point
+        ...     # (will partially skew data due to getting memory also taking memory)
+        ...     # (this is generally negligible unless working with small quantities of data)
         ...     mp.memory_used
         ...     for _ in range(100_000):
         ...             pass
         ...
         0.608
+        >>> # get the memory used after
         >>> mp.memory_used
         1.168
         ```
@@ -642,15 +658,19 @@ class MemoryProfiler:
         Example Usage (Decorator)
         -------------------------
         ```python
+        >>> # create the memory profiler
         >>> mp = MemoryProfiler()
         >>>
+        >>> # decorate a function with it
         >>> @mp
         ... def perf_example():
         ...     for _ in range(100_000):
         ...             pass
         ...
+        >>> # run the function
         >>> perf_example()
         >>>
+        >>> # get the memory used
         >>> mp.memory_used
         0.528
         ```
