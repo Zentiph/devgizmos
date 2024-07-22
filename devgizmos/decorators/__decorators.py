@@ -6,7 +6,6 @@ decorators.__decorators
 Module containing decorators.
 """
 
-# --imports-- #
 from asyncio import sleep as async_sleep
 from collections import OrderedDict
 from functools import wraps
@@ -23,13 +22,11 @@ from ..checks import (
     check_value,
 )
 
-# --consts-- #
 F = TypeVar("F", bound=Callable[..., Any])
 Decorator = Callable[[F], F]
 LoggingLevel = int
 
 
-# --exceptions-- #
 class ConditionError(Exception):
     """
     ConditionError
