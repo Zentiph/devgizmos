@@ -11,9 +11,8 @@ plans for devgizmos
 	- sum (over args, or an iterable)
 	- product (over args, or an iterable)
 	- ...
-4. add type verifying to checks.py
-5. lightweight version of the package (probably not any time soon)
-6. add support for self arg when class methods are decorated (print self or nothing instead of cls.__repr__())
-7. Chr TypeAlias
-8. add ConvertibleTo ___ Protocols to types package and a check version of them to checks module
-9. parallel execution ulti?
+4. lightweight version of the package (probably not any time soon)
+5. add support for self arg when class methods are decorated (print self or nothing instead of cls.__repr__())
+6. add ConvertibleTo ___ Protocols to types package and a check version of them to checks module
+7. parallel execution ulti?
+8. math tools such as different pi-calculating algorithms

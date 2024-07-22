@@ -7,6 +7,7 @@ from typing import (
     Callable,
     Dict,
     Iterator,
+    List,
     Optional,
     Self,
     Tuple,
@@ -49,6 +50,10 @@ class FailureHandler(ABC):
     def priority(self, p: int, /) -> None: ...
     @property
     def returned(self) -> Any: ...
+    @property
+    def suppress(self) -> bool: ...
+    @suppress.setter
+    def suppress(self, s: bool) -> None: ...
     @abstractmethod
     def __str__(self) -> str: ...
     @abstractmethod
@@ -96,4 +101,6 @@ class FailureManager:
     @exceptions.setter
     def exceptions(self, excs: Tuple[Type[BaseException], ...]) -> None: ...
     @property
-    def caught(self) -> Type[BaseException]: ...
+    def caught(
+        self,
+    ) -> List[Tuple[Type[BaseException], BaseException, TracebackType]]: ...

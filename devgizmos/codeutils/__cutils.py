@@ -210,6 +210,7 @@ class FailureHandler(ABC):
     def __init__(self, *args, **kwargs):
         self.__priority = 1
         self.__returned = None
+        self.__suppress = True
 
     @abstractmethod
     def __call__(self):
@@ -274,6 +275,39 @@ class FailureHandler(ABC):
         """
 
         return self.__returned
+
+    @property
+    def suppress(self):
+        """
+        FailureHandler.suppress
+        =======================
+        Returns whether the handler should suppress exceptions.
+
+        Return
+        ------
+        :return: Whether the handler should suppress exceptions.
+        :rtype: bool
+        """
+
+        return self.__suppress
+
+    @suppress.setter
+    def suppress(self, s):
+        """
+        FailureHandler.suppress()
+        =========================
+        Sets whether the FailureHandler should suppress exceptions.
+
+        Parameters
+        ----------
+        :param s: Whether to suppress exceptions.
+        :type s: bool
+        """
+
+        # type checks
+        check_type(s, bool)
+
+        self.__suppress = s
 
     @abstractmethod
     def __str__(self):
@@ -443,15 +477,22 @@ class FailureManager:
         self.__handlers = list(handlers)
         self.__sort_handlers()
         self.__exceptions = exceptions
-        self.__caught = None
+        self.__caught = []
 
     def __enter__(self):
         return self
 
     def __exit__(self, type_, value, traceback):
-        if check_type(value, self.__exceptions, raise_exc=False):
+        if check_type(value, self.__exceptions, raise_exc=False) and self.handlers:
+
             for handler in self.__handlers:
                 handler()
+
+                if not handler.suppress:
+                    return False
+
+            self.__caught.append((type_, value, traceback))
+
             return True
         return False
 
@@ -568,12 +609,13 @@ class FailureManager:
         """
         FailureManager.caught
         =====================
-        Returns the exception caught by FailureManager.
+        Returns the info of the exceptions caught by FailureManager in chronological order.
+        For the most recent caught exception, get FailureManager.caught[-1].
 
         Return
         ------
-        :return: The caught exception.
-        :rtype: Type[BaseException]
+        :return: The info of the caught exceptions (type, value, traceback).
+        :rtype: List[Tuple[Type[BaseException], BaseException, TracebackType]]
         """
 
         return self.__caught
