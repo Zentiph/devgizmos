@@ -345,8 +345,30 @@ class Fallback(FailureHandler):
 
         Example Usage
         -------------
+        For general use, see FailureManager's docstring.
         ```python
-        # TODO:
+        >>> # showcasing Fallback's unique 'validate' and 'error_scan' methods
+        >>> def fun():
+        ...     print("falling back")
+        ...
+        >>> fb = Fallback(fun)
+        >>> # validate that the fallback func works
+        >>> fb.validate()
+        falling back
+        True
+        >>>
+        >>> def risky():
+        ...     raise TypeError
+        ...
+        >>> fb2 = Fallback(risky)
+        >>> fb2.validate()
+        False
+        >>>
+        >>> # error_scan works the same as validate but returns error info
+        >>> fb.error_scan()
+        >>> # returned None
+        >>> fb2.error_scan()
+        TypeError()
         ```
         """
 
@@ -369,6 +391,24 @@ class Fallback(FailureHandler):
         Verifies the function, args, and kwargs
         passed to Fallback will run and not raise errors.
         If the function involves randomness, this result cannot be trusted.
+
+        Return
+        ------
+        :return: Whether the function raised an exception.
+        :rtype: bool
+        """
+
+        try:
+            self.__func(*self.__args, **self.__kwargs)
+            return True
+        except Exception:
+            return False
+
+    def error_scan(self):
+        """
+        Fallback.error_scan()
+        =====================
+        Works identically to Fallback.validate(), but returns error info instead.
 
         Return
         ------
@@ -429,9 +469,6 @@ class _HandlerCollection:
         return repr(self.__handlers)
 
 
-# TODO: add an auto-sorting/changing priority arg called "set_priorities"
-# it will automatically find the next available priority and assign that to the handlers
-# in a first come first serve pattern
 class FailureManager:
     """Class for handling code failures."""
 
@@ -446,8 +483,8 @@ class FailureManager:
         ----------
         :param handlers: The handlers to use when handling failures, or None for no handler, defaults to None.
         :type handlers: Tuple[FailureHandler, ...] | None, optional
-        :param exceptions: The exceptions to activate the FailureManager for.
-        :type exceptions: Tuple[Type[BaseException], ...]
+        :param exceptions: The exceptions to activate the FailureManager for, defaults to (Exception,).
+        :type exceptions: Tuple[Type[BaseException], ...], optional
 
         Raises
         ------
@@ -518,6 +555,50 @@ class FailureManager:
             priorities,
             exc_msg="FailureManager cannot contain two handlers with the same priority",
         )
+
+    def sort_handler_priorities(self):
+        """
+        FailureManager.sort_handler_priorities()
+        ========================================
+        Sorts the priorities of the handlers. Handlers with the highest priorities are pushed to the top first.
+        Ex: Handlers with priorities of h1: 2, h2: 4, h3: 7 -> h1: 1, h2: 2, h3: 3
+        """
+
+        # this should work assuming the handlers are already sorted due to
+        # self.__sort_handlers call in __init__
+        for i, handler in enumerate(self.__handlers):
+            if i + 1 not in self.handlers.priorities:
+                handler.priority = i + 1
+
+    def set_priority(self, handler, priority, /):
+        """
+        FailureManager.set_priority()
+        =============================
+        Sets the priority of the specified handler object.
+
+        Parameters
+        ----------
+        :param handler: The handler to change the priority of.
+        :type handler: FailureHandler
+        :param priority: The new priority.
+        :type priority: int
+        """
+
+        # type checks
+        check_subclass(FailureHandler, type(handler))
+        check_type(priority, int)
+
+        # value checks
+        check_in_bounds(priority, 1, None)
+
+        try:
+            self.__handlers.index(handler)
+        except ValueError as e:
+            raise f"'{handler}' not found in the FailureManager" from e
+
+        handler.priority = priority
+
+        self.__sort_handlers()
 
     def add_handler(self, handler, /):
         """
