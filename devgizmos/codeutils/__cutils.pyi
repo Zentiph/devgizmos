@@ -18,6 +18,49 @@ from typing import (
 
 F = TypeVar("F", bound=Callable[..., Any])
 
+class UnsupportedOSError(Exception): ...
+
+class Retry:
+    def __init__(
+        self,
+        max_attempts: int,
+        delay: Union[int, float],
+        backoff_strategy: Optional[
+            Callable[[Union[int, float], int], Union[int, float]]
+        ] = None,
+        exceptions: Tuple[Type[BaseException]] = (Exception,),
+        raise_last: bool = True,
+    ): ...
+    def __call__(self, func: F, /) -> F: ...
+    @property
+    def max_attempts(self) -> int: ...
+    @max_attempts.setter
+    def max_attempts(self, m: int, /) -> None: ...
+    @property
+    def delay(self) -> Union[int, float]: ...
+    @delay.setter
+    def delay(self, d: Union[int, float], /) -> None: ...
+    @property
+    def backoff_strategy(
+        self,
+    ) -> Union[Callable[[Union[int, float], int], Union[int, float]], None]: ...
+    @backoff_strategy.setter
+    def backoff_strategy(
+        self, bs: Optional[Callable[[Union[int, float], int], Union[int, float]]], /
+    ) -> None: ...
+    @property
+    def exceptions(self) -> Tuple[Type[BaseException], ...]: ...
+    @exceptions.setter
+    def exceptions(self, excs: Tuple[Type[BaseException], ...], /) -> None: ...
+    @property
+    def raise_last(self) -> bool: ...
+    @raise_last.setter
+    def raise_last(self, rl: bool, /) -> None: ...
+    @property
+    def attempts(self) -> int: ...
+    @property
+    def caught(self) -> List[Type[BaseException]]: ...
+
 class Timeout:
     def __init__(
         self,
