@@ -15,8 +15,9 @@ from typing import (
     Tuple,
 )
 from threading import Lock, Thread
+from concurrent.futures import Future
 
-from ..types import Num
+Num = Union[int, float]
 
 class _HasBoolAttr(Protocol):
     @abstractmethod
@@ -45,7 +46,4 @@ def retry_on(
     backoff_strategy: Optional[BackoffFunc] = None,
 ): ...
 def profile(output_file: Optional[str] = None) -> ContextManager[cProfile.Profile]: ...
-def lock_handler(lock: Lock) -> ContextManager[None]: ...
-def thread_manager(
-    target: Callable[..., Any], *args: Tuple[Any, ...], **kwargs: Any
-) -> ContextManager[Thread]: ...
+def future_manager(future: Future) -> ContextManager[None]: ...

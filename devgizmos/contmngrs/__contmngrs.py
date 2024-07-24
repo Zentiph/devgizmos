@@ -13,7 +13,7 @@ from random import seed as rand_seed
 from random import setstate
 from tempfile import NamedTemporaryFile, mkdtemp
 from time import perf_counter_ns, sleep
-from threading import Lock, Thread
+from concurrent.futures import Future
 
 from ..checks import (
     check_callable,
@@ -365,76 +365,32 @@ def profile(output_file=None):
 
 
 @contextmanager
-def lock_handler(lock):
+def future_manager(future):
     """
-    lock_handler
-    ============
-    Context manager that handles acquiring and releasing a lock.
+    future_manager
+    ==============
+    Context Manager that ensures that a future is cancelled properly.
 
     Parameters
     ----------
-    :param lock: The lock that is being managed.
-    :type lock: threading.Lock
+    :param future: The future that is being managed.
+    :type future: concurrent.futures.Future
 
     Example Usage
     -------------
     ```python
-    >>> from threading import Lock
-    >>> my_lock = Lock()
-    >>> with lock_manager(lock):
-    ...     print("Lock acquired")
+    >>> from concurrent.futures import Future
+    >>> some_future: Future = Future()
     ...
-    Lock acquired
-    ```
+    >>> with future_manager(some_future):
+    ...     print("Future is being managed")
+    ...
+    >>> print(some_future.cancelled)
+    True
     """
+    check_type(future, Future)
 
-    # type check
-    check_type(lock, Lock)
-
-    lock.acquire()
     try:
         yield
     finally:
-        lock.release()
-
-
-@contextmanager
-def thread_manager(target, *args, **kwargs):
-    """
-    thread_manager
-    ==============
-    Context manager that ensures that threads are properly started and terminated.
-
-    Parameters
-    ----------
-    :param target: A function or method that is being threaded.
-    :type target: Callable[..., Any]
-    :param args: The arguments passed to the function.
-    :type args: Tuple[Any]
-    :param kwargs: The keyword arguments passed to the function.
-    :type kwargs: Any
-
-    Example Usage
-    -------------
-    ```python
-    >>> import time
-    >>> def worker():
-    ...     print("Thread is working!")
-    ...     time.sleep(2)
-    ...     print("Thread is finishing.")
-    ...
-    >>> with thread_manager(worker):
-    ...     print("Main thread is doing work.")
-    ...
-    Thread is working!
-    Main thread is doing work.
-    Thread is finishing.
-    ```
-    """
-    thread = Thread(target=target, args=args, kwargs=kwargs)
-    thread.start()
-
-    try:
-        yield thread
-    finally:
-        thread.join()
+        future.cancel()
