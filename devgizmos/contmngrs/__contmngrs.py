@@ -386,6 +386,7 @@ def future_manager(future):
     ...     print("Future is being managed")
     ...
     >>> print(some_future.cancelled)
+    Future is being managed
     True
     """
     check_type(future, Future)
