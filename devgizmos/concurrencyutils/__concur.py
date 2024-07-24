@@ -100,7 +100,7 @@ def barrier_sync(barrier):
     Parameters
     ----------
     :param barrier: The barrier being managed.
-    :type barrier: Barrier
+    :type barrier: threading.Barrier
 
     Example Usage
     -------------
