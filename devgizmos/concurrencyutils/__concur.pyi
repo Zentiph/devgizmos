@@ -3,9 +3,9 @@
 from threading import Lock, Thread, Barrier
 from typing import TypeVar, Callable, Any, Union, Tuple, Type, ContextManager
 
-from ..types import Decorator, Num
-
 F = TypeVar("F", bound=Callable[..., Any])
+
+Decorator = Callable[[F], F]
 
 DecoratedFunc = Decorator
 DecoratedCls = Callable[[Type], Type]
