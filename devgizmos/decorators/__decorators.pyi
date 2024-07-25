@@ -17,8 +17,6 @@ from typing import (
     overload,
 )
 
-from ..types import Decorator, Num
-
 T = TypeVar("T")  # generic type
 C = TypeVar("C")  # generic class instance type
 F = TypeVar("F", bound=Callable[..., Any])
@@ -37,37 +35,6 @@ class SupportsLazyProperty(Protocol):
 class UnsupportedOSError(Exception): ...
 class ConditionError(Exception): ...
 
-def retry(
-    max_attempts: int,
-    delay: Num,
-    backoff_strategy: Optional[BackoffFunc] = None,
-    exceptions: Tuple[Type[BaseException], ...] = (Exception,),
-    raise_last: bool = True,
-    *,
-    success_fmt: Optional[str] = "",
-    failure_fmt: Optional[str] = "",
-    logger: Optional[logging.Logger] = None,
-    level: LoggingLevel = logging.INFO,
-) -> DecoratedFunc: ...
-def async_retry(
-    max_attempts: int,
-    delay: Num,
-    backoff_strategy: Optional[BackoffFunc] = None,
-    exceptions: Tuple[Type[BaseException], ...] = (Exception,),
-    raise_last: bool = True,
-    *,
-    success_fmt: Optional[str] = "",
-    failure_fmt: Optional[str] = "",
-    logger: Optional[logging.Logger] = None,
-    level: LoggingLevel = logging.INFO,
-) -> DecoratedFunc: ...
-def tracer(
-    *,
-    entry_fmt: Optional[str] = "",
-    exit_fmt: Optional[str] = "",
-    logger: Optional[logging.Logger] = None,
-    level: LoggingLevel = logging.INFO,
-) -> DecoratedFunc: ...
 def error_logger(
     suppress: bool = True,
     *,

@@ -7,6 +7,7 @@ Module containing function inspection/controlling utility.
 """
 
 from abc import ABC, abstractmethod
+from datetime import datetime
 from functools import wraps
 
 
@@ -26,7 +27,7 @@ class FailureHandler(ABC):
     def __init__(self, *args, **kwargs):
         self.__priority = 1
         self.__returned = None
-        self.__suppress = True
+        self.__suppress = (Exception,)
 
     @abstractmethod
     def __call__(self):
@@ -101,7 +102,7 @@ class FailureHandler(ABC):
 
         Return
         ------
-        :return: Whether the handler should suppress exceptions.
+        :return: Whether exceptions should be suppressed.
         :rtype: bool
         """
 
@@ -112,7 +113,7 @@ class FailureHandler(ABC):
         """
         FailureHandler.suppress()
         =========================
-        Sets whether the FailureHandler should suppress exceptions.
+        Sets whether exceptions should be suppressed by the handler.
 
         Parameters
         ----------
@@ -285,6 +286,77 @@ class _HandlerCollection:
         return repr(self.__handlers)
 
 
+class _ExcData:
+    """Helper class for returning caught exception data with FailureManager."""
+
+    def __init__(self, type_, value, traceback, time):
+        self.__type = type_
+        self.__value = value
+        self.__trace = traceback
+        self.__time = time
+
+    @property
+    def type(self):
+        """
+        _ExcData.type
+        =============
+        Returns the exception type.
+        """
+
+        return self.__type
+
+    @property
+    def value(self):
+        """
+        _ExcData.value
+        ==============
+        Returns the exception value.
+        """
+
+        return self.__value
+
+    @property
+    def traceback(self):
+        """
+        _ExcData.traceback
+        ==================
+        Returns the exception traceback.
+        """
+
+        return self.__trace
+
+    @property
+    def time(self):
+        """
+        _ExcData.time
+        =============
+        Returns the time the exception occurred.
+        """
+
+        return self.__time
+
+    def reraise(self):
+        """
+        _ExcData.reraise
+        ================
+        Re-raises the caught exception.
+        """
+
+        raise self.__value
+
+    def __str__(self):
+        return (
+            f"Exception data: type={self.__type}, "
+            + f"value={repr(self.__value)}, traceback={self.__trace}, time={self.__time}"
+        )
+
+    def __repr__(self):
+        return (
+            f"Exception data: type={self.__type}, "
+            + f"value={repr(self.__value)}, traceback={self.__trace}, time={self.__time}"
+        )
+
+
 class FailureManager:
     """Class for handling code failures."""
 
@@ -336,7 +408,7 @@ class FailureManager:
         return self
 
     def __exit__(self, type_, value, traceback):
-        if check_type(value, self.__exceptions, raise_exc=False) and self.handlers:
+        if isinstance(value, self.__exceptions) and self.handlers:
 
             for handler in self.__handlers:
                 handler()
@@ -344,7 +416,7 @@ class FailureManager:
                 if not handler.suppress:
                     return False
 
-            self.__caught.append((type_, value, traceback))
+            self.__caught.append(_ExcData(type_, value, traceback, datetime.now()))
 
             return True
         return False
@@ -511,8 +583,8 @@ class FailureManager:
 
         Return
         ------
-        :return: The info of the caught exceptions (type, value, traceback).
-        :rtype: List[Tuple[Type[BaseException], BaseException, TracebackType]]
+        :return: The info of the caught exceptions (type, value, traceback, time).
+        :rtype: List[_ExcData]
         """
 
         return self.__caught
