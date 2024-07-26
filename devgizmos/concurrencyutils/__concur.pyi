@@ -1,7 +1,17 @@
 # pylint: disable=all
 
 from threading import Lock, Thread, Barrier
-from typing import TypeVar, Callable, Any, Union, Tuple, Type, ContextManager
+from typing import (
+    TypeVar,
+    Callable,
+    Any,
+    Union,
+    Tuple,
+    Type,
+    ContextManager,
+    Iterable,
+    List,
+)
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -29,3 +39,6 @@ class PeriodicTask:
     def stop(self) -> None: ...
 
 def periodic_running_task(interval: Union[int, float]) -> DecoratedFunc: ...
+def batch_processer(
+    data: Iterable[Any], workers: int, process_function: F
+) -> List[Any]: ...

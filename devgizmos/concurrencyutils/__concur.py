@@ -5,6 +5,7 @@ Module containing tools for threading.
 """
 
 # --imports-- #
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from functools import wraps
 from time import sleep
@@ -227,3 +228,53 @@ def periodic_running_task(interval):
         return wrapper
 
     return decorator
+
+
+def batch_processer(data, workers, process_function):
+    """
+    batch_processer
+    ===============
+    Allows multiple tasks to be excuted to an amount of workers to be completed.
+    Processes data in batches using concurrent futures.
+
+    Parameters
+    ----------
+    :param data: List of data items to be processed.
+    :type data: Iterable[Any]
+    :param workers: Number of working threads/processes to use.
+    :type workers: int
+
+    Returns
+    -------
+    :return: List of results from processing each data item.
+    :rtype: List[Any]
+
+    Example Usage
+    -------------
+    >>> def process_data(item):
+    ...     return item * item
+    ...
+    >>> data = [1, 2, 4, 5, 10]
+    >>> processed_data = batch_processer(data, 5, process_data)
+    >>> print(processed_data)
+    [1, 4, 16, 25, 100]
+    """
+
+    # type checks
+    check_type(workers, int)
+
+    results = [None] * len(data)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {
+            executor.submit(process_function, item): index
+            for index, item in enumerate(data)
+        }
+
+        for future in as_completed(futures):
+            index = futures[future]
+            try:
+                results[index] = future.result()
+            except Exception as e:
+                print(f"Task failed due to an exception: {e}")
+                results[index] = None
+    return results
