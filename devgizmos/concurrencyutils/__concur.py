@@ -234,7 +234,6 @@ def batch_processer(data, workers, process_function):
     """
     batch_processer
     ===============
-    Allows multiple tasks to be excuted to an amount of workers to be completed.
     Processes data in batches using concurrent futures.
 
     Parameters
