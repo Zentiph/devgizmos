@@ -27,11 +27,49 @@ class FailureHandler(ABC):
     def __init__(self, *args, **kwargs):
         self.__priority = 1
         self.__returned = None
-        self.__suppress = (Exception,)
+        self.__suppress = True
+        self.__on = True
 
     @abstractmethod
     def __call__(self):
         pass
+
+    @property
+    def activated(self):
+        """
+        FailureHandler.activated
+        ========================
+        Returns whether the FailureHandler is activated.
+
+        Return
+        ------
+        :return: Whether the FailureHandler is activated.
+        :rtype: bool
+        """
+
+        return self.__on
+
+    @activated.setter
+    def activated(self, a, /):
+        """
+        FailureHandler.activated()
+        ==========================
+        Sets whether the FailureHandler is activated.
+
+        Parameters
+        ----------
+        :param a: Whether the FailureHandler is activated.
+        :type a: bool
+
+        Raises
+        ------
+        :raises TypeError: If a is not a bool.
+        """
+
+        # type checks
+        check_type(a, bool)
+
+        self.__on = a
 
     @property
     def priority(self):
@@ -135,6 +173,37 @@ class FailureHandler(ABC):
         pass
 
 
+# empty shell of a class, but exists merely for
+# suppressing functionality without any other functionality
+class Suppress(FailureHandler):
+    """FailureHandler for FailureManager that suppresses the exceptions given to FailureManager."""
+
+    def __init__(self):
+        """
+        Suppress
+        ========
+        FailureHandler for FailureManager that suppresses any exceptions
+        the FailureManager is listening for.
+
+        Example Usage
+        -------------
+        ```
+        >>> # TODO:
+        ```
+        """
+
+        super().__init__()
+
+    def __call__(self):
+        return
+
+    def __str__(self):
+        return "Suppress()"
+
+    def __repr__(self):
+        return "Suppress()"
+
+
 class Fallback(FailureHandler):
     """FailureHandler for FailureManager that falls back to a function if the code fails."""
 
@@ -163,7 +232,6 @@ class Fallback(FailureHandler):
         Example Usage
         -------------
         For general use, see FailureManager's docstring.
-        ```python
         >>> # showcasing Fallback's unique 'validate' and 'error_scan' methods
         >>> def fun():
         ...     print("falling back")
@@ -186,7 +254,6 @@ class Fallback(FailureHandler):
         >>> # returned None
         >>> fb2.error_scan()
         TypeError()
-        ```
         """
 
         # type checks
@@ -411,10 +478,11 @@ class FailureManager:
         if isinstance(value, self.__exceptions) and self.handlers:
 
             for handler in self.__handlers:
-                handler()
+                if handler.activated:
+                    handler()
 
-                if not handler.suppress:
-                    return False
+                    if not handler.suppress:
+                        return False
 
             self.__caught.append(_ExcData(type_, value, traceback, datetime.now()))
 

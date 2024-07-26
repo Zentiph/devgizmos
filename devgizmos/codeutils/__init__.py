@@ -14,6 +14,6 @@ __all__ = [
     "UnsupportedOSError",
 ]
 
-from .__failuremngr import FailureHandler, FailureManager, Fallback
+from .__failuremngr import FailureHandler, FailureManager, Fallback, Suppress
 from .__retry import Retry
 from .__timeout import Timeout, UnsupportedOSError
