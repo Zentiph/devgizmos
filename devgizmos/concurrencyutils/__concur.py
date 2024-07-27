@@ -11,6 +11,7 @@ from functools import wraps
 from time import sleep
 from typing import Union
 from threading import Event, Thread, Lock, Barrier
+from queue import Queue, Empty
 
 from ..checks import check_type
 
@@ -242,6 +243,8 @@ def batch_processer(data, workers, process_function):
     :type data: Iterable[Any]
     :param workers: Number of working threads/processes to use.
     :type workers: int
+    :param process_function: The function that processes each item.
+    :type process_function: F
 
     Returns
     -------
@@ -277,3 +280,87 @@ def batch_processer(data, workers, process_function):
                 print(f"Task failed due to an exception: {e}")
                 results[index] = None
     return results
+
+
+class QueueProcessor:
+    """
+    QueueProcessor
+    ==============
+    Automates the process of creating a thread-safe queue.
+
+    Parameters
+    ----------
+    :param num_workers: The amount of threads to be created.
+    :type num_workers: int
+    :param process_item: The function that processes each item.
+    :type process_item: F
+
+    Example Usage
+    -------------
+    >>> from threading import Lock
+    ...
+    >>> results = []
+    >>> results_lock = Lock()
+    ...
+    >>> def process_item(item):
+    ...     result = f"Processed {item}"
+    ...     with results_lock:
+    ...         results.append(result)
+    ...
+    >>> # Use the QueueProcessor
+    >>> qp = QueueProcessor(num_workers=3, process_item=process_item)
+    >>> qp.start()
+    ...
+    >>> for i in range(3):
+    ...     qp.add_task(f"Task {i}")
+    ...
+    >>> qp.stop()
+    print(results)
+    [Task 1, Task 2, Task 3]
+    """
+
+    def __init__(self, num_workers, process_item):
+        """Initializes the QueueProcessor class."""
+        self._queue = Queue()
+        self._num_workers = num_workers
+        self._process_item = process_item
+        self._workers = []
+        self._running = False
+
+    def _consumer(self):
+        """Manages how each item is supposed to be processed and breaks when an item is None."""
+        while True:
+            try:
+                item = self._queue.get(timeout=1)
+                if item is None:
+                    break
+                self._process_item(item)
+            except Empty:
+                continue
+            except Exception as e:
+                print(f"An error occurred during queue processing: {e}")
+            finally:
+                self._queue.task_done()
+
+    def start(self):
+        """Starts the QueueProcessor class."""
+        self._running = True
+        for _ in range(self._num_workers):
+            worker = Thread(target=self._consumer)
+            worker.start()
+            self._workers.append(worker)
+
+    def stop(self):
+        """Stops the queue for the QueueProcessor."""
+        for _ in range(self._num_workers):
+            self._queue.put(None)
+
+        for worker in self._workers:
+            worker.join()
+
+        self._workers = []
+        self._running = False
+
+    def add_task(self, item):
+        """Adds an item to be processed."""
+        self._queue.put(item)

@@ -10,6 +10,7 @@ __all__ = [
     "lock_handler",
     "periodic_running_task",
     "thread_manager",
+    "QueueProcessor",
 ]
 
 from .__concur import (
@@ -18,4 +19,5 @@ from .__concur import (
     lock_handler,
     periodic_running_task,
     thread_manager,
+    QueueProcessor,
 )
