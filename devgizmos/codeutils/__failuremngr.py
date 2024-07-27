@@ -187,9 +187,7 @@ class Suppress(FailureHandler):
 
         Example Usage
         -------------
-        ```
-        >>> # TODO:
-        ```
+        >>> # TODO
         """
 
         super().__init__()
@@ -229,9 +227,12 @@ class Fallback(FailureHandler):
         ------
         :raises TypeError: If func is not callable.
 
-        Example Usage
-        -------------
-        For general use, see FailureManager's docstring.
+        Example Usage (General)
+        -----------------------
+        >>> # TODO
+
+        Example Usage (Unique Methods)
+        ------------------------------
         >>> # showcasing Fallback's unique 'validate' and 'error_scan' methods
         >>> def fun():
         ...     print("falling back")
@@ -448,15 +449,11 @@ class FailureManager:
 
         Example Usage (Context Manager)
         -------------------------------
-        ```python
-        # TODO:
-        ```
+        >>> # TODO
 
         Example Usage (Decorator)
         -------------------------
-        ```python
-        # TODO:
-        ```
+        >>> # TODO
         """
 
         # type checks

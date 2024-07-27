@@ -4,18 +4,14 @@ from typing import Any, Dict, Iterable, Optional, Sequence, Sized, Tuple, Type, 
 
 def check_type(
     value: Any,
-    types_or_tuple: Union[Type, Tuple[Type, ...]],
-    /,
+    *types: Type,
     optional: bool = False,
-    *,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
 def check_value(
     value: Any,
-    value_or_tuple: Union[Any, Tuple[Any, ...]],
-    /,
-    *,
+    *values: Any,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
@@ -23,8 +19,8 @@ def check_in_range(
     value: Any,
     seq: Sequence,
     /,
-    start: Optional[int] = None,
-    end: Optional[int] = None,
+    start: int = 0,
+    end: int = -1,
     *,
     raise_exc: bool = True,
     exc_msg: str = "",
@@ -33,63 +29,39 @@ def check_in_bounds(
     value: Union[int, float],
     lower: Optional[Union[int, float]],
     upper: Optional[Union[int, float]],
-    /,
+    *,
     inclusive: bool = True,
-    *,
-    raise_exc: bool = True,
-    exc_msg: str = "",
-) -> bool: ...
-def check_truthy(value: Any, *, raise_exc: bool = True, exc_msg: str = "") -> bool: ...
-def check_not_none(
-    value: Any, *, raise_exc: bool = True, exc_msg: str = ""
-) -> bool: ...
-def check_length(
-    value: Sized,
-    /,
-    min_length: int,
-    max_length: int = -1,
-    *,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
 def check_regex(
-    string: str, regex: str, /, *, raise_exc: bool = True, exc_msg: str = ""
+    regex: str, *strings: str, raise_exc: bool = True, exc_msg: str = ""
 ) -> bool: ...
-def check_key_in_dict(
+def check_keys_in_dict(
     dictionary: Dict[Any, Any],
-    key_or_tuple: Union[Any, Tuple[Any, ...]],
-    /,
-    *,
+    *keys: Any,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
 def check_contains(
     iterable: Iterable,
-    item_or_tuple: Union[Any, Tuple[Any, ...]],
-    /,
-    *,
+    *items: Any,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
 def check_subclass(
     superclass: Type,
-    subclass_or_tuple: Union[Type, Tuple[Type, ...]],
-    /,
-    *,
+    *subclasses: Type,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
 def check_callable(
-    obj_or_tuple: Union[object, Tuple[object, ...]],
-    /,
-    *,
+    *objs: object,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
 def check_no_duplicates(
-    obj_or_tuple: Union[object, Tuple[object, ...]],
-    /,
-    *,
+    *objs: object,
     raise_exc: bool = True,
     exc_msg: str = "",
 ) -> bool: ...
