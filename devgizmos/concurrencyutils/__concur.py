@@ -330,7 +330,7 @@ class QueueProcessor:
         ...
         >>> qp.stop()
         print(results)
-        [Task 1, Task 2, Task 3]
+        [Processed Task 1, Processed Task 2, Processed Task 3]
         """
 
         self._queue = Queue()
