@@ -1,8 +1,46 @@
 # pylint: disable=all
 
-from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar, Union
+from contextlib import contextmanager, asynccontextmanager
+from datetime import datetime
+from types import TracebackType
+from typing import (
+    Any,
+    AsyncContextManager,
+    Callable,
+    ContextManager,
+    List,
+    NoReturn,
+    Optional,
+    Self,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+class _ExcData:
+    """Helper class for returning caught exception data with FailureManager."""
+
+    def __init__(
+        self,
+        type_: Type[BaseException],
+        value: BaseException,
+        traceback: TracebackType,
+        time: datetime,
+    ) -> None: ...
+    @property
+    def type(self) -> Type[BaseException]: ...
+    @property
+    def value(self) -> BaseException: ...
+    @property
+    def traceback(self) -> TracebackType: ...
+    @property
+    def time(self) -> datetime: ...
+    def reraise(self) -> NoReturn: ...
+    def __str__(self) -> str: ...
+    def __repr__(self) -> str: ...
 
 class Retry:
     def __init__(
@@ -13,9 +51,13 @@ class Retry:
             Callable[[Union[int, float], int], Union[int, float]]
         ] = None,
         exceptions: Tuple[Type[BaseException]] = (Exception,),
-        raise_last: bool = True,
+        raise_last: bool = False,
         asynchronous: bool = False,
     ): ...
+    def __enter__(self) -> Self: ...
+    def __exit__(
+        self, type_: Type[BaseException], value: BaseException, traceback: TracebackType
+    ) -> bool: ...
     def __call__(self, func: F, /) -> F: ...
     @property
     def max_attempts(self) -> int: ...
@@ -48,4 +90,5 @@ class Retry:
     @property
     def attempts(self) -> int: ...
     @property
-    def caught(self) -> List[Type[BaseException]]: ...
+    def suppressed(self) -> List[_ExcData]: ...
+    def clear_suppressed(self) -> None: ...

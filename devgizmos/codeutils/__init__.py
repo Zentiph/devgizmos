@@ -15,5 +15,5 @@ __all__ = [
 ]
 
 from .__failuremngr import FailureHandler, FailureManager, Fallback, Suppress
-from .__retry import Retry
+from .__retry import Retry, retry
 from .__timeout import Timeout, UnsupportedOSError

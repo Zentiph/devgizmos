@@ -6,6 +6,6 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 def tracer(
     *,
-    entry_fmt: Optional[str] = "",
-    exit_fmt: Optional[str] = "",
+    entry_msg: Optional[str] = "",
+    exit_msg: Optional[str] = "",
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...

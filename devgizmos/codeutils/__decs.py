@@ -1,32 +1,26 @@
-# pylint: disable=too-many-lines
-
 """
-decorators.__decorators
-=======================
-Module containing decorators.
+codeutils.__decs
+================
+Module containing decorators for the codeutils package.
 """
 
 from collections import OrderedDict
 from functools import wraps
 from time import perf_counter, sleep
-from typing import Any, Callable, TypeVar, get_type_hints
+from typing import get_type_hints
 from warnings import warn
 
 from ..errguards import ensure_callable, ensure_in_bounds, ensure_instance_of
 
-F = TypeVar("F", bound=Callable[..., Any])
-Decorator = Callable[[F], F]
-LoggingLevel = int
-
 
 def rate_limit(*args):
     """
-    rate_limit
-    ==========
+    @rate_limit()
+    -------------
     Limits the number of times a function can be called in the given period.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param interval: The time interval between each call (single argument).
     :type interval: int | float
     :param calls: The number of allowed calls in the period (first of two arguments).
@@ -35,7 +29,7 @@ def rate_limit(*args):
     :type period: int | float
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If any number of args other than 1 or 2 are passed.
     :raises TypeError: If interval is not an int or float.
     :raises TypeError: If calls is not an int.
@@ -45,8 +39,7 @@ def rate_limit(*args):
     :raises ValueError: If period is 0 or less.
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> from time import perf_counter
     >>>
     >>> @rate_limit(1)
@@ -56,10 +49,9 @@ def rate_limit(*args):
     >>> t1 = get_time()
     >>> t2 = get_time()
     >>> t2 - t1
-    # the function will not be "re-callable"
-    # for ~1 second each time it is called
     1.0003656
-    ```
+    >>> # the function will not be "re-callable"
+    >>> # for ~1 second each time it is called
     """
 
     last_called = [0.0]
@@ -109,30 +101,28 @@ def rate_limit(*args):
 
 def cache(maxsize=None, *, type_specific=False):
     """
-    cache
-    =====
+    @cache()
+    --------
     Caches the output of the decorated function and instantly returns it
     when given the same args and kwargs later.
     Uses LRU caching if a maxsize is provided.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param maxsize: The maximum number of results to store in the cache using an LRU system, defaults to None.
-    - Enter None for no size limitation.\n
     :type maxsize: int | None, optional
     :param type_specific: Whether to cache results differently depending on differently
     typed yet equal parameters, such as func(1) vs func(1.0), defaults to False.
     :type type_specific: bool, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If maxsize is not an int or None.
     :raises TypeError: If type_specific is not a bool.
     :raises ValueError: If maxsize is less than 1.
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> from random import random
     >>>
     >>> @cache()
@@ -147,7 +137,6 @@ def cache(maxsize=None, *, type_specific=False):
     0.8902874918377771
     >>> random_results(2)
     0.8902874918377771
-    ```
     """
 
     ensure_instance_of(maxsize, int, optional=True)
@@ -186,41 +175,19 @@ def cache(maxsize=None, *, type_specific=False):
 # pylint: disable=invalid-name
 class lazy_property:
     """
-    lazy_property
-    =============
-    Transforms the decorated method into a property that is only computed once,
-    and is then cached as an attribute.
-
-    Example Usage
-    -------------
-    ```python
-    >>> class Circle:
-    ...     def __init__(self, radius):
-    ...         self.radius = radius
-    ...     @lazy_property
-    ...     def area(self):
-    ...         print("Computing area")
-    ...         return 3.14159 * self.radius ** 2
-    ...
-    >>> c = Circle(10)
-    >>> print(c.area)
-    Computing area
-    314.159
-    >>> print(c.area)
-    314.159
-    ```
+    Transforms the decorated method into a property that is
+    only computed once, and is then cached as an attribute.
     """
 
     def __init__(self, func):
         """
-        lazy_property
-        =============
-        Transforms the decorated method into a property that is only computed once,
-        and is then cached as an attribute.
+        @lazy_property
+        --------------
+        Transforms the decorated method into a property that is
+        only computed once, and is then cached as an attribute.
 
         Example Usage
-        -------------
-        ```python
+        ~~~~~~~~~~~~~
         >>> class Circle:
         ...     def __init__(self, radius):
         ...         self.radius = radius
@@ -230,13 +197,14 @@ class lazy_property:
         ...         return 3.14159 * self.radius ** 2
         ...
         >>> c = Circle(10)
-        >>> print(c.area)
+        >>> c.area
         Computing area
         314.159
-        >>> print(c.area)
+        >>> c.area
         314.159
-        ```
         """
+
+        ensure_callable(func)
 
         self.func = func
         self.__doc__ = getattr(func, "__doc__")
@@ -252,12 +220,12 @@ class lazy_property:
 
 def deprecated(reason, version=None, date=None):
     """
-    deprecated
-    ==========
+    @deprecated()
+    -------------
     Creates a DeprecationWarning to show the decorated function or class is deprecated.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param reason: The reason for deprecation.
     :type reason: str
     :param version: The version number of the function, defaults to None.
@@ -266,13 +234,13 @@ def deprecated(reason, version=None, date=None):
     :type date: str | None, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If reason is not a str.
     :raises TypeError: If version is not an int, float, str, or None.
     :raises TypeError: If date is not a str or None.
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> @deprecated("We found a better way to do this", "v1.0.3")
     ... def old_func(*args, **kwargs):
     ...     return all(args)
@@ -292,9 +260,9 @@ def deprecated(reason, version=None, date=None):
         def wrapper(*args, **kwargs):
             msg = f"{func.__name__} is deprecated: {reason}"
             if version:
-                msg += f" (Ver: {version})"
+                msg += f" | Ver: {version}"
             if date:
-                msg += f" (Removal: {date})"
+                msg += f" | Removal: {date}"
 
             warn(msg, DeprecationWarning, stacklevel=2)
             return func(*args, **kwargs)
@@ -306,13 +274,13 @@ def deprecated(reason, version=None, date=None):
 
 def decorate_all_methods(decorator, *args, **kwargs):
     """
-    decorate_all_methods
-    ====================
+    @decorate_all_methods()
+    -----------------------
     Decorates all the methods in a class with the given decorator,
     ignoring magic/dunder methods.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param decorator: The decorator to apply to each method.
     :type decorator: Decorator
     :param args: The arguments passed to the decorator.
@@ -321,12 +289,12 @@ def decorate_all_methods(decorator, *args, **kwargs):
     :type kwargs: Any
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If decorator is not callable.
 
     Example Usage
-    -------------
-    >>> @decorate_all_methods(tracer, exit_fmt=None)
+    ~~~~~~~~~~~~~
+    >>> @decorate_all_methods(deprecated, "Don't use this class anymore, see MyBetterClass")
     ... class MyClass:
     ...     def __init__(self, a):
     ...         self.a = a
@@ -337,7 +305,7 @@ def decorate_all_methods(decorator, *args, **kwargs):
     ...
     >>> cls = MyClass(1)
     >>> cls.add_to_a(2)
-    [TRACER]: ENTERING add_to_a WITH args=(MyClass(a=3), 2) AND kwargs={}
+    <stdin>:1: DeprecationWarning: add_to_a is deprecated: Don't use this class anymore, see MyBetterClass
     """
 
     # type checks
@@ -358,17 +326,16 @@ def decorate_all_methods(decorator, *args, **kwargs):
 
 def immutable(cls):
     """
-    immutable
-    =========
+    @immutable
+    ----------
     Enforces immutability onto the decorated object.
 
     Raises
-    ------
+    ~~~~~~
     :raises AttributeError: If an attempt is made to edit the immutable object's attributes.
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> @immutable
     ... class Point2D:
     ...     def __init__(self, x, y):
@@ -378,13 +345,15 @@ def immutable(cls):
     >>> pt = Point2D(3, 5)
     >>> pt.x = 2
     AttributeError: Cannot modify attribute 'x' of immutable instance
-    ```
     """
+
+    # type checks
+    ensure_instance_of(cls, type)
 
     class ImmutableInstance(cls):
         """
         ImmutableInstance
-        =================
+        -----------------
         Copies the decorated class and makes it immutable.
         """
 
@@ -404,16 +373,15 @@ def immutable(cls):
     return ImmutableInstance
 
 
-def singleton():
+def singleton(cls):
     """
-    singleton
-    =========
+    @singleton
+    ----------
     Ensures only one instance of a class can exist at once.
 
     Example Usage
-    -------------
-    ```python
-    >>> @singleton()
+    ~~~~~~~~~~~~~
+    >>> @singleton
     ... class Single:
     ...     def __init__(self, x):
     ...         self.x = x
@@ -426,37 +394,36 @@ def singleton():
     1
     >>> s1 is s2
     True
-    ```
     """
+
+    # type checks
+    ensure_instance_of(cls, type)
 
     instances = {}
 
-    def decorator(cls):
-        @wraps(cls)
-        def wrapper(*args, **kwargs):
-            if cls not in instances:
-                instances[cls] = cls(*args, **kwargs)
-            return instances[cls]
+    @wraps(cls)
+    def wrapper(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
 
-        return wrapper
-
-    return decorator
+    return wrapper
 
 
-def type_checker():
+def type_checker(func):
     """
-    type_checker
-    ============
+    @type_checker
+    -------------
     Ensures the arguments passed to the decorated function are of the correct type based on the type hints.
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If the args or kwargs passed do not match the function's type hints.
     :raises TypeError: If the return value does not match the function's type hints.
 
     Example Usage
-    -------------
-    >>> @type_checker()
+    ~~~~~~~~~~~~~
+    >>> @type_checker
     ... def typed_fun(a: int, b: float) -> str:
     ...     return str(a + b)
     ...
@@ -466,31 +433,29 @@ def type_checker():
     TypeError: Argument 'a' must be type 'int'
     """
 
-    def decorator(func):
-        hints = get_type_hints(func)
+    # type checks
+    ensure_callable(func)
 
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            for name, value in zip(func.__code__.co_varnames, args):
-                if name in hints and not isinstance(value, hints[name]):
-                    raise TypeError(
-                        f"Argument '{name}' must be type '{hints[name].__name__}'"
-                    )
+    hints = get_type_hints(func)
 
-            for name, value in kwargs.items():
-                if name in hints and not isinstance(value, hints[name]):
-                    raise TypeError(
-                        f"Argument '{name}' must be type '{hints[name].__name__}'"
-                    )
-
-            result = func(*args, **kwargs)
-
-            if "return" in hints and not isinstance(result, hints["return"]):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        for name, value in zip(func.__code__.co_varnames, args):
+            if name in hints and not isinstance(value, hints[name]):
                 raise TypeError(
-                    f"Return value must be type '{hints['return'].__name__}'"
+                    f"Argument '{name}' must be type '{hints[name].__name__}'"
                 )
-            return result
 
-        return wrapper
+        for name, value in kwargs.items():
+            if name in hints and not isinstance(value, hints[name]):
+                raise TypeError(
+                    f"Argument '{name}' must be type '{hints[name].__name__}'"
+                )
 
-    return decorator
+        result = func(*args, **kwargs)
+
+        if "return" in hints and not isinstance(result, hints["return"]):
+            raise TypeError(f"Return value must be type '{hints['return'].__name__}'")
+        return result
+
+    return wrapper

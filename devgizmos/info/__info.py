@@ -10,7 +10,7 @@ from warnings import warn
 from ..errguards import ensure_instance_of
 
 
-def tracer(*, entry_fmt="", exit_fmt=""):
+def tracer(*, entry_msg="", exit_msg=""):
     """
     tracer
     ======
@@ -18,28 +18,28 @@ def tracer(*, entry_fmt="", exit_fmt=""):
 
     Parameters
     ----------
-    :param entry_fmt: Used to enter a custom message format, defaults to "".
+    :param entry_msg: Used to enter a custom message format, defaults to "".
     - Leave as an empty string to use the pre-made message, or enter None for no message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - args: The arguments passed to the function.
     - kwargs: The keyword arguments passed to the function.
-    - Ex: entry_fmt="Entering func {name} with args={args} and kwargs={kwargs}."\n
-    :type entry_fmt: str | None, optional
-    :param exit_fmt: Used to enter a custom message format, defaults to "".
+    - Ex: entry_msg="Entering func {name} with args={args} and kwargs={kwargs}."\n
+    :type entry_msg: str | None, optional
+    :param exit_msg: Used to enter a custom message format, defaults to "".
     - Leave as an empty string to use the pre-made message, or enter None for no message.
     - Enter an unformatted string with the following fields to include their values
     - name: The name of the function.
     - args: The arguments passed to the function.
     - kwargs: The keyword arguments passed to the function.
     - returned: The return value of the function.
-    - Ex: fmt="Exiting func {name} with args={args} and kwargs={kwargs}; Returned {returned}."\n
-    :type exit_fmt: str | None, optional
+    - Ex: exit_msg="Exiting func {name} with args={args} and kwargs={kwargs}; Returned {returned}."\n
+    :type exit_msg: str | None, optional
 
     Raises
     ------
-    :raises TypeError: If entry_fmt is not a str.
-    :raises TypeError: If exit_fmt is not a str.
+    :raises TypeError: If entry_msg is not a str.
+    :raises TypeError: If exit_msg is not a str.
 
     Example Usage
     -------------
@@ -56,22 +56,22 @@ def tracer(*, entry_fmt="", exit_fmt=""):
     """
 
     # type checks
-    ensure_instance_of(entry_fmt, str, optional=True)
-    ensure_instance_of(exit_fmt, str, optional=True)
+    ensure_instance_of(entry_msg, str, optional=True)
+    ensure_instance_of(exit_msg, str, optional=True)
 
-    if entry_fmt is None and exit_fmt is None:
+    if entry_msg is None and exit_msg is None:
         warn(
-            "Both entry_fmt and exit_fmt are None. No logging will occur.",
+            "Both entry_msg and exit_msg are None. No logging will occur.",
             UserWarning,
         )
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if entry_fmt is not None:
-                if entry_fmt:
+            if entry_msg is not None:
+                if entry_msg:
                     print(
-                        entry_fmt.format(name=func.__name__, args=args, kwargs=kwargs)
+                        entry_msg.format(name=func.__name__, args=args, kwargs=kwargs)
                     )
                 else:
                     print(
@@ -80,10 +80,10 @@ def tracer(*, entry_fmt="", exit_fmt=""):
 
             result = func(*args, **kwargs)
 
-            if exit_fmt is not None:
-                if exit_fmt:
+            if exit_msg is not None:
+                if exit_msg:
                     print(
-                        exit_fmt.format(
+                        exit_msg.format(
                             name=func.__name__,
                             args=args,
                             kwargs=kwargs,

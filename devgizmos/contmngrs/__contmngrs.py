@@ -26,20 +26,19 @@ from ..errguards import (
 def seed(a, version=2):
     """
     seed
-    ====
+    ----
     Context manager that initializes the code within with the given seed.
     Can also be used as a decorator.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param a: The seed.
     :type a: int | float | str | bytes | bytearray | None
     :param version: The version to use.
     :type version: Literal[1, 2]
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> from random import random
     >>>
     >>> with seed(18):
@@ -59,7 +58,6 @@ def seed(a, version=2):
     0.18126486333322134
     >>> pt_rnd()
     0.18126486333322134
-    ```
     """
 
     orig_state = getstate()
@@ -75,18 +73,16 @@ def seed(a, version=2):
 def tempdir():
     """
     tempdir
-    =======
+    -------
     Context manager that creates a temporary directory, deleting it on exit.
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> with tempdir() as td:
     ...     print(td)
     ...
     'C:\\Users\\user\\AppData\\Local\\Temp\\tmpcnssgvv3'
     >>> # may vary depending on OS or machine setup
-    ```
     """
 
     td = mkdtemp()
@@ -100,17 +96,15 @@ def tempdir():
 def tempfile():
     """
     tempfile
-    ========
+    --------
     Context manager that creates a temporary file, deleting it upon exit.
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> with tempfile() as tf:
     ...     print(tf)
     ...
     'C:\\Users\\user\\AppData\\Local\\Temp\\tmp_fmy_5nk'
-    ```
     """
 
     tf = NamedTemporaryFile(delete=False)
@@ -125,21 +119,20 @@ def tempfile():
 def change_dir(path):
     """
     change_dir
-    ==========
+    ----------
     Context manager that temporarily changes the current working directory.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param path: The new working directory path.
     :type path: str
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If path is not a str.
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> from os import getcwd
     >>>
     >>> with change_dir("C:/Users/users/Desktop"):
@@ -149,7 +142,6 @@ def change_dir(path):
     >>>
     >>> getcwd()
     'C:\\Users\\users\\Desktop\\Programming\\Python\\devgizmos'
-    ```
     """
 
     ensure_instance_of(path, str)
@@ -166,21 +158,20 @@ def change_dir(path):
 def change_env(**env_vars):
     """
     change_env
-    ==========
+    ----------
     Context manager that temporarily sets environment variables.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param env_vars: The environment variables to set.
     :type env_vars: str
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If any env var in env_vars is not a str.
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> from os import environ
     >>>
     >>> with change_env(PATH="/tmp"):
@@ -191,7 +182,6 @@ def change_env(**env_vars):
     >>> print(environ["PATH"])
     'C:\\Previous\\Path1;C:\\Previous\\Path2'
     >>> # etc
-    ```
     """
 
     for var in env_vars.values():
@@ -211,23 +201,21 @@ def change_env(**env_vars):
 def suppress(*exceptions):
     """
     suppress
-    ========
+    --------
     Context manager that suppresses specified exceptions depending on the user.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param exceptions: The exceptions provided to be suppress.
     :type exceptions: Type[BaseException]
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> with suppress(FileNotFoundError):
     ...     open("example_file.txt")
     ...
     >>>
     (No traceback, exception suppressed)
-    ```
     """
 
     ensure_superclass_of(BaseException, exceptions)
@@ -242,11 +230,11 @@ def suppress(*exceptions):
 def retry_on(exc, /, *, max_attempts=3, delay=1, backoff_strategy=None):
     """
     retry_on
-    ========
+    --------
     Context manager that retries a section of code if a specific exception is raised.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param exc: The exception to retry on.
     :type exc: Type[BaseException]
     :param max_attempts: The maximum number of times to attempt to run the code, defaults to 3.
@@ -260,8 +248,7 @@ def retry_on(exc, /, *, max_attempts=3, delay=1, backoff_strategy=None):
     :type backoff_strategy: Callable[[int | float, int], int | float], optional
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> from random import random
     >>>
     >>> def risky():
@@ -275,7 +262,6 @@ def retry_on(exc, /, *, max_attempts=3, delay=1, backoff_strategy=None):
     ...     risky()
     ...
     1
-    ```
     """
 
     # type checks
@@ -312,13 +298,12 @@ def profile(output_file=None):
     Context manager used to measure and analyze the performance of a block of code.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param output_file: The file to save the profile data to, defaults to None.
     :type output_file: str, optional
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> with profile() as prof:
     ...     for i in range(1_000_000_000):
     ...         pass
@@ -343,7 +328,6 @@ def profile(output_file=None):
     >>> import pstats
     >>> stats = pstats.Stats("profile_output.prof")
     >>> stats.sort_stats(pstats.SortKey.CUMULATIVE).print_stats(10)
-    ```
     """
 
     prof = cProfile.Profile()
@@ -370,13 +354,12 @@ def future_manager(future):
     Context Manager that ensures that a future is cancelled properly.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param future: The future that is being managed.
     :type future: concurrent.futures.Future
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> from concurrent.futures import Future
     >>> some_future: Future = Future()
     ...
@@ -386,7 +369,6 @@ def future_manager(future):
     >>> print(some_future.cancelled)
     Future is being managed
     True
-    ```
     """
     ensure_instance_of(future, Future)
 

@@ -21,7 +21,7 @@ elif system() == "Windows":
 class UnsupportedOSError(Exception):
     """
     UnsupportedOSError
-    ==================
+    ------------------
     Error to raise when an unsupported OS is being used.
     Primary purpose is as a "catch all cases" solution, as it is unlikely this will ever be needed.
     """
@@ -33,31 +33,31 @@ class Timeout:
     def __init__(self, cutoff, exc=TimeoutError):
         """
         Timeout
-        =======
+        -------
         Class for timing out code if it takes too long to run.
         Can be used as a context manager and a decorator.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param cutoff: The time allotted for the code to run in seconds.
         :type cutoff: int | float
         :param exc: The exception to raise if time runs out, or None, defaults to TimeoutError.
         :type exc: Type[BaseException] | None
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If cutoff is not an int or float.
         :raises TypeError: If exc is not a BaseException or None.
         :raises ValueError: If cutoff is less than or equal to 0.
 
         Example Usage (Context Manager)
-        -------------------------------
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         ```python
 
         ```
 
         Example Usage (Decorator)
-        -------------------------
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
         ```python
 
         ```
@@ -147,11 +147,11 @@ class Timeout:
     def cutoff(self):
         """
         Timeout.cutoff
-        ==============
+        --------------
         Returns the cutoff time of Timeout.
 
         Return
-        ------
+        ~~~~~~
         :return: The cutoff time.
         :rtype: int | float
         """
@@ -162,11 +162,11 @@ class Timeout:
     def exc(self):
         """
         Timeout.exc
-        ===========
+        -----------
         Returns the exception that will be raised by Timeout if its cutoff time is exceeded.
 
         Return
-        ------
+        ~~~~~~
         :return: The exception raised when the cutoff time is exceeded.
         :rtype: Type[BaseException]
         """
@@ -177,16 +177,16 @@ class Timeout:
     def exc(self, e, /):
         """
         Timeout.exc()
-        =============
+        -------------
         Sets Timeout's exception that will be raised if the cutoff time is exceeded.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param e: The new exception.
         :type e: Type[BaseException]
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If e is not an instance of BaseException.
         """
 

@@ -37,11 +37,11 @@ class FailureHandler(ABC):
     def activated(self):
         """
         FailureHandler.activated
-        ========================
+        ------------------------
         Returns whether the FailureHandler is activated.
 
         Return
-        ------
+        ~~~~~~
         :return: Whether the FailureHandler is activated.
         :rtype: bool
         """
@@ -52,16 +52,16 @@ class FailureHandler(ABC):
     def activated(self, a, /):
         """
         FailureHandler.activated()
-        ==========================
+        --------------------------
         Sets whether the FailureHandler is activated.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param a: Whether the FailureHandler is activated.
         :type a: bool
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If a is not a bool.
         """
 
@@ -74,13 +74,13 @@ class FailureHandler(ABC):
     def priority(self):
         """
         FailureHandler.priority
-        =======================
+        -----------------------
         Returns the FailureHandler's priority.
         Priority determines the order the FailureManager executes its handlers.
         Lowest number (minimum 1) takes highest priority.
 
         Return
-        ------
+        ~~~~~~
         :return: The priority.
         :rtype: int
         """
@@ -91,18 +91,18 @@ class FailureHandler(ABC):
     def priority(self, p, /):
         """
         FailureHandler.priority()
-        =========================
+        -------------------------
         Sets the FailureHandler's priority.
         Priority determines the order the FailureManager executes its handlers.
         Lowest number (minimum 1) takes highest priority.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param p: The priority of the handler.
         :type p: int
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If p is not an int.
         :raises ValueError: If p is less than or equal to 0.
         """
@@ -119,11 +119,11 @@ class FailureHandler(ABC):
     def returned(self):
         """
         FailureHandler.returned
-        =======================
+        -----------------------
         Returns the return value when called due to an error being raised.
 
         Return
-        ------
+        ~~~~~~
         :return: The return value.
         :rtype: Any
         """
@@ -134,11 +134,11 @@ class FailureHandler(ABC):
     def suppress(self):
         """
         FailureHandler.suppress
-        =======================
+        -----------------------
         Returns whether the handler should suppress exceptions.
 
         Return
-        ------
+        ~~~~~~
         :return: Whether exceptions should be suppressed.
         :rtype: bool
         """
@@ -149,11 +149,11 @@ class FailureHandler(ABC):
     def suppress(self, s):
         """
         FailureHandler.suppress()
-        =========================
+        -------------------------
         Sets whether exceptions should be suppressed by the handler.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param s: Whether to suppress exceptions.
         :type s: bool
         """
@@ -180,12 +180,12 @@ class Suppress(FailureHandler):
     def __init__(self):
         """
         Suppress
-        ========
+        --------
         FailureHandler for FailureManager that suppresses any exceptions
         the FailureManager is listening for.
 
         Example Usage
-        -------------
+        ~~~~~~~~~~~~~
         >>> # TODO
         """
 
@@ -207,14 +207,14 @@ class Fallback(FailureHandler):
     def __init__(self, func, *args, **kwargs):
         """
         Fallback
-        ========
+        --------
         FailureHandler for FailureManager that executes the given
         func with the given args and kwargs if the code fails.
         Meant to be passed to FailureManager as an argument, not
         to be used as a standalone handler.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param func: The fallback function.
         :type func: Callable[..., Any]
         :param args: The args to pass to func.
@@ -223,15 +223,13 @@ class Fallback(FailureHandler):
         :type kwargs: Dict[str, Any]
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If func is not callable.
 
-        Example Usage (General)
-        -----------------------
+        Example Usage
+        ~~~~~~~~~~~~~
         >>> # TODO
-
-        Example Usage (Unique Methods)
-        ------------------------------
+        >>>
         >>> # showcasing Fallback's unique 'validate' and 'error_scan' methods
         >>> def fun():
         ...     print("falling back")
@@ -271,13 +269,13 @@ class Fallback(FailureHandler):
     def validate(self):
         """
         Fallback.validate()
-        ===================
+        -------------------
         Verifies the function, args, and kwargs
         passed to Fallback will run and not raise errors.
         If the function involves randomness, this result cannot be trusted.
 
         Return
-        ------
+        ~~~~~~
         :return: Whether the function raised an exception.
         :rtype: bool
         """
@@ -291,11 +289,11 @@ class Fallback(FailureHandler):
     def error_scan(self):
         """
         Fallback.error_scan()
-        =====================
+        ---------------------
         Works identically to Fallback.validate(), but returns error info instead.
 
         Return
-        ------
+        ~~~~~~
         :return: Either None if the function raised no errors,
         or the exception that was raised when running the function.
         :rtype: Type[Exception] | None
@@ -327,11 +325,11 @@ class _HandlerCollection:
     def priorities(self):
         """
         _HandlerCollection.priorities
-        =============================
+        -----------------------------
         Returns the priorities of each handler.
 
         Return
-        ------
+        ~~~~~~
         :return: The priorities of each handler.
         :rtype: Tuple[int, ...]
         """
@@ -366,7 +364,7 @@ class _ExcData:
     def type(self):
         """
         _ExcData.type
-        =============
+        -------------
         Returns the exception type.
         """
 
@@ -376,7 +374,7 @@ class _ExcData:
     def value(self):
         """
         _ExcData.value
-        ==============
+        --------------
         Returns the exception value.
         """
 
@@ -386,7 +384,7 @@ class _ExcData:
     def traceback(self):
         """
         _ExcData.traceback
-        ==================
+        ------------------
         Returns the exception traceback.
         """
 
@@ -396,7 +394,7 @@ class _ExcData:
     def time(self):
         """
         _ExcData.time
-        =============
+        -------------
         Returns the time the exception occurred.
         """
 
@@ -405,7 +403,7 @@ class _ExcData:
     def reraise(self):
         """
         _ExcData.reraise
-        ================
+        ----------------
         Re-raises the caught exception.
         """
 
@@ -430,28 +428,24 @@ class FailureManager:
     def __init__(self, *handlers, exceptions=(Exception,)):
         """
         FailureManager
-        ==============
+        --------------
         Class that handles code failures using the handler provided.
         Can be used as a context manager and a decorator.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param handlers: The handlers to use when handling failures, or None for no handler, defaults to None.
         :type handlers: Tuple[FailureHandler, ...] | None, optional
         :param exceptions: The exceptions to activate the FailureManager for, defaults to (Exception,).
         :type exceptions: Tuple[Type[BaseException], ...], optional
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If handlers is not a Tuple of FailureHandler instances or None.
         :raises TypeError: If exceptions is not a Tuple of BaseExceptions.
 
-        Example Usage (Context Manager)
-        -------------------------------
-        >>> # TODO
-
-        Example Usage (Decorator)
-        -------------------------
+        Example Usage
+        ~~~~~~~~~~~~~
         >>> # TODO
         """
 
@@ -496,7 +490,7 @@ class FailureManager:
     def __sort_handlers(self):
         """
         FailureManager.__sort_handlers()
-        ================================
+        --------------------------------
         Internal class func for sorting the handlers.
         """
 
@@ -511,7 +505,7 @@ class FailureManager:
     def sort_handler_priorities(self):
         """
         FailureManager.sort_handler_priorities()
-        ========================================
+        ----------------------------------------
         Sorts the priorities of the handlers. Handlers with the highest priorities are pushed to the top first.
         Ex: Handlers with priorities of h1: 2, h2: 4, h3: 7 -> h1: 1, h2: 2, h3: 3
         """
@@ -525,11 +519,11 @@ class FailureManager:
     def set_priority(self, handler, priority, /):
         """
         FailureManager.set_priority()
-        =============================
+        -----------------------------
         Sets the priority of the specified handler object.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param handler: The handler to change the priority of.
         :type handler: FailureHandler
         :param priority: The new priority.
@@ -555,11 +549,11 @@ class FailureManager:
     def add_handler(self, handler, /):
         """
         FailureManager.add_handler()
-        ============================
+        ----------------------------
         Adds a handler to the FailureManager.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param handler: The handler to add.
         :type handler: FailureHandler
         """
@@ -573,11 +567,11 @@ class FailureManager:
     def del_handler(self, priority, /):
         """
         FailureManager.del_handler()
-        ============================
+        ----------------------------
         Removes the handler with the given priority from the FailureManager.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param priority: The priority of the handler to remove.
         :type priority: int
         """
@@ -588,11 +582,11 @@ class FailureManager:
     def handlers(self):
         """
         FailureManager.handlers
-        =======================
+        -----------------------
         Returns a tuple of the FailureManager's handlers.
 
         Return
-        ------
+        ~~~~~~
         :return: A tuple of the handlers.
         :rtype: Tuple[FailureHandler, ...] | None
         """
@@ -603,11 +597,11 @@ class FailureManager:
     def exceptions(self):
         """
         FailureManager.exceptions
-        =========================
+        -------------------------
         Returns the exceptions being watched for by the FailureManager.
 
         Return
-        ------
+        ~~~~~~
         :return: The exceptions being watched for.
         :rtype: Tuple[Type[BaseException], ...]
         """
@@ -618,16 +612,16 @@ class FailureManager:
     def exceptions(self, excs):
         """
         FailureManager.exceptions()
-        ===========================
+        ---------------------------
         Sets the exceptions for the FailureManager to watch.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param excs: The exceptions to watch for.
         :type excs: Tuple[Type[BaseException], ...]
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If excs is not a Tuple of BaseExceptions.
         """
 
@@ -641,14 +635,23 @@ class FailureManager:
     def caught(self):
         """
         FailureManager.caught
-        =====================
+        ---------------------
         Returns the info of the exceptions caught by FailureManager in chronological order.
         For the most recent caught exception, get FailureManager.caught[-1].
 
         Return
-        ------
-        :return: The info of the caught exceptions (type, value, traceback, time).
+        ~~~~~~
+        :return: The info of the caught exceptions (type, value, traceback, datetime).
         :rtype: List[_ExcData]
         """
 
         return self.__caught
+
+    def clear_caught(self):
+        """
+        FailureManager.clear_caught()
+        -----------------------------
+        Clears the list of caught exceptions.
+        """
+
+        self.__caught.clear()

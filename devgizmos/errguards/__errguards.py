@@ -340,11 +340,11 @@ def is_in_bounds(value, lower, upper, /, *, inclusive=True):
         raise TypeError(
             f"'value' must be an 'int' or 'float', not '{type(value).__name__}'"
         )
-    if not isinstance(lower, (int, float)):
+    if not isinstance(lower, (int, float)) and lower is not None:
         raise TypeError(
             f"'lower' must be an 'int', 'float', or 'None', not '{type(lower).__name__}'"
         )
-    if not isinstance(upper, (int, float)):
+    if not isinstance(upper, (int, float)) and upper is not None:
         raise TypeError(
             f"'upper' must be an 'int', 'float', or 'None', not '{type(upper).__name__}'"
         )
