@@ -8,7 +8,7 @@ from functools import wraps
 from inspect import currentframe
 from platform import system
 
-from ..checks import check_in_bounds, check_subclass, check_type
+from ..errguards import ensure_in_bounds, ensure_instance_of, ensure_superclass_of
 
 if system() in ("Darwin", "Linux"):
     # pylint: disable=no-name-in-module
@@ -64,11 +64,11 @@ class Timeout:
         """
 
         # type checks
-        check_type(cutoff, (int, float))
-        check_subclass(BaseException, exc)
+        ensure_instance_of(cutoff, (int, float))
+        ensure_superclass_of(BaseException, exc)
 
         # value checks
-        check_in_bounds(cutoff, 0, None, inclusive=False)
+        ensure_in_bounds(cutoff, 0, None, inclusive=False)
 
         self.__cutoff = cutoff
         self.__exc = exc
@@ -191,6 +191,6 @@ class Timeout:
         """
 
         # type checks
-        check_subclass(BaseException, e)
+        ensure_superclass_of(BaseException, e)
 
         self.__exc = e

@@ -7,7 +7,7 @@ Contains code information related functionality.
 from functools import wraps
 from warnings import warn
 
-from ..checks import check_type
+from ..errguards import ensure_instance_of
 
 
 def tracer(*, entry_fmt="", exit_fmt=""):
@@ -56,8 +56,8 @@ def tracer(*, entry_fmt="", exit_fmt=""):
     """
 
     # type checks
-    check_type(entry_fmt, str, optional=True)
-    check_type(exit_fmt, str, optional=True)
+    ensure_instance_of(entry_fmt, str, optional=True)
+    ensure_instance_of(exit_fmt, str, optional=True)
 
     if entry_fmt is None and exit_fmt is None:
         warn(

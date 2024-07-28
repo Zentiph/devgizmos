@@ -6,21 +6,19 @@ Module containing context managers.
 
 from contextlib import contextmanager
 import cProfile
-from logging import INFO, Logger
 from os import chdir, environ, getcwd, remove, rmdir
 from random import getstate
 from random import seed as rand_seed
 from random import setstate
 from tempfile import NamedTemporaryFile, mkdtemp
-from time import perf_counter_ns, sleep
+from time import sleep
 from concurrent.futures import Future
 
-from ..checks import (
-    check_callable,
-    check_in_bounds,
-    check_subclass,
-    check_type,
-    check_value,
+from ..errguards import (
+    ensure_callable,
+    ensure_in_bounds,
+    ensure_superclass_of,
+    ensure_instance_of,
 )
 
 
@@ -154,7 +152,7 @@ def change_dir(path):
     ```
     """
 
-    check_type(path, str)
+    ensure_instance_of(path, str)
 
     orig_dir = getcwd()
     chdir(path)
@@ -197,7 +195,7 @@ def change_env(**env_vars):
     """
 
     for var in env_vars.values():
-        check_type(var, str)
+        ensure_instance_of(var, str)
 
     orig_env = environ.copy()
     environ.update(env_vars)
@@ -232,7 +230,7 @@ def suppress(*exceptions):
     ```
     """
 
-    check_subclass(BaseException, exceptions)
+    ensure_superclass_of(BaseException, exceptions)
 
     try:
         yield
@@ -281,15 +279,15 @@ def retry_on(exc, /, *, max_attempts=3, delay=1, backoff_strategy=None):
     """
 
     # type checks
-    check_subclass(BaseException, exc)
-    check_type(max_attempts, int)
-    check_type(delay, (int, float))
+    ensure_superclass_of(BaseException, exc)
+    ensure_instance_of(max_attempts, int)
+    ensure_instance_of(delay, (int, float))
     if backoff_strategy is not None:
-        check_callable(backoff_strategy)
+        ensure_callable(backoff_strategy)
 
     # value checks
-    check_in_bounds(max_attempts, 1, None)
-    check_in_bounds(delay, 0, None, inclusive=False)
+    ensure_in_bounds(max_attempts, 1, None)
+    ensure_in_bounds(delay, 0, None, inclusive=False)
 
     attempt = 1
     while attempt <= max_attempts:
@@ -390,7 +388,7 @@ def future_manager(future):
     True
     ```
     """
-    check_type(future, Future)
+    ensure_instance_of(future, Future)
 
     try:
         yield

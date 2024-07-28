@@ -10,13 +10,12 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import wraps
 
-
-from ..checks import (
-    check_callable,
-    check_in_bounds,
-    check_no_duplicates,
-    check_subclass,
-    check_type,
+from ..errguards import (
+    ensure_callable,
+    ensure_in_bounds,
+    ensure_instance_of,
+    ensure_no_duplicates,
+    ensure_superclass_of,
 )
 
 
@@ -67,7 +66,7 @@ class FailureHandler(ABC):
         """
 
         # type checks
-        check_type(a, bool)
+        ensure_instance_of(a, bool)
 
         self.__on = a
 
@@ -109,10 +108,10 @@ class FailureHandler(ABC):
         """
 
         # type checks
-        check_type(p, int)
+        ensure_instance_of(p, int)
 
         # value checks
-        check_in_bounds(p, 1, None)
+        ensure_in_bounds(p, 1, None)
 
         self.__priority = p
 
@@ -160,7 +159,7 @@ class FailureHandler(ABC):
         """
 
         # type checks
-        check_type(s, bool)
+        ensure_instance_of(s, bool)
 
         self.__suppress = s
 
@@ -258,7 +257,7 @@ class Fallback(FailureHandler):
         """
 
         # type checks
-        check_callable(func)
+        ensure_callable(func)
 
         self.__func = func
         self.__args = args
@@ -458,10 +457,10 @@ class FailureManager:
 
         # type checks
         if handlers is not None:
-            check_type(handlers, tuple)
-            check_subclass(FailureHandler, tuple(type(h) for h in handlers))
-        check_type(exceptions, tuple)
-        check_subclass(BaseException, exceptions)
+            ensure_instance_of(handlers, tuple)
+            ensure_superclass_of(FailureHandler, tuple(type(h) for h in handlers))
+        ensure_instance_of(exceptions, tuple)
+        ensure_superclass_of(BaseException, exceptions)
 
         self.__handlers = list(handlers)
         self.__sort_handlers()
@@ -504,9 +503,9 @@ class FailureManager:
         self.__handlers.sort(key=lambda h: h.priority)
 
         priorities = tuple(h.priority for h in self.__handlers)
-        check_no_duplicates(
+        ensure_no_duplicates(
             priorities,
-            exc_msg="FailureManager cannot contain two handlers with the same priority",
+            msg="FailureManager cannot contain two handlers with the same priority",
         )
 
     def sort_handler_priorities(self):
@@ -538,11 +537,11 @@ class FailureManager:
         """
 
         # type checks
-        check_subclass(FailureHandler, type(handler))
-        check_type(priority, int)
+        ensure_superclass_of(FailureHandler, type(handler))
+        ensure_instance_of(priority, int)
 
         # value checks
-        check_in_bounds(priority, 1, None)
+        ensure_in_bounds(priority, 1, None)
 
         try:
             self.__handlers.index(handler)
@@ -566,7 +565,7 @@ class FailureManager:
         """
 
         # type checks
-        check_subclass(FailureHandler, type(handler))
+        ensure_superclass_of(FailureHandler, type(handler))
 
         self.__handlers.append(handler)
         self.__sort_handlers()
@@ -633,8 +632,8 @@ class FailureManager:
         """
 
         # type checks
-        check_type(excs, tuple)
-        check_subclass(BaseException, excs)
+        ensure_instance_of(excs, tuple)
+        ensure_superclass_of(BaseException, excs)
 
         self.__exceptions = excs
 

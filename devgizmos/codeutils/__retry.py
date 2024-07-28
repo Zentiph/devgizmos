@@ -8,7 +8,12 @@ from asyncio import sleep as async_sleep
 from functools import wraps
 from time import sleep
 
-from ..checks import check_callable, check_in_bounds, check_subclass, check_type
+from ..errguards import (
+    ensure_callable,
+    ensure_in_bounds,
+    ensure_instance_of,
+    ensure_superclass_of,
+)
 
 
 class Retry:
@@ -95,18 +100,18 @@ class Retry:
         """
 
         # type checks
-        check_type(max_attempts, int)
-        check_type(delay, (int, float))
+        ensure_instance_of(max_attempts, int)
+        ensure_instance_of(delay, (int, float))
         if backoff_strategy is not None:
-            check_callable(backoff_strategy)
-        check_type(exceptions, tuple)
-        check_subclass(BaseException, exceptions)
-        check_type(raise_last, bool)
-        check_type(asynchronous, bool)
+            ensure_callable(backoff_strategy)
+        ensure_instance_of(exceptions, tuple)
+        ensure_superclass_of(BaseException, exceptions)
+        ensure_instance_of(raise_last, bool)
+        ensure_instance_of(asynchronous, bool)
 
         # value checks
-        check_in_bounds(max_attempts, 1, None)
-        check_in_bounds(delay, 0, None)
+        ensure_in_bounds(max_attempts, 1, None)
+        ensure_in_bounds(delay, 0, None)
 
         self.__max = max_attempts
         self.__delay = delay
@@ -207,10 +212,10 @@ class Retry:
         """
 
         # type checks
-        check_type(m, int)
+        ensure_instance_of(m, int)
 
         # value checks
-        check_in_bounds(m, 1, None)
+        ensure_in_bounds(m, 1, None)
 
         self.__max = m
 
@@ -248,10 +253,10 @@ class Retry:
         """
 
         # type checks
-        check_type(d, (int, float))
+        ensure_instance_of(d, (int, float))
 
         # value checks
-        check_in_bounds(d, 0, None)
+        ensure_in_bounds(d, 0, None)
 
         self.__delay = d
 
@@ -289,7 +294,7 @@ class Retry:
 
         # type checks
         if bs is not None:
-            check_callable(bs)
+            ensure_callable(bs)
 
         self.__bs = bs
 
@@ -326,8 +331,8 @@ class Retry:
         """
 
         # type checks
-        check_type(excs, tuple)
-        check_subclass(BaseException, excs)
+        ensure_instance_of(excs, tuple)
+        ensure_superclass_of(BaseException, excs)
 
         self.__excs = excs
 
@@ -364,7 +369,7 @@ class Retry:
         """
 
         # type checks
-        check_type(rl, bool)
+        ensure_instance_of(rl, bool)
 
         self.__raise_last = rl
 
@@ -401,7 +406,7 @@ class Retry:
         """
 
         # type checks
-        check_type(a, bool)
+        ensure_instance_of(a, bool)
 
         self.__async = a
 

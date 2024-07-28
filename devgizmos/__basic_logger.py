@@ -17,7 +17,7 @@ typing
 
 from logging import DEBUG, Formatter, Logger, StreamHandler
 
-from .checks import check_type, check_value
+from .errguards import ensure_instance_of, ensure_value
 
 LoggingLevel = int
 LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
@@ -47,11 +47,11 @@ class BasicLogger(Logger):
         """
 
         # type checks
-        check_type(level, LoggingLevel)
-        check_type(fmt, str)
+        ensure_instance_of(level, LoggingLevel)
+        ensure_instance_of(fmt, str)
 
         # value checks
-        check_value(level, LOGGING_LEVELS)
+        ensure_value(level, LOGGING_LEVELS)
 
         super().__init__("BasicLogger", level)
 

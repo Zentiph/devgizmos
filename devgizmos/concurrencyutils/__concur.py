@@ -13,7 +13,7 @@ from typing import Union
 from threading import Event, Thread, Lock, Barrier
 from queue import Queue, Empty
 
-from ..checks import check_type
+from ..errguards import ensure_instance_of
 
 
 @contextmanager
@@ -83,7 +83,7 @@ def lock_handler(lock):
     """
 
     # type check
-    check_type(lock, Lock)
+    ensure_instance_of(lock, Lock)
 
     lock.acquire()
     try:
@@ -128,7 +128,7 @@ def barrier_sync(barrier):
     Barrier reached
     ```
     """
-    check_type(barrier, Barrier)
+    ensure_instance_of(barrier, Barrier)
 
     barrier.wait()
     yield
@@ -155,7 +155,7 @@ class PeriodicTask:
     def __init__(self, interval, func, *args, **kwargs):
         """The Constructor method."""
         # typecheck
-        check_type(interval, Union[int, float])
+        ensure_instance_of(interval, Union[int, float])
 
         self.interval = interval
         self.func = func
@@ -216,7 +216,7 @@ def periodic_running_task(interval):
     ```
     """
     # typecheck
-    check_type(interval, Union[int, float])
+    ensure_instance_of(interval, Union[int, float])
 
     def decorator(func):
         @wraps(func)
@@ -263,7 +263,7 @@ def batch_processer(data, workers, process_function):
     """
 
     # type checks
-    check_type(workers, int)
+    ensure_instance_of(workers, int)
 
     results = [None] * len(data)
     with ThreadPoolExecutor(max_workers=workers) as executor:

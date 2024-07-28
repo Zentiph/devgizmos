@@ -22,7 +22,7 @@ __copyright__ = "Copyright 2024 Gavin Borne, Leo Nguyen"
 __maintainers__ = ("Gavin Borne", "Leo Nguyen")
 
 __all__ = [
-    "checks",
+    "errguards",
     "codeutils",
     "interpolation",
     "performance",
@@ -31,5 +31,5 @@ __all__ = [
     "BasicLogger",
 ]
 
-from . import checks, codeutils, interpolation, performance, regex, types
+from . import codeutils, errguards, interpolation, performance, regex, types
 from .__basic_logger import BasicLogger

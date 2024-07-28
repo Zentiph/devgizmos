@@ -6,21 +6,13 @@ decorators.__decorators
 Module containing decorators.
 """
 
-from asyncio import sleep as async_sleep
 from collections import OrderedDict
 from functools import wraps
-from logging import ERROR, INFO, Logger
 from time import perf_counter, sleep
 from typing import Any, Callable, TypeVar, get_type_hints
 from warnings import warn
 
-from ..checks import (
-    check_callable,
-    check_in_bounds,
-    check_subclass,
-    check_type,
-    check_value,
-)
+from ..errguards import ensure_callable, ensure_in_bounds, ensure_instance_of
 
 F = TypeVar("F", bound=Callable[..., Any])
 Decorator = Callable[[F], F]
@@ -76,20 +68,20 @@ def rate_limit(*args):
     # or raise an exception if too many/little args
     if len(args) == 1:
         # type checks
-        check_type(args[0], int, float)
+        ensure_instance_of(args[0], int, float)
 
         # value checks
-        check_in_bounds(args[0], 0, None, inclusive=False)
+        ensure_in_bounds(args[0], 0, None, inclusive=False)
 
         interval = args[0]
     elif len(args) == 2:
         # type checks
-        check_type(args[0], int)
-        check_type(args[1], int, float)
+        ensure_instance_of(args[0], int)
+        ensure_instance_of(args[1], int, float)
 
         # value checks
-        check_in_bounds(args[0], 1, None)
-        check_in_bounds(args[1], 0, None, inclusive=False)
+        ensure_in_bounds(args[0], 1, None)
+        ensure_in_bounds(args[1], 0, None, inclusive=False)
 
         interval = float(args[0]) / float(args[1])
     else:
@@ -158,8 +150,8 @@ def cache(maxsize=None, *, type_specific=False):
     ```
     """
 
-    check_type(maxsize, int, optional=True)
-    check_type(type_specific, bool)
+    ensure_instance_of(maxsize, int, optional=True)
+    ensure_instance_of(type_specific, bool)
 
     def decorator(func):
         cache_ = OrderedDict()
@@ -291,9 +283,9 @@ def deprecated(reason, version=None, date=None):
     """
 
     # type checks
-    check_type(reason, str)
-    check_type(version, (int, float, str), optional=True)
-    check_type(date, str, optional=True)
+    ensure_instance_of(reason, str)
+    ensure_instance_of(version, (int, float, str), optional=True)
+    ensure_instance_of(date, str, optional=True)
 
     def decorator(func):
         @wraps(func)
@@ -349,7 +341,7 @@ def decorate_all_methods(decorator, *args, **kwargs):
     """
 
     # type checks
-    check_callable(decorator)
+    ensure_callable(decorator)
 
     def decorator_(cls):
         for attr_name, attr_value in cls.__dict__.items():

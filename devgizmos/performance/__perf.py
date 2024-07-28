@@ -11,7 +11,7 @@ from tracemalloc import start as tm_start
 from tracemalloc import stop as tm_stop
 from tracemalloc import take_snapshot
 
-from ..checks import check_in_bounds, check_type, check_value
+from ..errguards import ensure_in_bounds, ensure_instance_of, ensure_value
 
 TIME_UNITS = ("ns", "us", "ms", "s")
 DEC_MEM_UNITS = ("b", "kb", "mb", "gb")
@@ -132,11 +132,11 @@ class Timer:
         """
 
         # type checks
-        check_type(precision, int)
+        ensure_instance_of(precision, int)
 
         unit = unit.lower()
         # value checks
-        check_value(unit, TIME_UNITS)
+        ensure_value(unit, TIME_UNITS)
 
         self.__unit = unit
         self.__precision = precision
@@ -295,7 +295,7 @@ class Timer:
         """
 
         # value checks
-        check_value(u, TIME_UNITS)
+        ensure_value(u, TIME_UNITS)
 
         self.__unit = u
 
@@ -332,7 +332,7 @@ class Timer:
         """
 
         # type checks
-        check_value(p, int)
+        ensure_value(p, int)
 
         self.__precision = p
 
@@ -388,13 +388,13 @@ class Benchmark:
         """
 
         # type checks
-        check_type(trials, int)
-        check_type(precision, int)
+        ensure_instance_of(trials, int)
+        ensure_instance_of(precision, int)
 
         unit = unit.lower()
         # value checks
-        check_in_bounds(trials, 1, None)
-        check_value(unit, TIME_UNITS)
+        ensure_in_bounds(trials, 1, None)
+        ensure_value(unit, TIME_UNITS)
 
         self.__trials = trials
         self.__unit = unit
@@ -510,10 +510,10 @@ class Benchmark:
         """
 
         # type checks
-        check_type(t, int)
+        ensure_instance_of(t, int)
 
         # value checks
-        check_in_bounds(t, 1, None)
+        ensure_in_bounds(t, 1, None)
 
         self.__trials = t
 
@@ -550,7 +550,7 @@ class Benchmark:
         """
 
         # value checks
-        check_value(u, TIME_UNITS)
+        ensure_value(u, TIME_UNITS)
 
         self.__unit = u
 
@@ -587,7 +587,7 @@ class Benchmark:
         """
 
         # type checks
-        check_value(p, int)
+        ensure_value(p, int)
 
         self.__precision = p
 
@@ -677,11 +677,11 @@ class MemoryProfiler:
         """
 
         # type checks
-        check_type(precision, int)
+        ensure_instance_of(precision, int)
 
         unit = unit.lower()
         # value checks
-        check_value(unit, MEM_UNITS)
+        ensure_value(unit, MEM_UNITS)
 
         self.__unit = unit
         self.__precision = precision
@@ -806,7 +806,7 @@ class MemoryProfiler:
         """
 
         # value checks
-        check_value(u, MEM_UNITS)
+        ensure_value(u, MEM_UNITS)
 
         self.__unit = u
 
@@ -843,6 +843,6 @@ class MemoryProfiler:
         """
 
         # type checks
-        check_value(p, int)
+        ensure_value(p, int)
 
         self.__precision = p
