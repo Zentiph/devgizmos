@@ -410,16 +410,10 @@ class _ExcData:
         raise self.__value
 
     def __str__(self):
-        return (
-            f"Exception data: type={self.__type}, "
-            + f"value={repr(self.__value)}, traceback={self.__trace}, time={self.__time}"
-        )
+        return f"Exception {repr(self.__value)}, traceback {self.__trace}, time {self.__time}"
 
     def __repr__(self):
-        return (
-            f"Exception data: type={self.__type}, "
-            + f"value={repr(self.__value)}, traceback={self.__trace}, time={self.__time}"
-        )
+        return f"Exception {repr(self.__value)}, traceback {self.__trace}, time {self.__time}"
 
 
 class FailureManager:

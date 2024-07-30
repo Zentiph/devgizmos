@@ -5,9 +5,9 @@ Module containing the Retry class.
 """
 
 from asyncio import sleep as async_sleep
-from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime
 from functools import wraps
+from inspect import iscoroutinefunction
 from sys import exc_info
 from time import sleep
 
@@ -20,7 +20,6 @@ from ..errguards import (
 from .__failuremngr import _ExcData
 
 
-# TODO: fix this because it doesnt fucking work and im losing my mind
 class Retry:
     """Class for retrying failed code."""
 
@@ -31,20 +30,18 @@ class Retry:
         backoff_strategy=None,
         exceptions=(Exception,),
         raise_last=False,
-        asynchronous=False,
     ):
         """
         Retry
         -----
         Class that retries a function if it fails
         up until the maximum number of attempts is reached.
-        Can be used as a context manager and a decorator.
 
         Parameters
         ~~~~~~~~~~
         :param max_attempts: The maximum number of times to attempt running
         the decorated function, including the first time.
-        :type max_attempts: int
+        :type max_attempts: int | None
         :param delay: The time in seconds to wait after each retry.
         :type delay: int
         :param backoff_strategy: A function to determine the delay after each attempt, or None for no strategy.
@@ -55,9 +52,6 @@ class Retry:
         :param raise_last: Whether to raise the final exception raised when all attempts fail,
         defaults to False.
         :type raise_last: bool, optional
-        :param asynchronous: Whether to apply the retries asynchronously.
-        This is for async functions and will not work if used as a context manager, defaults to False.
-        :type asynchronous: bool, optional
 
         Raises
         ~~~~~~
@@ -68,7 +62,6 @@ class Retry:
         :raises TypeError: If exceptions is not a tuple.
         :raises TypeError: If an item inside exceptions is not an instance of BaseException.
         :raises TypeError: If raise_last is not a bool.
-        :raises TypeError: If asynchronous is not a bool.
         :raises ValueError: If max_attempts is less than 1.
         :raises ValueError: If delay is less than 0.
 
@@ -80,84 +73,47 @@ class Retry:
         ...     if random() > 0.5:
         ...         raise TypeError
         ...
-        >>> # use as a context manager
-        >>> with Retry(3, 1):
-        ...     risky()
-        ...
-        >>> with Retry(3, 1) as r:
-        ...     # get the suppressed errors
-        ...     retry.suppressed
-        ...     risky()
-        [TypeError()]
-        >>> # clear the error list for future use
-        >>> r.clear_suppressed()
-        >>>
         >>> # use as a decorator
-        >>> @Retry(3, 1)
+        >>> r = Retry(1, 1)
+        >>> @r
         ... def err():
         ...     raise Exception
         ...
+        >>> err()
+        >>> # get the suppressed errors
+        >>> r.suppressed
+        [Exception Exception(), traceback <traceback object at 0x00000174FDED2880>, time 2024-07-28 23:40:12.479442]
+        >>> # clear the error list for future list
+        >>> r.clear_suppressed()
+        >>> r.suppressed
+        []
         """
-        # TODO: TEST ^^^
 
         # type checks
-        ensure_instance_of(max_attempts, int)
+        ensure_instance_of(max_attempts, int, optional=True)
         ensure_instance_of(delay, int, float)
         if backoff_strategy is not None:
             ensure_callable(backoff_strategy)
         ensure_instance_of(exceptions, tuple)
         ensure_superclass_of(BaseException, *exceptions)
         ensure_instance_of(raise_last, bool)
-        ensure_instance_of(asynchronous, bool)
 
         # value checks
         ensure_in_bounds(max_attempts, 1, None)
         ensure_in_bounds(delay, 0, None)
 
         self.__max = max_attempts
-        self.__init_delay = delay
-        self.__delay = self.__init_delay
+        self.__delay = delay
         self.__bs = backoff_strategy
         self.__excs = exceptions
         self.__raise_last = raise_last
-        self.__async = asynchronous
+        self.__on_retry = None
 
         self.__attempts = 0
         self.__suppressed = []
 
-    # TODO: fix this it dont work
-    def __enter__(self):
-        self.__attempts = 0
-        self.__delay = self.__init_delay
-
-        while self.__attempts < self.__max:
-            try:
-                return self
-
-            except self.__excs:
-                self.__attempts += 1
-
-                if self.__attempts >= self.__max:
-                    if self.__raise_last:
-                        raise
-
-                    self.__suppressed.append(_ExcData(*exc_info(), datetime.now()))
-                    return False  # suppress the exception
-
-                self.__suppressed.append(_ExcData(*exc_info(), datetime.now()))
-
-                if self.__bs:
-                    self.__delay = self.__bs(self.__delay, self.__attempts)
-                sleep(self.__delay)
-                return False
-
-    def __exit__(self, type_, value, traceback):
-        if isinstance(value, self.__excs):
-            return not self.__raise_last
-        return False
-
     def __call__(self, func, /):
-        if not self.__async:
+        if not iscoroutinefunction(func):
 
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -174,7 +130,10 @@ class Retry:
                         if self.__attempts >= self.__max and self.__raise_last:
                             raise
 
-                        self.__suppressed.append(e)
+                        if self.__on_retry is not None:
+                            self.__on_retry(self.__attempts, e)
+
+                        self.__suppressed.append(_ExcData(*exc_info(), datetime.now()))
 
                         if self.__bs:
                             delay = self.__bs(delay, self.__attempts)
@@ -209,6 +168,24 @@ class Retry:
             return None
 
         return async_wrapper
+
+    def on_retry(self, func, /):
+        """
+        Retry.on_retry()
+        ----------------
+        Sets a function to run on each retry, or None for no function.
+
+        Parameters
+        ~~~~~~~~~~
+        :param func: The function to run each retry, or None for no function.
+        :type func: Callable[[int, BaseException], None] | None
+        """
+
+        # type checks
+        if func is not None:
+            ensure_callable(func)
+
+        self.__on_retry = func
 
     @property
     def max_attempts(self):
@@ -406,43 +383,6 @@ class Retry:
         self.__raise_last = rl
 
     @property
-    def asynchronous(self):
-        """
-        Retry.asynchronous
-        ------------------
-        Returns whether the Retry object should be executed asynchronously (for async functions).
-
-        Return
-        ~~~~~~
-        :return: Whether the Retry object will execute code asynchronously.
-        :rtype: bool
-        """
-
-        return self.__async
-
-    @asynchronous.setter
-    def asynchronous(self, a, /):
-        """
-        Retry.asynchronous()
-        --------------------
-        Sets whether the Retry object will should run code asynchronously (for async functions).
-
-        Parameters
-        ~~~~~~~~~~
-        :param a: Whether to run code asynchronously.
-        :type a: bool
-
-        Raises
-        ~~~~~~
-        :raises TypeError: If a is not a bool.
-        """
-
-        # type checks
-        ensure_instance_of(a, bool)
-
-        self.__async = a
-
-    @property
     def attempts(self):
         """
         Retry.attempts
@@ -481,3 +421,17 @@ class Retry:
         """
 
         self.__suppressed.clear()
+
+    def __str__(self):
+        return (
+            f"Retry(max_attempts={self.__max}, delay={self.__delay}, "
+            + f"backoff_strategy={self.__bs.__name__ if self.__bs else None}, "
+            + f"exceptions={self.__excs}, raise_last={self.__raise_last}"
+        )
+
+    def __repr__(self):
+        return (
+            f"Retry(max_attempts={self.__max}, delay={self.__delay}, "
+            + f"backoff_strategy={self.__bs.__name__ if self.__bs else None}, "
+            + f"exceptions={self.__excs}, raise_last={self.__raise_last}"
+        )
