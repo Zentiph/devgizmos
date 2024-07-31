@@ -11,6 +11,7 @@ __all__ = [
     "periodic_task",
     "thread_manager",
     "QueueProcessor",
+    "ReactivationError",
 ]
 
 from .__concur import (
@@ -20,4 +21,5 @@ from .__concur import (
     lock_handler,
     periodic_task,
     thread_manager,
+    ReactivationError,
 )

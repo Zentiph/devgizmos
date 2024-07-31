@@ -15,6 +15,15 @@ from queue import Queue, Empty
 from ..errguards import ensure_instance_of
 
 
+class ReactivationError(Exception):
+    """
+    ReactivationError
+    -----------------
+    Exception to raise if a QueueProcessor's start() method is called when
+    its start() method has been previously called and before its stop() method has been called.
+    """
+
+
 @contextmanager
 def thread_manager(target, *args, **kwargs):
     """
@@ -307,12 +316,10 @@ def batch_processor(data, workers, process_function):
     return results
 
 
-# TODO: note from zen - consider adding some @property funcs so users can
-# get the workers and process_func of the qp? (just a QOL change)
 class QueueProcessor:
     """Class for creating thread-safe queues."""
 
-    def __init__(self, workers, process_function):
+    def __init__(self, workers, process_function, raise_exceptions=False):
         """
         QueueProcessor()
         ----------------
@@ -324,6 +331,12 @@ class QueueProcessor:
         :type workers: int
         :param process_function: The function that processes each item.
         :type process_function: F
+        :param raise_exceptions: Allows an exception should be suppressed or raised. Defaults to False.
+        :type raise_exceptions: bool
+
+        Raises
+        ~~~~~~
+        :raises ReactivationError: If the start() method is called twice before the stop() method has been called.
 
         Example Usage
         ~~~~~~~~~~~~~
@@ -346,18 +359,33 @@ class QueueProcessor:
         ...
         >>> qp.stop()
         print(results)
-        [Processed Task 1, Processed Task 2, Processed Task 3]
+        [Processed Task 0, Processed Task 1, Processed Task 2]
         """
-
-        # TODO: note from zen - above example usage caused a massive error
 
         self.__queue = Queue()
         self.__workers = workers
         self.__process_function = process_function
         self.__active_workers = []
-        # TODO: note from zen - running does not do anything right now, consider adding checks
-        # to prevent start() from being called again if the qp is already running?
         self.__running = False
+        self.__raise_exceptions = raise_exceptions
+
+    @property
+    def workers(self):
+        """
+        QueueProcessor().workers
+        ----------------------------
+        Returns the list of active workers.
+        """
+        return self.__active_workers
+
+    @property
+    def process_func(self):
+        """
+        QueueProcessor().workers
+        ----------------------------
+        Returns the process function's name.
+        """
+        return self.__process_function.__name__
 
     def _consumer(self):
         """
@@ -369,16 +397,22 @@ class QueueProcessor:
         while True:
             try:
                 item = self.__queue.get(timeout=1)
+
                 if item is None:
                     break
+
                 self.__process_function(item)
+                self.__queue.task_done()
             except Empty:
                 continue
             except Exception as e:
-                # TODO: note from zen - see line 178
+                if self.__raise_exceptions:
+                    self.stop()
+                    raise RuntimeError(
+                        f"An error occurred during queue processing: {e}"
+                    ) from e
+
                 print(f"An error occurred during queue processing: {e}")
-            finally:
-                self.__queue.task_done()
 
     def start(self):
         """
@@ -386,6 +420,11 @@ class QueueProcessor:
         ------------------------
         Starts the QueueProcessor class.
         """
+
+        if self.__running:
+            raise ReactivationError(
+                "'QueueProcessor.start()' was called when QueueProcessor was already activated."
+            )
 
         self.__running = True
         for _ in range(self.__workers):
