@@ -19,8 +19,8 @@ from ..errguards import ensure_instance_of
 @contextmanager
 def thread_manager(target, *args, **kwargs):
     """
-    thread_manager
-    --------------
+    thread_manager()
+    ----------------
     Context manager that ensures that threads are properly started and terminated.
 
     Parameters
@@ -60,8 +60,8 @@ def thread_manager(target, *args, **kwargs):
 @contextmanager
 def lock_handler(lock):
     """
-    lock_handler
-    ------------
+    lock_handler()
+    --------------
     Context manager that handles acquiring and releasing a lock.
 
     Parameters
@@ -92,8 +92,8 @@ def lock_handler(lock):
 @contextmanager
 def barrier_sync(barrier):
     """
-    barrier_sync
-    ------------
+    barrier_sync()
+    --------------
     Context manager that uses to a barrier to synchronize multiple threads.
 
     Parameters
@@ -131,25 +131,25 @@ def barrier_sync(barrier):
 
 
 class PeriodicTask:
-    """
-    PeriodicTask
-    ------------
-    The main functionality of the decorator, periodic_running_task.
-
-    Parameters
-    ~~~~~~~~~~
-    :param interval: The time in seconds between each function call.
-    :type interval: Union[int, float]
-    :param func: The function being modified by the decorator.
-    :type func: F
-    :param args: The arguments passed to the function.
-    :type args: Tuple[Any, ...]
-    :param kwargs: The keyword arguments passed to the function.
-    :type kwargs: Any
-    """
+    """The main functionality of the decorator, periodic_running_task."""
 
     def __init__(self, interval, func, *args, **kwargs):
-        """The Constructor method."""
+        """
+        PeriodicTask()
+        --------------
+        The main functionality of the decorator, periodic_running_task.
+
+        Parameters
+        ~~~~~~~~~~
+        :param interval: The time in seconds between each function call.
+        :type interval: Union[int, float]
+        :param func: The function being modified by the decorator.
+        :type func: F
+        :param args: The arguments passed to the function.
+        :type args: Any
+        :param kwargs: The keyword arguments passed to the function.
+        :type kwargs: Any
+        """
 
         # type checks
         ensure_instance_of(interval, Union[int, float])
@@ -164,8 +164,8 @@ class PeriodicTask:
 
     def __target(self):
         """
-        PeriodicTask.__target()
-        -----------------------
+        PeriodicTask().__target()
+        -------------------------
         The thread's target, a private function only used in PeriodicTask.
         """
 
@@ -179,8 +179,8 @@ class PeriodicTask:
 
     def start(self):
         """
-        PeriodicTask.start()
-        --------------------
+        PeriodicTask().start()
+        ----------------------
         Starts the threading process.
         """
 
@@ -188,8 +188,8 @@ class PeriodicTask:
 
     def stop(self):
         """
-        PeriodicTask.stop()
-        -------------------
+        PeriodicTask().stop()
+        ---------------------
         A manual function that allows the user to stop the function.
         """
 
@@ -199,8 +199,8 @@ class PeriodicTask:
 
 def periodic_running_task(interval):
     """
-    periodic_running_task
-    ---------------------
+    periodic_running_task()
+    -----------------------
     Runs a decorated function periodically within a specified interval through a background thread.
 
     Parameters
@@ -244,8 +244,8 @@ def periodic_running_task(interval):
 
 def batch_processor(data, workers, process_function):
     """
-    batch_processor
-    ---------------
+    batch_processor()
+    -----------------
     Processes data in batches using concurrent futures.
 
     Parameters
@@ -298,8 +298,8 @@ class QueueProcessor:
 
     def __init__(self, num_workers, process_item):
         """
-        QueueProcessor
-        --------------
+        QueueProcessor()
+        ----------------
         Automates the process of creating a thread-safe queue.
 
         Parameters
@@ -341,8 +341,8 @@ class QueueProcessor:
 
     def _consumer(self):
         """
-        QueueProcessor._consumer()
-        --------------------------
+        QueueProcessor()._consumer()
+        ----------------------------
         Manages how each item is supposed to be processed and breaks when an item is None.
         """
 
@@ -361,8 +361,8 @@ class QueueProcessor:
 
     def start(self):
         """
-        QueueProcessor.start()
-        ----------------------
+        QueueProcessor().start()
+        ------------------------
         Starts the QueueProcessor class.
         """
 
@@ -374,8 +374,8 @@ class QueueProcessor:
 
     def stop(self):
         """
-        QueueProcessor.stop()
-        ---------------------
+        QueueProcessor().stop()
+        -----------------------
         Stops the queue for the QueueProcessor.
         """
 

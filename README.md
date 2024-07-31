@@ -1,16 +1,17 @@
 devgizmos
 =========
-devgizmos is a developer toolkit containing useful features such as decorators, quick type-checking functions, and more.
+devgizmos is a developer toolkit containing useful features such as decorators, quick type-checking functions, timers, and more.
 
 Features
 --------
-- decorators
-- various checkers such as check_type(), check_value(), check_in_bounds(), etc.
-- context managers
-- interpolation
+- general code utilities such as FailureManager, Timeout, Retry, etc.
+- various error guards such as is_instance_of(), is_in_bounds(), contains(), etc.
+- system io utilities
+- code information utility such as tracer()
+- performance measuring tools
+- threading utility
 - regexes
-- custom types (classes) such as Number(), Char(), etc.
-- custom types (TypeAliases) such as Num, Chr, etc.
+- custom types such as Number and Char
 
 Installation
 ------------
@@ -22,7 +23,6 @@ devgizmos is not currently available via PyPI, but is planned to be in the futur
 
 Quick Start
 -----------
-TODO
 ```python
 # TODO
 ```
@@ -36,5 +36,6 @@ Contributing
 ------------
 Contributions are not currently welcome, but will possibly be in the future.
 
-Suggestions/bug reports are always welcome, however! Open an issue or email zentiphdev@gmail.com
-(Please only create bug report issues for main versions (i.e. X.X.0, not X.X.1, X.X.2, etc.)
+Suggestions/bug reports are always welcome, however! Open an issue or email zentiphdev@gmail.com.
+
+(Please only create bug report issues for main versions, not alphas or betas.)

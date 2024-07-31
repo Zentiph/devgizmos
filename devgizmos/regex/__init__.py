@@ -2,6 +2,8 @@
 regex
 =====
 Module containing useful regexes.
+For regex matching utility, import 'matches_regex()'
+or 'ensure_matches_regex()' from errguards.
 """
 
 __all__ = [

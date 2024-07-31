@@ -2,17 +2,6 @@
 basic_logger
 ============
 Module containing an already set up logger to skip the few set up lines of code needed when testing basic logging.
-
-Built-in Utilizations
----------------------
-This module utilizes the following functionality from built-in modules/packages:
-logging
-- DEBUG
-- Formatter
-- Logger
-- StreamHandler\n
-typing
-- Union
 """
 
 from logging import DEBUG, Formatter, Logger, StreamHandler
@@ -25,8 +14,6 @@ LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
 
 class BasicLogger(Logger):
     """
-    BasicLogger
-    ===========
     Logger for quickly testing/logging.
     """
 
@@ -34,12 +21,13 @@ class BasicLogger(Logger):
         self, level=DEBUG, fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     ):
         """
-        BasicLogger
-        ===========
+        BasicLogger()
+        -------------
         Logger for quickly testing/logging.
+        Child class of logging.Logger.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param level: The logging level, defaults to logging.DEBUG
         :type level: LoggingLevel, optional
         :param fmt: The logging format, defaults to "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

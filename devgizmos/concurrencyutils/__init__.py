@@ -5,7 +5,7 @@ Module containing tools for threading.
 """
 
 __all__ = [
-    "batch_processer",
+    "batch_processor",
     "barrier_sync",
     "lock_handler",
     "periodic_running_task",
@@ -14,10 +14,10 @@ __all__ = [
 ]
 
 from .__concur import (
-    batch_processer,
+    QueueProcessor,
     barrier_sync,
+    batch_processor,
     lock_handler,
     periodic_running_task,
     thread_manager,
-    QueueProcessor,
 )

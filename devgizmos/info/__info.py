@@ -12,38 +12,26 @@ from ..errguards import ensure_instance_of
 
 def tracer(*, entry_msg="", exit_msg=""):
     """
-    tracer
-    ======
+    tracer()
+    --------
     Logs entries and exits of the decorated function.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param entry_msg: Used to enter a custom message format, defaults to "".
-    - Leave as an empty string to use the pre-made message, or enter None for no message.
-    - Enter an unformatted string with the following fields to include their values
-    - name: The name of the function.
-    - args: The arguments passed to the function.
-    - kwargs: The keyword arguments passed to the function.
-    - Ex: entry_msg="Entering func {name} with args={args} and kwargs={kwargs}."\n
+    Ex: entry_msg="Entering func {name} with args={args} and kwargs={kwargs}."
     :type entry_msg: str | None, optional
     :param exit_msg: Used to enter a custom message format, defaults to "".
-    - Leave as an empty string to use the pre-made message, or enter None for no message.
-    - Enter an unformatted string with the following fields to include their values
-    - name: The name of the function.
-    - args: The arguments passed to the function.
-    - kwargs: The keyword arguments passed to the function.
-    - returned: The return value of the function.
-    - Ex: exit_msg="Exiting func {name} with args={args} and kwargs={kwargs}; Returned {returned}."\n
+    Ex: exit_msg="Exiting func {name} with args={args} and kwargs={kwargs}; Returned {returned}."
     :type exit_msg: str | None, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If entry_msg is not a str.
     :raises TypeError: If exit_msg is not a str.
 
     Example Usage
-    -------------
-    ```python
+    ~~~~~~~~~~~~~
     >>> @tracer()
     ... def func(*args, **kwargs):
     ...     return all(args)
@@ -52,7 +40,6 @@ def tracer(*, entry_msg="", exit_msg=""):
     [TRACER]: ENTERING FUNC func WITH args=(1, 2) AND kwargs={'word': 'Hello'}
     [TRACER]: EXITING FUNC func WITH args=(1, 2) AND kwargs={'word': 'Hello'}; RETURNED True
     True
-    ```
     """
 
     # type checks

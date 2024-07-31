@@ -38,6 +38,11 @@ def rate_limit(*args):
     :raises ValueError: If calls is 0 or less.
     :raises ValueError: If period is 0 or less.
 
+    Return
+    ~~~~~~
+    :return: The decorated function.
+    :rtype: Decorated
+
     Example Usage
     ~~~~~~~~~~~~~
     >>> from time import perf_counter
@@ -120,6 +125,11 @@ def cache(maxsize=None, *, type_specific=False):
     :raises TypeError: If maxsize is not an int or None.
     :raises TypeError: If type_specific is not a bool.
     :raises ValueError: If maxsize is less than 1.
+
+    Return
+    ~~~~~~
+    :return: The decorated function.
+    :rtype: Decorated
 
     Example Usage
     ~~~~~~~~~~~~~
@@ -239,6 +249,11 @@ def deprecated(reason, version=None, date=None):
     :raises TypeError: If version is not an int, float, str, or None.
     :raises TypeError: If date is not a str or None.
 
+    Return
+    ~~~~~~
+    :return: The decorated function.
+    :rtype: Decorated
+
     Example Usage
     ~~~~~~~~~~~~~
     >>> @deprecated("We found a better way to do this", "v1.0.3")
@@ -292,6 +307,11 @@ def decorate_all_methods(decorator, *args, **kwargs):
     ~~~~~~
     :raises TypeError: If decorator is not callable.
 
+    Return
+    ~~~~~~
+    :return: The decorated class.
+    :rtype: DecoratedCls
+
     Example Usage
     ~~~~~~~~~~~~~
     >>> @decorate_all_methods(deprecated, "Don't use this class anymore, see MyBetterClass")
@@ -330,9 +350,19 @@ def immutable(cls):
     ----------
     Enforces immutability onto the decorated object.
 
+    Parameters
+    ~~~~~~~~~~
+    :param cls: The class to decorate and make immutable.
+    :type cls: Type[T]
+
     Raises
     ~~~~~~
     :raises AttributeError: If an attempt is made to edit the immutable object's attributes.
+
+    Return
+    ~~~~~~
+    :return: The decorated class.
+    :rtype: ImmutableInstance
 
     Example Usage
     ~~~~~~~~~~~~~
@@ -379,6 +409,16 @@ def singleton(cls):
     ----------
     Ensures only one instance of a class can exist at once.
 
+    Parameters
+    ~~~~~~~~~~
+    :param cls: The class to decorate and make a singleton.
+    :type cls: Type[T]
+
+    Return
+    ~~~~~~
+    :return: The decorated class.
+    :rtype: DecoratedCls
+
     Example Usage
     ~~~~~~~~~~~~~
     >>> @singleton
@@ -416,10 +456,20 @@ def type_checker(func):
     -------------
     Ensures the arguments passed to the decorated function are of the correct type based on the type hints.
 
+    Parameters
+    ~~~~~~~~~~
+    :param func: The function to decorate and type check.
+    :type func: Callable[P, T]
+
     Raises
     ~~~~~~
     :raises TypeError: If the args or kwargs passed do not match the function's type hints.
     :raises TypeError: If the return value does not match the function's type hints.
+
+    Return
+    ~~~~~~
+    :return: The decorated function.
+    :rtype: Callable[P, T]
 
     Example Usage
     ~~~~~~~~~~~~~

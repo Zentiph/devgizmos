@@ -6,11 +6,9 @@ from types import TracebackType
 from typing import (
     Any,
     Callable,
-    ContextManager,
     List,
     NoReturn,
     Optional,
-    Self,
     Tuple,
     Type,
     TypeVar,

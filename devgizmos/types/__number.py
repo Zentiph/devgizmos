@@ -7,21 +7,18 @@ Contains the custom Number type.
 from math import ceil, floor, trunc
 from re import match as re_match
 
+from ..errguards import ensure_instance_of
 from ..regex import COMPLEX_EXACT, COMPLEX_PARENS_EXACT, FLOAT_EXACT, INT_EXACT
 
 
 class Number:
-    """
-    Number
-    ======
-    Represents a general number.
-    """
+    """Represents a general number."""
 
     # pylint: disable=too-many-branches
     def __new__(cls, obj, base=10, /, *, preserve_type=False):
         """
-        Number
-        ======
+        Number()
+        --------
         Represents a general number.
         Accepts any object with an __int__, __float__, or __complex__ method,
         or a convertible str, bytes, or bytearray.
@@ -30,35 +27,28 @@ class Number:
         If a __number__ method is found, that implementation will take priority.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param obj: The object to convert to a Number.
-        The object must have at least one number-conversion method (i.e. __int__, __float__, __complex__),
-        or be a str, bytes, or bytearray.
+        The object must have at least one number-conversion method (i.e. __int__), or be a str, bytes, or bytearray.
         :type obj: ConvertibleToNumber | str | bytes | bytearray
         :param preserve_type: Whether to preserve the type of the number given, defaults to False.
-        By default, Number will simplify given numbers as much as possible.
-        ```python
-        >>> num = Number((1+0j))
-        >>> print(num)
-        1
-        ```
+        By default, Number will simplify given numbers as much as possible. (Ex: Number((1+0j)) -> 1)
         :type preserve_type: bool, optional
         :param base: The base of the number.
         Only compatible when obj is a str, bytes, or bytearray and represents an int.
         :type base: SupportsIndex
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If the object to convert is not a str, bytes, bytearray, or ConvertibleToNumber,
 
         Return
-        ------
+        ~~~~~~
         :return: A new Char instance.
         :rtype: Self
 
         Example Usage
-        -------------
-        ```python
+        ~~~~~~~~~~~~~
         >>> int_num = Number(3)
         >>> int_num + int_num
         6
@@ -74,34 +64,42 @@ class Number:
         >>> class A:
         ...     def __init__(self, x):
         ...         self.x = x
-        ...     def __number__(self): # custom number conversion implementation
+        ...     def __number__(self): # custom num conversion method
         ...         return Number(self.x + 3)
         ...
         >>> a = A(3)
         >>> n = Number(a)
         >>> print(n)
         6
-        ```
         """
 
         # ConvertibleToNumber implementation
         # (obj has __number__ method)
         if hasattr(obj, "__number__"):
             custom_val = obj.__number__()
-            if not isinstance(custom_val, (int, float, complex, Number)):
-                raise TypeError(
-                    "__number__() implementation must return an "
-                    + f"'int', 'float', 'complex', or 'Number' value, not '{type(custom_val).__name__}'"
-                )
+
+            # type checks
+            m = (
+                "__number__() implementation must return an "
+                + f"'int', 'float', 'complex', or 'Number' value, not '{type(custom_val).__name__}'"
+            )
+            ensure_instance_of(
+                custom_val,
+                int,
+                float,
+                complex,
+                Number,
+                msg=m,
+            )
 
             instance = super().__new__(cls)
             instance._val = custom_val
             instance._num_type = type(custom_val)
             return instance
 
+        # base value checks
         if base != 0 and not 2 <= base <= 36:
             raise ValueError("Number() base must be >= 2 and <= 36, or 0")
-
         # if base is changed
         if base != 10 and isinstance(obj, (str, bytes, bytearray)):
             instance = super().__new__(cls)
@@ -109,7 +107,7 @@ class Number:
             instance._num_type = int
             return instance
 
-        # str implementation
+        # base 10 str implementation
         if isinstance(obj, str):
             int_match = re_match(INT_EXACT, obj)
             if int_match:
@@ -157,7 +155,7 @@ class Number:
 
             raise ValueError(f"invalid literal for Number(): '{obj}'")
 
-        # SupportsNumType implementation
+        # ConvertibleToNumber implementation
         # (obj has an __int__, __float__, or __complex__ method)
         if not (
             hasattr(obj, "__int__")
@@ -200,47 +198,74 @@ class Number:
 
     def as_integer_ratio(self):
         """
-        Return a pair of integers, whose ratio is equal to the original int.
+        Number().as_integer_ratio()
+        ---------------------------
+        Return a pair of integers, whose ratio is equal to the original Number.
 
         The ratio is in lowest terms and has a positive denominator.
 
-        ```python
+        Return
+        ~~~~~~
+        :return: A pair of integers, whose ratio is equal to the original Number,
+        or None if the Number is complex.
+        :rtype: Tuple[int, int] | None
+
+        Example Usage
+        ~~~~~~~~~~~~~
         >>> Number(10).as_integer_ratio()
         (10, 1)
         >>> Number(-10).as_integer_ratio()
         (-10, 1)
         >>> Number(0).as_integer_ratio()
         (0, 1)
-        ```
         """
 
         if self._num_type in (int, float):
             return self._val.as_integer_ratio()
 
         # no method for complex
-        raise TypeError("cannot express complex value as integer ratio")
+        return None
 
     def hex(self):
-        """Return a hexadecimal representation of a floating-point number.
+        """
+        Number().hex()
+        --------------
+        Return a hexadecimal representation of a floating-point number.
 
-        ```python
-        >>> (-0.1).hex()
+        Return
+        ~~~~~~
+        :return: A hexadecimal representation of the Number,
+        or None if the Number is an int or complex.
+        :rtype: str | None
+
+        Example Usage
+        ~~~~~~~~~~~~~
+        >>> Number(-0.1).hex()
         '-0x1.999999999999ap-4'
-        >>> 3.14159.hex()
+        >>> Number(3.14159).hex()
         '0x1.921f9f01b866ep+1'
-        ```
         """
 
         if self._num_type == float:
             return self._val.hex()
 
-        raise TypeError("cannot express int or complex value as hex")
+        # no method for int or complex
+        return None
 
     def is_integer(self):
-        """Return True if the Number is an integer."""
+        """
+        Number().is_integer()
+        ---------------------
+        Return True if the Number is an integer.
+
+        Return
+        ~~~~~~
+        :return: True if the Number is an integer.
+        :rtype: bool
+        """
 
         if isinstance(self._val, complex):
-            return self._val.real.is_integer()  # pylint: disable=no-member
+            return self._val.real.is_integer() and self._val.imag.is_integer()
         if isinstance(self._val, float):
             return self._val.is_integer()
         return True
@@ -248,14 +273,21 @@ class Number:
     @classmethod
     def fromhex(cls, string, /):
         """
+        Number.fromhex()
+        ----------------
         Create a floating-point number from a hexadecimal string.
 
-        ```python
-        >>> float.fromhex('0x1.ffffp10')
-        2047.984375
-        >>> float.fromhex('-0x1p-1074')
-        -5e-324
-        ```
+        Return
+        ~~~~~~
+        :return: A new Number made from the hex string.
+        :rtype: Number
+
+        Example Usage
+        ~~~~~~~~~~~~~
+        >>> Number.fromhex('0x1.ffffp10')
+        Number(2047.984375)
+        >>> Number.fromhex('-0x1p-1074')
+        Number(-5e-324)
         """
 
         value = float.fromhex(string)
@@ -263,25 +295,46 @@ class Number:
 
     @property
     def real(self):
-        """the real part of a complex number"""
+        """
+        Number().real
+        -------------
+        the real part of a complex number
 
-        if self._num_type in (int, float):
-            return self._val
+        Return
+        ~~~~~~
+        :return: The real part of the Number.
+        :rtype: int | float
+        """
 
         return self._val.real
 
     @property
     def imag(self):
-        """the imaginary part of a complex number"""
+        """
+        Number().imag
+        -------------
+        the imaginary part of a complex number
 
-        if self._num_type in (int, float):
-            return 0
+        Return
+        ~~~~~~
+        :return: The imaginary part of the Number.
+        :rtype: int | float
+        """
 
         return self._val.imag
 
     @property
     def numerator(self):
-        """the numerator of a rational number in lowest terms"""
+        """
+        Number().numerator
+        ------------------
+        the numerator of a rational number in lowest terms
+
+        Return
+        ~~~~~~
+        :return: The numerator of a rational number of the Number.
+        :rtype: int | None
+        """
 
         if self._num_type == int:
             return self._val
@@ -289,11 +342,21 @@ class Number:
         if self._num_type == float:
             return self._val.as_integer_ratio()[0]
 
-        raise TypeError("cannot express complex value as a numerator")
+        # no complex implementation
+        return None
 
     @property
     def denominator(self):
-        """the denominator of a rational number in lowest terms"""
+        """
+        Number().denominator
+        --------------------
+        the denominator of a rational number in lowest terms
+
+        Return
+        ~~~~~~
+        :return: The denominator of a rational number of the Number.
+        :rtype: int | None
+        """
 
         if self._num_type == int:
             return 1
@@ -301,17 +364,18 @@ class Number:
         if self._num_type == float:
             return self._val.as_integer_ratio()[1]
 
-        raise TypeError("cannot express complex value as a denominator")
+        # no complex implementation
+        return None
 
     @property
     def num_type(self):
         """
-        num_type
-        ========
+        Number().num_type()
+        -------------------
         Returns the type of number the Number represents.
 
         Return
-        ------
+        ~~~~~~
         :return: The type of number the Number represents.
         :rtype: Literal["int", "float", "complex"]
         """
@@ -319,96 +383,128 @@ class Number:
         return self._num_type.__name__
 
     def conjugate(self):
-        """Returns self, the complex conjugate of any int."""
+        """
+        Number().conjugate()
+        --------------------
+        Returns the conjugate of the Number.
 
-        if self._num_type == int:
-            return self._val
+        Return
+        ~~~~~~
+        :return: The conjugate of the Number.
+        :rtype: int | float | complex
+        """
 
-        if self._num_type == float:
+        if self._num_type in (int, float):
             return self._val
 
         return self._val.conjugate()
 
     def bit_length(self):
         """
+        Number().bit_length()
+        ---------------------
         Number of bits necessary to represent self in binary.
 
-        ```python
-        >>> bin(37)
-        '0b100101'
-        >>> (37).bit_length()
+        Return
+        ~~~~~~
+        :return: The number of bits necessary to represent the Number in binary.
+        :rtype: int | None
+
+        Example Usage
+        -------------
+        >>> bin(Number(37))
+        0b100101
+        >>> Number(37).bit_length()
         6
-        ```
         """
 
         if self._num_type == int:
             return self._val.bit_length()
 
-        raise TypeError("cannot express float or complex value as bit length")
+        # no float or complex implementation
+        return None
 
     def bit_count(self):
         """
+        Number().bit_count()
+        --------------------
         Number of ones in the binary representation of the absolute value of self.
 
         Also known as the population count.
 
-        ```python
-        >>> bin(13)
-        '0b1101'
-        >>> (13).bit_count()
+        Return
+        ~~~~~~
+        :return: The number of ones in the binary representation of the absolute value of the Number.
+        :rtype: int | None
+
+        >>> bin(Number(13))
+        0b1101
+        >>> Number(13).bit_count()
         3
-        ```
         """
 
         if self._num_type == int:
             return self._val.bit_count()
 
-        raise TypeError("cannot express float or complex value as population count")
+        # no float or complex implementation
+        return None
 
+    # regrettable long lines but necessary so pylance can parse the docstring
+    # pylint: disable=line-too-long
     def to_bytes(self, length=1, byteorder="big", *, signed=False):
         """
-        Return an array of bytes representing an integer.
+        Number().to_bytes()
+        -------------------
+        Return an array of bytes representing the Number.
 
-        length
-            Length of bytes object to use.
-            An OverflowError is raised if the integer is not representable
-            with the given number of bytes.
-            Default is length 1.
-        byteorder
-            The byte order used to represent the integer.
-            If byteorder is 'big', the most significant byte is at the beginning of the byte array.
-            If byteorder is 'little', the most significant byte is at the end of the byte array.
-            To request the native byte order of the host system, use sys.byteorder as the byte order value.
-            Default is to use 'big'.
-        signed
-            Determines whether two's complement is used to represent the integer.
-            If signed is False and a negative integer is given, an OverflowError is raised.
+        Parameters
+        ~~~~~~~~~~
+        :param length: Length of bytes object to use. An OverflowError is raised if the integer is not representable
+        with the given number of bytes. Default is length 1.
+        :type length: SupportsIndex, optional
+        :param byteorder: The byte order used to represent the integer. If byteorder is 'big', the most significant byte is at the beginning of the byte array.
+        If byteorder is 'little', the most significant byte is at the end of the byte array. To request the native byte order of the host system, use sys.byteorder as the byte order value. Default is to use 'big'.
+        :type byteorder: Literal["little", "big"], optional
+        :param signed: Determines whether two's complement is used to represent the integer.
+        If signed is False and a negative integer is given, an OverflowError is raised.
+        :type signed: bool, optional
+
+        Return
+        ~~~~~~
+        :return: An array of bytes representing the Number.
+        :rtype: bytes | None
         """
 
         if self._num_type == int:
             return self._val.to_bytes(length, byteorder, signed=signed)
 
-        raise TypeError("cannot convert float or complex value to bytes")
+        # no float or complex implementation
+        return None
 
-    # pylint: disable=redefined-builtin
+    # again, regrettable long lines, but necessary for pylance to parse the docstring
+    # pylint: disable=redefined-builtin, line-too-long
     @classmethod
     def from_bytes(cls, bytes, byteorder="big", *, signed=False):
         """
-        Return the integer represented by the given array of bytes.
+        Number.from_bytes()
+        -------------------
+        Return the Number represented by the given array of bytes.
 
-        bytes
-            Holds the array of bytes to convert.
-            The argument must either support the buffer protocol
-            or be an iterable object producing bytes.
-            Bytes and bytearray are examples of built-in objects that support the buffer protocol.
-        byteorder
-            The byte order used to represent the integer.
-            If byteorder is 'big', the most significant byte is at the beginning of the byte array.
-            If byteorder is 'little', the most significant byte is at the end of the byte array.
-            To request the native byte order of the host system, use sys.byteorder as the byte order value.
-            Default is to use 'big'.
-        signed
-            Indicates whether two's complement is used to represent the integer.
+        Parameters
+        ~~~~~~~~~~
+        :param bytes: Holds the array of bytes to convert. The argument must either support the buffer protocol
+        or be an iterable object producing bytes. Bytes and bytearray are examples of built-in objects that support the buffer protocol.
+        :type bytes: Iterable[SupportsIndex] | SupportsBytes | ReadableBuffer, optional
+        :param byteorder: The byte order used to represent the integer. If byteorder is 'big', the most significant byte is at the beginning of the byte array.
+        If byteorder is 'little', the most significant byte is at the end of the byte array. To request the native byte order of the host system, use sys.byteorder as the byte order value. Default is to use 'big'.
+        :type byteorder: Literal["little", "big"], optional
+        :param signed: Indicates whether two's complement is used to represent the integer.
+        :type signed: bool, optional
+
+        Return
+        ~~~~~~
+        :return: A new Number represented by the given array of bytes.
+        :rtype: Number
         """
 
         value = int.from_bytes(bytes, byteorder, signed=signed)
@@ -416,14 +512,15 @@ class Number:
 
     def pow(self, exp, mod=None, /):
         """
-        pow
-        ===
-        Returns Number**exp % mod.
+        Number().pow()
+        --------------
+        Returns Number()**exp % mod.
+
         Custom pow function to circumvent built-in
         pow() not recognizing Number.__rpow__() method.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param exp: The value to raise the Number to.
         :type exp: int | float | complex | Number
         :param mod: The modulus to perform on the exponential value, defaults to None.
@@ -431,7 +528,7 @@ class Number:
         :type mod: int | None, optional
 
         Return
-        ------
+        ~~~~~~
         :return: The Number raised to the power, with modulus applied if mod is not None.
         :rtype: Number
         """
@@ -440,22 +537,23 @@ class Number:
 
     def rpow(self, base, mod=None, /):
         """
-        rpow
-        ====
-        Returns base**Number % mod.
+        Number().rpow()
+        ---------------
+        Returns base**Number() % mod.
+
         Custom reverse power function to circumvent built-in
         pow() not recognizing Number.__rpow__() method.
 
         Parameters
-        ----------
-        :param base: The base that will be raises to the power of Number.
+        ~~~~~~~~~~
+        :param base: The base that will be raised to the power of the Number.
         :type base: int | float | complex | Number
         :param mod: The modulus to perform on the exponential value, defaults to None.
         Only compatible with integer exp values.
         :type mod: int | None, optional
 
         Return
-        ------
+        ~~~~~~
         :return: The Number raised to the power, with modulus applied if mod is not None.
         :rtype: Number
         """

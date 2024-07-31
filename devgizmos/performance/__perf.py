@@ -22,17 +22,25 @@ MEM_UNITS = BIN_MEM_UNITS + DEC_MEM_UNITS
 class NotStartedError(Exception):
     """
     NotStartedError
-    ===============
-    Exception to raise if one of a class's methods is called before its start() method has been called.
+    ---------------
+    Exception to raise if one of a Timer's methods is called before its start() method has been called.
     """
 
 
 class ReactivationError(Exception):
     """
     ReactivationError
-    =================
-    Exception to raise if a class's start() is called when
+    -----------------
+    Exception to raise if a Timer's start() method is called when
     its start() method has been previously called and before its stop() method has been called.
+    """
+
+
+class BadResetError(Exception):
+    """
+    BadResetError
+    -------------
+    Exception to raise if a Timer's reset() method is called while it is running.
     """
 
 
@@ -42,29 +50,28 @@ class Timer:
 
     def __init__(self, unit="ns", precision=3):
         """
-        Timer
-        =====
+        Timer()
+        -------
         Class that times how long code takes to run.
         Can be used as a standard class, a context manager, or a decorator.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param unit: The unit of time to use, defaults to "ns".
-        - Supported units are "ns", "us", "ms", "s".\n
+        Supported units are "ns", "us", "ms", and "s".
         :type unit: Literal["ns", "us", "ms", "s"], optional
-        :param precision: The precision to use when rounding the time, defaults to 3
+        :param precision: The precision to use when rounding the time, defaults to 3.
         :type precision: int, optional
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If precision is not an int.
         :raises ValueError: If unit is not 'ns', 'us', 'ms', or 's'.
         :raises ReactivationError: If the start() method is called twice before the stop() method has been called.
         :raises NotStartedError: If any methods other than start() are called before start().
 
-        Example Usage (Standard)
-        ------------------------
-        ```python
+        Example Usage
+        ~~~~~~~~~~~~~
         >>> # create the timer
         >>> tmr = Timer("ms")
         >>> # start the timer
@@ -89,12 +96,23 @@ class Timer:
         >>> tmr.reset()
         >>> tmr.elapsed
         0.0
-        ```
-
-        Example Usage (Context Manager)
-        -------------------------------
-        ```python
-        >>> # enter the context manager
+        >>>
+        >>>
+        >>> # decorate a function with the timer
+        >>> @tmr
+        ... def perf_test():
+        ...     for _ in range(100_000):
+        ...             pass
+        ...
+        >>> # call the function
+        >>> perf_test()
+        >>>
+        >>> # get the time elapsed
+        >>> tmr.elapsed
+        1.837
+        >>>
+        >>>
+        >>> # enter as a context manager
         >>> with Timer("ms") as t:
         ...     for _ in range(100_000):
         ...             pass
@@ -108,27 +126,6 @@ class Timer:
         >>> # get the time elapsed
         >>> t.elapsed
         1.947
-        ```
-
-        Example Usage (Decorator)
-        -------------------------
-        ```python
-        >>> # create the timer object
-        >>> tmr = Timer("ms")
-        >>>
-        >>> # decorate a function with it
-        >>> @tmr
-        ... def perf_test():
-        ...     for _ in range(100_000):
-        ...             pass
-        ...
-        >>> # call the function
-        >>> perf_test()
-        >>>
-        >>> # get the time elapsed
-        >>> tmr.elapsed
-        1.837
-        ```
         """
 
         # type checks
@@ -167,12 +164,12 @@ class Timer:
     @property
     def elapsed(self):
         """
-        Timer.elapsed
-        =============
+        Timer().elapsed
+        ---------------
         Returns the time elapsed so far.
 
         Return
-        ------
+        ~~~~~~
         :return: The time elapsed.
         :rtype: int | float
         """
@@ -189,8 +186,8 @@ class Timer:
 
     def start(self):
         """
-        Timer.start()
-        =============
+        Timer().start()
+        ---------------
         Starts the timer. Overrides old data.
         """
 
@@ -206,8 +203,8 @@ class Timer:
 
     def stop(self):
         """
-        Timer.stop()
-        ============
+        Timer().stop()
+        --------------
         Stops the timer.
         """
 
@@ -221,8 +218,8 @@ class Timer:
 
     def pause(self):
         """
-        Timer.pause()
-        =============
+        Timer().pause()
+        ---------------
         Pauses the timer.
         """
 
@@ -237,8 +234,8 @@ class Timer:
 
     def resume(self):
         """
-        Timer.resume()
-        ==============
+        Timer().resume()
+        ----------------
         Resumes the timer.
         """
 
@@ -253,10 +250,15 @@ class Timer:
 
     def reset(self):
         """
-        Timer.reset()
-        =============
+        Timer().reset()
+        ---------------
         Resets the timer's time settings to their initial state.
         """
+
+        if self.__started:
+            raise BadResetError(
+                "Timer must be stopped to used 'Timer.reset()'. To stop the Timer, use 'Timer.stop()'."
+            )
 
         self.__elapsed_time = 0.0
         self.__initial_time = 0.0
@@ -265,12 +267,12 @@ class Timer:
     @property
     def unit(self):
         """
-        Timer.unit
-        ==========
+        Timer().unit
+        ------------
         Returns the unit being used by the Timer.
 
         Return
-        ------
+        ~~~~~~
         :return: The unit being used by the Timer.
         :rtype: Literal["ns", "us", "ms", "s"]
         """
@@ -280,17 +282,17 @@ class Timer:
     @unit.setter
     def unit(self, u, /):
         """
-        Timer.unit()
-        ============
+        Timer().unit()
+        --------------
         Sets the unit for the Timer.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param u: The new unit.
         :type u: Literal["ns", "us", "ms", "s"]
 
         Raises
-        ------
+        ~~~~~~
         :raises ValueError: If u is not "ns", "us", "ms", or "s".
         """
 
@@ -302,12 +304,12 @@ class Timer:
     @property
     def precision(self):
         """
-        Timer.precision
-        ===============
+        Timer().precision
+        -----------------
         Returns the precision being used by the Timer.
 
         Return
-        ------
+        ~~~~~~
         :return: The precision being used by the Timer.
         :rtype: int
         """
@@ -317,17 +319,17 @@ class Timer:
     @precision.setter
     def precision(self, p, /):
         """
-        Timer.precision()
-        =================
+        Timer().precision()
+        -------------------
         Sets the precision for the Timer.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param p: The new precision.
         :type p: int
 
         Raises
-        ------
+        ~~~~~~
         :raises ValueError: If p is not an int.
         """
 
@@ -342,31 +344,30 @@ class Benchmark:
 
     def __init__(self, trials=10, unit="ns", precision=3):
         """
-        Benchmark
-        =========
+        Benchmark()
+        -----------
         Class to be used as a decorator that runs code multiple times
         and reports the average, minimum, and maximum execution times.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param trials: The number of times to run the code, defaults to 10.
         :type trials: int
         :param unit: The unit of time to use, defaults to "ns".
-        - Supported units are "ns", "us", "ms", "s".\n
+        Supported units are "ns", "us", "ms", "s".
         :type unit: Literal["ns", "us", "ms", "s"], optional
         :param precision: The precision to use when rounding the time, defaults to 3
         :type precision: int, optional
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If trials is not an int.
         :raises TypeError: If precision is not an int.
         :raises ValueError: If trials is less than 1.
         :raises ValueError: If unit is not 'ns', 'us', 'ms', or 's'.
 
         Example Usage
-        -------------
-        ```python
+        ~~~~~~~~~~~~~
         >>> # create the benchmark
         >>> benchmark = Benchmark(unit="ms")
         >>>
@@ -384,7 +385,6 @@ class Benchmark:
         1.522
         >>> benchmark.maximum
         1.813
-        ```
         """
 
         # type checks
@@ -434,12 +434,12 @@ class Benchmark:
     @property
     def average(self):
         """
-        Benchmark.average
-        =================
+        Benchmark().average
+        -------------------
         Returns the average time it took the code to execute.
 
         Return
-        ------
+        ~~~~~~
         :return: The average time.
         :rtype: float
         """
@@ -449,12 +449,12 @@ class Benchmark:
     @property
     def minimum(self):
         """
-        Benchmark.minimum
-        =================
+        Benchmark().minimum
+        -------------------
         Returns the minimum time it took the code to execute.
 
         Return
-        ------
+        ~~~~~~
         :return: The minimum time.
         :rtype: float
         """
@@ -464,12 +464,12 @@ class Benchmark:
     @property
     def maximum(self):
         """
-        Benchmark.maximum
-        =================
+        Benchmark().maximum
+        -------------------
         Returns the maximum time it took the code to execute.
 
         Return
-        ------
+        ~~~~~~
         :return: The maximum time.
         :rtype: float
         """
@@ -479,12 +479,12 @@ class Benchmark:
     @property
     def trials(self):
         """
-        Benchmark.trials
-        ================
+        Benchmark().trials
+        ------------------
         Returns the number of trials the Benchmark will run.
 
         Return
-        ------
+        ~~~~~~
         :return: The number of trials to be run.
         :rtype: int
         """
@@ -494,17 +494,17 @@ class Benchmark:
     @trials.setter
     def trials(self, t, /):
         """
-        Benchmark.trials()
-        ==================
+        Benchmark().trials()
+        --------------------
         Sets the number of trials the Benchmark will run.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param t: The new number of trials to run.
         :type t: int
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If t is not an int.
         :raises ValueError: If t is less than or equal to 0.
         """
@@ -520,12 +520,12 @@ class Benchmark:
     @property
     def unit(self):
         """
-        Benchmark.unit
-        ==============
+        Benchmark().unit
+        ----------------
         Returns the unit being used by the Benchmark.
 
         Return
-        ------
+        ~~~~~~
         :return: The unit being used by the Benchmark.
         :rtype: Literal["ns", "us", "ms", "s"]
         """
@@ -535,17 +535,17 @@ class Benchmark:
     @unit.setter
     def unit(self, u, /):
         """
-        Benchmark.unit()
-        ================
+        Benchmark().unit()
+        ------------------
         Sets the unit for the Benchmark.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param u: The new unit.
         :type u: Literal["ns", "us", "ms", "s"]
 
         Raises
-        ------
+        ~~~~~~
         :raises ValueError: If u is not "ns", "us", "ms", or "s".
         """
 
@@ -557,12 +557,12 @@ class Benchmark:
     @property
     def precision(self):
         """
-        Benchmark.precision
-        ===================
+        Benchmark().precision
+        ---------------------
         Returns the precision being used by the Benchmark.
 
         Return
-        ------
+        ~~~~~~
         :return: The precision being used by the Benchmark.
         :rtype: int
         """
@@ -572,17 +572,17 @@ class Benchmark:
     @precision.setter
     def precision(self, p, /):
         """
-        Benchmark.precision()
-        =====================
+        Benchmark().precision()
+        -----------------------
         Sets the precision for the Benchmark.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param p: The new precision.
         :type p: int
 
         Raises
-        ------
+        ~~~~~~
         :raises ValueError: If p is not an int.
         """
 
@@ -597,30 +597,28 @@ class MemoryProfiler:
 
     def __init__(self, unit="kb", precision=3):
         """
-        MemoryProfiler
-        ==============
+        MemoryProfiler()
+        ----------------
         Class for profiling memory usage.
         Can be used as a standard class, a context manager, or a decorator.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param unit: The unit of memory to use, defaults to "kb".
-        - Supported decimal units are "b", "kb", "mb", "gb".
-        - Supported binary units are "b", "kib", "mib", "gib".\n
+        Supported decimal units are "b", "kb", "mb", "gb". Supported binary units are "b", "kib", "mib", "gib".
         :type unit: Literal["b", "kb", "mb", "gb", "kib", "mib", "gib"]
         :param precision: The precision to use when rounding the memory, defaults to 3
         :type precision: int, optional
 
         Raises
-        ------
+        ~~~~~~
         :raises TypeError: If precision is not an int.
         :raises ValueError: If unit is not 'b', 'kb', 'mb', 'gb', 'kib', 'mib', or 'gib'.
         :raises ReactivationError: If the start() method is called twice before the stop() method has been called.
         :raises NotStartedError: If any methods other than start() are called before start().
 
-        Example Usage (Standard)
-        ------------------------
-        ```python
+        Example Usage
+        ~~~~~~~~~~~~~
         >>> # create the memory profiler
         >>> mp = MemoryProfiler()
         >>> # start it
@@ -633,35 +631,9 @@ class MemoryProfiler:
         >>> # get the memory used
         >>> mp.memory_used
         9.544
-        ```
-
-        Example Usage (Context Manager)
-        -------------------------------
-        ```python
-        >>> # enter the context manager block
-        >>> with MemoryProfiler() as mp:
-        ...     for _ in range(100_000):
-        ...             pass
-        ...     # get the memory used up to this point
-        ...     # (will partially skew data due to getting memory also taking memory)
-        ...     # (this is generally negligible unless working with small quantities of data)
-        ...     mp.memory_used
-        ...     for _ in range(100_000):
-        ...             pass
-        ...
-        0.608
-        >>> # get the memory used after
-        >>> mp.memory_used
-        1.168
-        ```
-
-        Example Usage (Decorator)
-        -------------------------
-        ```python
-        >>> # create the memory profiler
-        >>> mp = MemoryProfiler()
         >>>
-        >>> # decorate a function with it
+        >>>
+        >>> # decorate a function with the mem profiler
         >>> @mp
         ... def perf_example():
         ...     for _ in range(100_000):
@@ -673,7 +645,23 @@ class MemoryProfiler:
         >>> # get the memory used
         >>> mp.memory_used
         0.528
-        ```
+        >>>
+        >>>
+        >>> # enter as a context manager
+        >>> with MemoryProfiler() as mp:
+        ...     for _ in range(100_000):
+        ...             pass
+        ...     # get the memory used up to this point
+        ...     # (will partially skew data due to getting memory also taking memory)
+        ...     # (this is generally negligible unless measuring small data quantities)
+        ...     mp.memory_used
+        ...     for _ in range(100_000):
+        ...             pass
+        ...
+        0.608
+        >>> # get the memory used after
+        >>> mp.memory_used
+        1.168
         """
 
         # type checks
@@ -716,8 +704,8 @@ class MemoryProfiler:
 
     def start(self):
         """
-        MemoryProfiler.start()
-        ======================
+        MemoryProfiler().start()
+        ------------------------
         Starts listening for memory usage. Overrides old data.
         """
 
@@ -732,8 +720,8 @@ class MemoryProfiler:
 
     def stop(self):
         """
-        MemoryProfiler.stop()
-        =====================
+        MemoryProfiler().stop()
+        -----------------------
         Stops listening for memory usage.
         """
 
@@ -750,12 +738,12 @@ class MemoryProfiler:
     @property
     def memory_used(self):
         """
-        MemoryProfiler.memory_used
-        ==========================
+        MemoryProfiler().memory_used
+        ----------------------------
         Returns the memory usage of the profiled code.
 
         Return
-        ------
+        ~~~~~~
         :return: The memory used, rounded using the MemoryProfiler's unit.
         :rtype: int | float
         """
@@ -776,12 +764,12 @@ class MemoryProfiler:
     @property
     def unit(self):
         """
-        MemoryProfiler.unit
-        ===================
+        MemoryProfiler().unit
+        ---------------------
         Returns the unit being used by the MemoryProfiler.
 
         Return
-        ------
+        ~~~~~~
         :return: The unit being used by the MemoryProfiler.
         :rtype: Literal["b", "kb", "mb", "gb", "kib", "mib", "gib"]
         """
@@ -791,17 +779,17 @@ class MemoryProfiler:
     @unit.setter
     def unit(self, u, /):
         """
-        MemoryProfiler.unit()
-        =====================
+        MemoryProfiler().unit()
+        -----------------------
         Sets the unit for the MemoryProfiler.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param u: The new unit.
         :type u: Literal["b", "kb", "mb", "gb", "kib", "mib", "gib"]
 
         Raises
-        ------
+        ~~~~~~
         :raises ValueError: If u is not "b", "kb", "mb", "gb", "kib", "mib", or "gib".
         """
 
@@ -813,12 +801,12 @@ class MemoryProfiler:
     @property
     def precision(self):
         """
-        MemoryProfiler.precision
-        ========================
+        MemoryProfiler().precision
+        --------------------------
         Returns the precision being used by the MemoryProfiler.
 
         Return
-        ------
+        ~~~~~~
         :return: The precision being used by the MemoryProfiler.
         :rtype: int
         """
@@ -828,17 +816,17 @@ class MemoryProfiler:
     @precision.setter
     def precision(self, p, /):
         """
-        MemoryProfiler.precision()
-        ==========================
+        MemoryProfiler().precision()
+        ----------------------------
         Sets the precision for the MemoryProfiler.
 
         Parameters
-        ----------
+        ~~~~~~~~~~
         :param p: The new precision.
         :type p: int
 
         Raises
-        ------
+        ~~~~~~
         :raises ValueError: If p is not an int.
         """
 

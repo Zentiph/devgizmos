@@ -68,8 +68,6 @@ class _HandlerCollection:
     def __repr__(self) -> str: ...
 
 class _ExcData:
-    """Helper class for returning caught exception data with FailureManager."""
-
     def __init__(
         self,
         type_: Type[BaseException],

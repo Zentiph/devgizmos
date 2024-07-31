@@ -36,8 +36,8 @@ class FailureHandler(ABC):
     @property
     def activated(self):
         """
-        FailureHandler.activated
-        ------------------------
+        FailureHandler().activated
+        --------------------------
         Returns whether the FailureHandler is activated.
 
         Return
@@ -51,8 +51,8 @@ class FailureHandler(ABC):
     @activated.setter
     def activated(self, a, /):
         """
-        FailureHandler.activated()
-        --------------------------
+        FailureHandler().activated()
+        ----------------------------
         Sets whether the FailureHandler is activated.
 
         Parameters
@@ -73,8 +73,8 @@ class FailureHandler(ABC):
     @property
     def priority(self):
         """
-        FailureHandler.priority
-        -----------------------
+        FailureHandler().priority
+        -------------------------
         Returns the FailureHandler's priority.
         Priority determines the order the FailureManager executes its handlers.
         Lowest number (minimum 1) takes highest priority.
@@ -90,8 +90,8 @@ class FailureHandler(ABC):
     @priority.setter
     def priority(self, p, /):
         """
-        FailureHandler.priority()
-        -------------------------
+        FailureHandler().priority()
+        ---------------------------
         Sets the FailureHandler's priority.
         Priority determines the order the FailureManager executes its handlers.
         Lowest number (minimum 1) takes highest priority.
@@ -118,8 +118,8 @@ class FailureHandler(ABC):
     @property
     def returned(self):
         """
-        FailureHandler.returned
-        -----------------------
+        FailureHandler().returned
+        -------------------------
         Returns the return value when called due to an error being raised.
 
         Return
@@ -133,8 +133,8 @@ class FailureHandler(ABC):
     @property
     def suppress(self):
         """
-        FailureHandler.suppress
-        -----------------------
+        FailureHandler().suppress
+        -------------------------
         Returns whether the handler should suppress exceptions.
 
         Return
@@ -148,8 +148,8 @@ class FailureHandler(ABC):
     @suppress.setter
     def suppress(self, s):
         """
-        FailureHandler.suppress()
-        -------------------------
+        FailureHandler().suppress()
+        ---------------------------
         Sets whether exceptions should be suppressed by the handler.
 
         Parameters
@@ -179,8 +179,8 @@ class Suppress(FailureHandler):
 
     def __init__(self):
         """
-        Suppress
-        --------
+        Suppress()
+        ----------
         FailureHandler for FailureManager that suppresses any exceptions
         the FailureManager is listening for.
 
@@ -206,8 +206,8 @@ class Fallback(FailureHandler):
 
     def __init__(self, func, *args, **kwargs):
         """
-        Fallback
-        --------
+        Fallback()
+        ----------
         FailureHandler for FailureManager that executes the given
         func with the given args and kwargs if the code fails.
         Meant to be passed to FailureManager as an argument, not
@@ -268,8 +268,8 @@ class Fallback(FailureHandler):
 
     def validate(self):
         """
-        Fallback.validate()
-        -------------------
+        Fallback().validate()
+        ---------------------
         Verifies the function, args, and kwargs
         passed to Fallback will run and not raise errors.
         If the function involves randomness, this result cannot be trusted.
@@ -288,8 +288,8 @@ class Fallback(FailureHandler):
 
     def error_scan(self):
         """
-        Fallback.error_scan()
-        ---------------------
+        Fallback().error_scan()
+        -----------------------
         Works identically to Fallback.validate(), but returns error info instead.
 
         Return
@@ -324,8 +324,8 @@ class _HandlerCollection:
     @property
     def priorities(self):
         """
-        _HandlerCollection.priorities
-        -----------------------------
+        _HandlerCollection().priorities
+        -------------------------------
         Returns the priorities of each handler.
 
         Return
@@ -363,8 +363,8 @@ class _ExcData:
     @property
     def type(self):
         """
-        _ExcData.type
-        -------------
+        _ExcData().type
+        ---------------
         Returns the exception type.
         """
 
@@ -373,8 +373,8 @@ class _ExcData:
     @property
     def value(self):
         """
-        _ExcData.value
-        --------------
+        _ExcData().value
+        ----------------
         Returns the exception value.
         """
 
@@ -383,8 +383,8 @@ class _ExcData:
     @property
     def traceback(self):
         """
-        _ExcData.traceback
-        ------------------
+        _ExcData().traceback
+        --------------------
         Returns the exception traceback.
         """
 
@@ -393,8 +393,8 @@ class _ExcData:
     @property
     def time(self):
         """
-        _ExcData.time
-        -------------
+        _ExcData().time
+        ---------------
         Returns the time the exception occurred.
         """
 
@@ -402,8 +402,8 @@ class _ExcData:
 
     def reraise(self):
         """
-        _ExcData.reraise
-        ----------------
+        _ExcData().reraise
+        ------------------
         Re-raises the caught exception.
         """
 
@@ -421,8 +421,8 @@ class FailureManager:
 
     def __init__(self, *handlers, exceptions=(Exception,)):
         """
-        FailureManager
-        --------------
+        FailureManager()
+        ----------------
         Class that handles code failures using the handler provided.
         Can be used as a context manager and a decorator.
 
@@ -483,8 +483,8 @@ class FailureManager:
 
     def __sort_handlers(self):
         """
-        FailureManager.__sort_handlers()
-        --------------------------------
+        FailureManager().__sort_handlers()
+        ----------------------------------
         Internal class func for sorting the handlers.
         """
 
@@ -498,8 +498,8 @@ class FailureManager:
 
     def sort_handler_priorities(self):
         """
-        FailureManager.sort_handler_priorities()
-        ----------------------------------------
+        FailureManager().sort_handler_priorities()
+        ------------------------------------------
         Sorts the priorities of the handlers. Handlers with the highest priorities are pushed to the top first.
         Ex: Handlers with priorities of h1: 2, h2: 4, h3: 7 -> h1: 1, h2: 2, h3: 3
         """
@@ -512,8 +512,8 @@ class FailureManager:
 
     def set_priority(self, handler, priority, /):
         """
-        FailureManager.set_priority()
-        -----------------------------
+        FailureManager().set_priority()
+        -------------------------------
         Sets the priority of the specified handler object.
 
         Parameters
@@ -542,8 +542,8 @@ class FailureManager:
 
     def add_handler(self, handler, /):
         """
-        FailureManager.add_handler()
-        ----------------------------
+        FailureManager().add_handler()
+        ------------------------------
         Adds a handler to the FailureManager.
 
         Parameters
@@ -560,8 +560,8 @@ class FailureManager:
 
     def del_handler(self, priority, /):
         """
-        FailureManager.del_handler()
-        ----------------------------
+        FailureManager().del_handler()
+        ------------------------------
         Removes the handler with the given priority from the FailureManager.
 
         Parameters
@@ -575,8 +575,8 @@ class FailureManager:
     @property
     def handlers(self):
         """
-        FailureManager.handlers
-        -----------------------
+        FailureManager().handlers
+        -------------------------
         Returns a tuple of the FailureManager's handlers.
 
         Return
@@ -590,8 +590,8 @@ class FailureManager:
     @property
     def exceptions(self):
         """
-        FailureManager.exceptions
-        -------------------------
+        FailureManager().exceptions
+        ---------------------------
         Returns the exceptions being watched for by the FailureManager.
 
         Return
@@ -605,8 +605,8 @@ class FailureManager:
     @exceptions.setter
     def exceptions(self, excs):
         """
-        FailureManager.exceptions()
-        ---------------------------
+        FailureManager().exceptions()
+        -----------------------------
         Sets the exceptions for the FailureManager to watch.
 
         Parameters
@@ -628,8 +628,8 @@ class FailureManager:
     @property
     def caught(self):
         """
-        FailureManager.caught
-        ---------------------
+        FailureManager().caught
+        -----------------------
         Returns the info of the exceptions caught by FailureManager in chronological order.
         For the most recent caught exception, get FailureManager.caught[-1].
 
@@ -643,8 +643,8 @@ class FailureManager:
 
     def clear_caught(self):
         """
-        FailureManager.clear_caught()
-        -----------------------------
+        FailureManager().clear_caught()
+        -------------------------------
         Clears the list of caught exceptions.
         """
 

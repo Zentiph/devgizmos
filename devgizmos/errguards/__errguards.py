@@ -13,16 +13,16 @@ from re import match as re_match
 def _msg_chk(msg):
     """
     _msg_chk()
-    ==========
+    ----------
     Checks that the msg is a str.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param msg: The message to check.
     :type msg: str
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If msg is not a str.
     """
 
@@ -33,11 +33,11 @@ def _msg_chk(msg):
 def is_instance_of(value, *types, optional=False):
     """
     is_instance_of()
-    ================
+    ----------------
     Determines if the given value is an instance of one of the expected type(s).
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param value: The value to check.
     :type value: Any
     :param types: The expected types.
@@ -46,7 +46,7 @@ def is_instance_of(value, *types, optional=False):
     :type optional: bool
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If any of the types are not a type.
 
     Return
@@ -55,7 +55,7 @@ def is_instance_of(value, *types, optional=False):
     :rtype: bool
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> is_instance_of(10, int)
     True
     >>> is_instance_of(True, (float, str))
@@ -78,11 +78,11 @@ def is_instance_of(value, *types, optional=False):
 def ensure_instance_of(value, *types, optional=False, msg=""):
     """
     ensure_instance_of()
-    ====================
+    --------------------
     Ensures the given value is an instance of one of the expected type(s).
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param value: The value to check.
     :type value: Any
     :param types: The expected types.
@@ -94,13 +94,13 @@ def ensure_instance_of(value, *types, optional=False, msg=""):
     :type msg: str
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If any of the types are not a type.
     :raises TypeError: If msg is not a str.
     :raises TypeError: If value is not an instance of one of the types.
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> ensure_instance_of(10, int)
     >>> ensure_instance_of(None, float, str, optional=True)
     >>> ensure_instance_of(True, float, str)
@@ -123,11 +123,11 @@ def ensure_instance_of(value, *types, optional=False, msg=""):
 def is_value(value, *values):
     """
     is_value()
-    ==========
+    ----------
     Determines if the given value is one of the expected values.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param value: The value to check.
     :type value: Any
     :param values: The expected values.
@@ -139,7 +139,7 @@ def is_value(value, *values):
     :rtype: bool
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> APPROVED_VALUES = (0, 1, 2, 3)
     >>> check_value(2, *APPROVED_VALUES)
     True
@@ -156,11 +156,11 @@ def is_value(value, *values):
 def ensure_value(value, *values, msg=""):
     """
     ensure_value()
-    ==============
+    --------------
     Ensures the given value is one of the expected values.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param value: The value to check.
     :type value: Any
     :param values: The expected values.
@@ -170,12 +170,12 @@ def ensure_value(value, *values, msg=""):
     :type msg: str
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If msg is not a str.
     :raises ValueError: If the value is not one of the expected value(s).
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> APPROVED_VALUES = (0, 1, 2, 3)
     >>> check_value(2, *APPROVED_VALUES)
     >>> check_value(7, *APPROVED_VALUES)
@@ -198,11 +198,11 @@ def ensure_value(value, *values, msg=""):
 def is_in_range(value, seq, /, start=0, end=-1):
     """
     is_in_range()
-    =============
+    -------------
     Determines if the given value is in the specified range in the sequence provided.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param value: The value to check.
     :type value: Any
     :param seq: The sequence to check within.
@@ -213,7 +213,7 @@ def is_in_range(value, seq, /, start=0, end=-1):
     :type end: int, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If seq is not a Sequence.
     :raises TypeError: If start is not an int.
     :raises TypeError: If end is not an int.
@@ -224,7 +224,7 @@ def is_in_range(value, seq, /, start=0, end=-1):
     :rtype: bool
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> is_in_range(3, range(0, 4))
     True
     >>> is_in_range(10, range(0, 4))
@@ -250,11 +250,11 @@ def is_in_range(value, seq, /, start=0, end=-1):
 def ensure_in_range(value, seq, /, start=0, end=-1, *, msg=""):
     """
     ensure_in_range()
-    ==================
+    ------------------
     Ensures the given value is in the specified range in the sequence provided.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param value: The value to check.
     :type value: Any
     :param seq: The sequence to check within.
@@ -268,7 +268,7 @@ def ensure_in_range(value, seq, /, start=0, end=-1, *, msg=""):
     :type msg: str
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If seq is not a Sequence.
     :raises TypeError: If start is not an int.
     :raises TypeError: If end is not an int.
@@ -276,7 +276,7 @@ def ensure_in_range(value, seq, /, start=0, end=-1, *, msg=""):
     :raises ValueError: If the value is not within the range in the sequence.
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> ensure_in_range(3, range(0, 4))
     >>> ensure_in_range(10, range(0, 4))
     ValueError: expected 10 to be within the range: (0, 4) in range(0, 4)
@@ -301,11 +301,11 @@ def ensure_in_range(value, seq, /, start=0, end=-1, *, msg=""):
 def is_in_bounds(value, lower, upper, /, *, inclusive=True):
     """
     is_in_bounds()
-    =================
+    --------------
     Determines if the given value is within the lower and upper bounds.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param value: The value to check.
     :type value: int | float
     :param lower: The lower bound. If None, no lower bound will be set.
@@ -316,7 +316,7 @@ def is_in_bounds(value, lower, upper, /, *, inclusive=True):
     :type inclusive: bool, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If value is not an int or float.
     :raises TypeError: If lower is not an int, float, or None.
     :raises TypeError: If upper is not an int, float, or None.
@@ -328,7 +328,7 @@ def is_in_bounds(value, lower, upper, /, *, inclusive=True):
     :rtype: bool
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> is_in_bounds(3, 1, 4)
     True
     >>> is_in_bounds(12, 1, 4)
@@ -391,11 +391,11 @@ def is_in_bounds(value, lower, upper, /, *, inclusive=True):
 def ensure_in_bounds(value, lower, upper, /, *, inclusive=True, msg=""):
     """
     ensure_in_bounds()
-    ==================
+    ------------------
     Ensures the given value is within the lower and upper bounds.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param value: The value to check.
     :type value: int | float
     :param lower: The lower bound. If None, no lower bound will be set.
@@ -409,7 +409,7 @@ def ensure_in_bounds(value, lower, upper, /, *, inclusive=True, msg=""):
     :type msg: str, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If value is not an int or float.
     :raises TypeError: If lower is not an int, float, or None.
     :raises TypeError: If upper is not an int, float, or None.
@@ -417,7 +417,7 @@ def ensure_in_bounds(value, lower, upper, /, *, inclusive=True, msg=""):
     :raises ValueError: If the value is not within the bounds.
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> ensure_in_bounds(3, 1, 4)
     >>> ensure_in_bounds(12, 1, 4)
     ValueError: 12 must be >= 1 and <= 4
@@ -434,22 +434,21 @@ def ensure_in_bounds(value, lower, upper, /, *, inclusive=True, msg=""):
         raise ValueError(msg)
 
 
-# pylint: disable=anomalous-backslash-in-string
 def matches_regex(regex, *strings):
     """
     matches_regex()
-    ===============
+    ---------------
     Determines if the given string matches the regex provided.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param regex: The regex to compare the strings to.
     :type regex: str
     :param strings: The strings to check.
     :type strings: str
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If regex is not a str.
     :raises TypeError: If a string in strings is not a str.
 
@@ -459,10 +458,10 @@ def matches_regex(regex, *strings):
     :rtype: bool
 
     Example Usage
-    -------------
-    >>> matches_regex(r'^\S+@\S+\.\S+$', "name@example.com")
+    ~~~~~~~~~~~~~
+    >>> matches_regex(r'^\\S+@\\S+\\.\\S+$', "name@example.com")
     True
-    >>> matches_regex(r'^\S+@\S+\.\S+$', "hello")
+    >>> matches_regex(r'^\\S+@\\S+\\.\\S+$', "hello")
     False
     """
 
@@ -480,11 +479,11 @@ def matches_regex(regex, *strings):
 def ensure_matches_regex(regex, *strings, msg=""):
     """
     ensure_matches_regex()
-    ======================
+    ----------------------
     Ensures the given strings match the regex provided.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param regex: The regex to compare the strings to.
     :type regex: str
     :param strings: The strings to check.
@@ -494,15 +493,15 @@ def ensure_matches_regex(regex, *strings, msg=""):
     :type msg: str, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If regex is not a str.
     :raises TypeError: If a string in strings is not a str.
     :raises ValueError: If the strings do not match the regex.
 
     Example Usage
-    -------------
-    >>> ensure_matches_regex(r'^\S+@\S+\.\S+$', "name@example.com")
-    >>> ensure_matches_regex(r'^\S+@\S+\.\S+$', "hello")
+    ~~~~~~~~~~~~~
+    >>> ensure_matches_regex(r'^\\S+@\\S+\\.\\S+$', "name@example.com")
+    >>> ensure_matches_regex(r'^\\S+@\\S+\\.\\S+$', "hello")
     ValueError: expected strings 'hello' to match the regex: '^\\S+@\\S+\\.\\S+$'
     """
 
@@ -522,18 +521,18 @@ def ensure_matches_regex(regex, *strings, msg=""):
 def dict_has_keys(dictionary, *keys):
     """
     dict_has_keys()
-    ===============
+    ---------------
     Determines if the given dictionary contains the keys provided.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param dictionary: The dictionary to check.
     :type dictionary: Dict[Any, Any]
     :param keys: The keys to search for.
     :type keys: Any
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If dictionary is not a dict.
 
     Return
@@ -542,7 +541,7 @@ def dict_has_keys(dictionary, *keys):
     :rtype: bool
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> ages = {"Bob": 24, "Martha": 22}
     >>> dict_has_keys(ages, "Bob", "Martha")
     True
@@ -564,11 +563,11 @@ def dict_has_keys(dictionary, *keys):
 def ensure_dict_has_keys(dictionary, *keys, msg=""):
     """
     ensure_dict_has_keys()
-    ======================
+    ----------------------
     Ensures the given dictionary contains the keys provided.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param dictionary: The dictionary to check.
     :type dictionary: Dict[Any, Any]
     :param keys: The keys to search for.
@@ -578,12 +577,12 @@ def ensure_dict_has_keys(dictionary, *keys, msg=""):
     :type msg: str, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If dictionary is not a dict.
     :raises KeyError: If any of the keys are not in the dictionary.
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> ages = {"Bob": 24, "Martha": 22}
     >>> ensure_dict_has_keys(ages, "Bob", "Martha")
     >>> ensure_dict_has_keys(ages, "Kevin")
@@ -606,18 +605,18 @@ def ensure_dict_has_keys(dictionary, *keys, msg=""):
 def contains(iterable, *items):
     """
     contains()
-    ==========
+    ----------
     Determines if the given iterable contains the items provided.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param iterable: The iterable to check.
     :type iterable: Iterable
     :param items: The items to search for.
     :type items: Any
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If iterable is not an Iterable.
 
     Return
@@ -626,7 +625,7 @@ def contains(iterable, *items):
     :rtype: bool
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> contains((0, 1, 2, 3), 3)
     True
     >>> contains(('a', 'b', 'c', 'd'), 'e')
@@ -646,11 +645,11 @@ def contains(iterable, *items):
 def ensure_contains(iterable, *items, msg=""):
     """
     ensure_contains()
-    =================
+    -----------------
     Ensures the given iterable contains the items provided.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param iterable: The iterable to check.
     :type iterable: Iterable
     :param items: The items to search for.
@@ -660,12 +659,12 @@ def ensure_contains(iterable, *items, msg=""):
     :type msg: str, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If iterable is not an Iterable.
     :raises: ValueError: If the iterable does not contain the items.
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> ensure_contains((0, 1, 2, 3), 3)
     >>> ensure_contains(('a', 'b', 'c', 'd'), 'e')
     ValueError: expected ('a', 'b', 'c', 'd') to contain the items: 'e'
@@ -687,18 +686,18 @@ def ensure_contains(iterable, *items, msg=""):
 def is_superclass_of(superclass, *subclasses):
     """
     is_superclass_of()
-    ==================
+    ------------------
     Verifies the given subclasses are subclasses of the superclass.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param superclass: The superclass.
     :type superclass: Type
     :param subclasses: The subclasses to check.
     :type subclasses: Type
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If superclass is not a type.
     :raises TypeError: If any subclass in subclasses is not a type.
 
@@ -708,7 +707,7 @@ def is_superclass_of(superclass, *subclasses):
     :rtype: bool
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> is_superclass_of(Exception, TypeError)
     True
     >>> is_superclass_of(int, str)
@@ -729,11 +728,11 @@ def is_superclass_of(superclass, *subclasses):
 def ensure_superclass_of(superclass, *subclasses, msg=""):
     """
     ensure_superclass_of()
-    ======================
+    ----------------------
     Ensures the given subclasses are all subclasses of the superclass.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param superclass: The superclass.
     :type superclass: Type
     :param subclasses: The subclasses to check.
@@ -743,13 +742,13 @@ def ensure_superclass_of(superclass, *subclasses, msg=""):
     :type msg: str, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If superclass is not a type.
     :raises TypeError: If any subclass in subclasses is not a type.
     :raises ValueError: If the subclasses are not subclasses of the superclass.
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> ensure_superclass_of(Exception, TypeError)
     >>> ensure_superclass_of(int, str)
     ValueError: expected subclasses of 'int', got 'str' instead
@@ -771,11 +770,11 @@ def ensure_superclass_of(superclass, *subclasses, msg=""):
 def ensure_callable(*objs, msg=""):
     """
     ensure_callable()
-    =================
+    -----------------
     Ensures the given objects are callable.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param objs: The objects to check.
     :type objs: object
     :param msg: The exception message, leave empty to use the default, defaults to ""
@@ -783,11 +782,11 @@ def ensure_callable(*objs, msg=""):
     :type msg: str, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If the objects are not callable.
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> def func(*args, **kwargs):
     ...     return None
     ...
@@ -815,16 +814,16 @@ def ensure_callable(*objs, msg=""):
 def contains_duplicates(*objs):
     """
     contains_duplicates()
-    =====================
+    ---------------------
     Determines if the given objects contain duplicate items.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param objs: The objects to check.
     :type objs: Iterable
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If any of the objects in objs are not an Iterable.
 
     Return
@@ -833,7 +832,7 @@ def contains_duplicates(*objs):
     :rtype: bool
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> l1 = [1, 2, 3, 4]
     >>> contains_duplicates(l1)
     False
@@ -854,11 +853,11 @@ def contains_duplicates(*objs):
 def ensure_no_duplicates(*objs, msg=""):
     """
     ensure_no_duplicates()
-    ======================
+    ----------------------
     Ensures the given object has no duplicate items inside.
 
     Parameters
-    ----------
+    ~~~~~~~~~~
     :param objs: The objects to check.
     :type objs: Iterable
     :param msg: The exception message, leave empty to use the default, defaults to ""
@@ -866,17 +865,17 @@ def ensure_no_duplicates(*objs, msg=""):
     :type msg: str, optional
 
     Raises
-    ------
+    ~~~~~~
     :raises TypeError: If any of the objects in objs are not an Iterable.
     :raises ValueError: If the objects contain duplicate items.
 
     Example Usage
-    -------------
+    ~~~~~~~~~~~~~
     >>> l1 = [1, 2, 3, 4]
     >>> ensure_no_duplicates(l1)
     >>> l2 = [1, 2, 3, 1]
     >>> ensure_no_duplicates(l2)
-    ValueError: objects [1, 2, 3, 1] contain duplicate items, expected no duplicates
+    ValueError: object(s) [1, 2, 3, 1] contain duplicate items, expected no duplicates
     """
 
     if contains_duplicates(*objs):
@@ -887,6 +886,8 @@ def ensure_no_duplicates(*objs, msg=""):
         if msg:
             msg = msg.format(objs=obj_names)
         else:
-            msg = f"objects {obj_names} contain duplicate items, expected no duplicates"
+            msg = (
+                f"object(s) {obj_names} contain duplicate items, expected no duplicates"
+            )
 
         raise TypeError(msg)

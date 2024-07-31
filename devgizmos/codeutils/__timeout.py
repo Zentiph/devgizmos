@@ -32,8 +32,8 @@ class Timeout:
 
     def __init__(self, cutoff, exc=TimeoutError):
         """
-        Timeout
-        -------
+        Timeout()
+        ---------
         Class for timing out code if it takes too long to run.
         Can be used as a context manager and a decorator.
 
@@ -50,17 +50,9 @@ class Timeout:
         :raises TypeError: If exc is not a BaseException or None.
         :raises ValueError: If cutoff is less than or equal to 0.
 
-        Example Usage (Context Manager)
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        ```python
-
-        ```
-
-        Example Usage (Decorator)
-        ~~~~~~~~~~~~~~~~~~~~~~~~~
-        ```python
-
-        ```
+        Example Usage
+        ~~~~~~~~~~~~~
+        >>> # TODO
         """
 
         # type checks
@@ -146,8 +138,8 @@ class Timeout:
     @property
     def cutoff(self):
         """
-        Timeout.cutoff
-        --------------
+        Timeout().cutoff
+        ----------------
         Returns the cutoff time of Timeout.
 
         Return
@@ -161,8 +153,8 @@ class Timeout:
     @property
     def exc(self):
         """
-        Timeout.exc
-        -----------
+        Timeout().exc
+        -------------
         Returns the exception that will be raised by Timeout if its cutoff time is exceeded.
 
         Return
@@ -176,8 +168,8 @@ class Timeout:
     @exc.setter
     def exc(self, e, /):
         """
-        Timeout.exc()
-        -------------
+        Timeout().exc()
+        ---------------
         Sets Timeout's exception that will be raised if the cutoff time is exceeded.
 
         Parameters

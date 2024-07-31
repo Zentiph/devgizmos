@@ -32,8 +32,8 @@ class Retry:
         raise_last=False,
     ):
         """
-        Retry
-        -----
+        Retry()
+        -------
         Class that retries a function if it fails
         up until the maximum number of attempts is reached.
 
@@ -171,8 +171,8 @@ class Retry:
 
     def on_retry(self, func, /):
         """
-        Retry.on_retry()
-        ----------------
+        Retry().on_retry()
+        ------------------
         Sets a function to run on each retry, or None for no function.
 
         Parameters
@@ -190,8 +190,8 @@ class Retry:
     @property
     def max_attempts(self):
         """
-        Retry.max_attempts
-        ------------------
+        Retry().max_attempts
+        --------------------
         Returns the max attempts alloted to Retry object.
 
         Return
@@ -205,8 +205,8 @@ class Retry:
     @max_attempts.setter
     def max_attempts(self, m, /):
         """
-        Retry.max_attempts()
-        --------------------
+        Retry().max_attempts()
+        ----------------------
         Sets the max attempts for the Retry object.
 
         Parameters
@@ -231,8 +231,8 @@ class Retry:
     @property
     def delay(self):
         """
-        Retry.delay
-        -----------
+        Retry().delay
+        -------------
         Returns the delay of the Retry object.
 
         Return
@@ -246,8 +246,8 @@ class Retry:
     @delay.setter
     def delay(self, d, /):
         """
-        Retry.delay()
-        -------------
+        Retry().delay()
+        ---------------
         Sets the delay for the Retry object.
 
         Parameters
@@ -272,8 +272,8 @@ class Retry:
     @property
     def backoff_strategy(self):
         """
-        Retry.backoff_strategy
-        ----------------------
+        Retry().backoff_strategy
+        ------------------------
         Returns the backoff strategy of the Retry object.
 
         Return
@@ -287,8 +287,8 @@ class Retry:
     @backoff_strategy.setter
     def backoff_strategy(self, bs, /):
         """
-        Retry.backoff_strategy()
-        ------------------------
+        Retry().backoff_strategy()
+        --------------------------
         Sets the backoff strategy of the Retry object.
 
         Parameters
@@ -310,8 +310,8 @@ class Retry:
     @property
     def exceptions(self):
         """
-        Retry.exceptions
-        ----------------
+        Retry().exceptions
+        ------------------
         Returns the exceptions the Retry object will suppress.
 
         Return
@@ -325,8 +325,8 @@ class Retry:
     @exceptions.setter
     def exceptions(self, excs, /):
         """
-        Retry.exceptions()
-        ------------------
+        Retry().exceptions()
+        --------------------
         Sets the exceptions for the Retry object to suppress.
 
         Parameters
@@ -348,8 +348,8 @@ class Retry:
     @property
     def raise_last(self):
         """
-        Retry.raise_last
-        ----------------
+        Retry().raise_last
+        ------------------
         Returns whether the Retry object will raise the final exception.
 
         Return
@@ -363,8 +363,8 @@ class Retry:
     @raise_last.setter
     def raise_last(self, rl, /):
         """
-        Retry.raise_last()
-        ------------------
+        Retry().raise_last()
+        --------------------
         Sets whether the Retry object will raise the final exception.
 
         Parameters
@@ -385,8 +385,8 @@ class Retry:
     @property
     def attempts(self):
         """
-        Retry.attempts
-        --------------
+        Retry().attempts
+        ----------------
         Returns the attempts used by the most recent Retry call.
 
         Return
@@ -400,8 +400,8 @@ class Retry:
     @property
     def suppressed(self):
         """
-        Retry.suppressed
-        ----------------
+        Retry().suppressed
+        ------------------
         Returns the info of the exceptions suppressed by Retry in chronological order.
         For the most recent suppressed exception, get Retry.suppressed[-1].
 
@@ -415,8 +415,8 @@ class Retry:
 
     def clear_suppressed(self):
         """
-        Retry.clear_suppressed()
-        --------------------
+        Retry().clear_suppressed()
+        --------------------------
         Clears the list of suppressed exceptions.
         """
 
