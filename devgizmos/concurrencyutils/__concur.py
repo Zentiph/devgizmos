@@ -4,7 +4,6 @@ concurrencyutils.__concur
 Module containing tools for threading.
 """
 
-# --imports-- #
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from functools import wraps
@@ -35,6 +34,7 @@ def thread_manager(target, *args, **kwargs):
     Example Usage
     ~~~~~~~~~~~~~
     >>> import time
+    >>>
     >>> def worker():
     ...     print("Thread is working!")
     ...     time.sleep(2)
@@ -71,9 +71,10 @@ def lock_handler(lock):
 
     Example Usage
     ~~~~~~~~~~~~~
-    >>> from threading import Lock
-    >>> my_lock = Lock()
-    >>> with lock_manager(lock):
+    >>> import threading
+    >>>
+    >>> lock = threading.Lock()
+    >>> with lock_handler(lock):
     ...     print("Lock acquired")
     ...
     Lock acquired
@@ -103,16 +104,18 @@ def barrier_sync(barrier):
 
     Example Usage
     ~~~~~~~~~~~~~
-    >>> from threading import Barrier, Thread
-    >>> barrier = Barrier(3)
+    >>> import threading
+    >>>
+    >>> barrier = threading.Barrier(3)
     >>> def worker(barrier):
     ...     print("Waiting at the barrier")
     ...     with barrier_handler(barrier):
     ...         print("Barrier reached")
     ...
-    >>> threads = [Thread(target=worker, args=(barrier,)) for _ in range(3)]
+    >>> threads = [threading.Thread(target=worker, args=(barrier,)) for _ in range(3)]
     >>> for thread in threads:
     ...     thread.start()
+    ...
     >>> for thread in threads:
     ...     thread.join()
     ...
@@ -131,13 +134,13 @@ def barrier_sync(barrier):
 
 
 class PeriodicTask:
-    """The main functionality of the decorator, periodic_running_task."""
+    """The main functionality of the decorator, periodic_task."""
 
     def __init__(self, interval, func, *args, **kwargs):
         """
         PeriodicTask()
         --------------
-        The main functionality of the decorator, periodic_running_task.
+        The main functionality of the decorator, periodic_task.
 
         Parameters
         ~~~~~~~~~~
@@ -154,13 +157,13 @@ class PeriodicTask:
         # type checks
         ensure_instance_of(interval, Union[int, float])
 
-        self.interval = interval
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
-        self.stop_event = Event()
-        self.thread = Thread(target=self.__target)
-        self.thread.daemon = True  # background thread
+        self.__interval = interval
+        self.__func = func
+        self.__args = args
+        self.__kwargs = kwargs
+        self.__stop_event = Event()
+        self.__thread = Thread(target=self.__target)
+        self.__thread.daemon = True  # background thread
 
     def __target(self):
         """
@@ -169,13 +172,18 @@ class PeriodicTask:
         The thread's target, a private function only used in PeriodicTask.
         """
 
-        while not self.stop_event.is_set():
+        while not self.__stop_event.is_set():
             try:
-                self.func(*self.args, **self.kwargs)
+                self.__func(*self.__args, **self.__kwargs)
             except Exception as e:
+                # TODO: note from zen - this is bad error handling, consider
+                # either stopping the task and then raising it or save it to a
+                # class attribute for error logging purposes
+                # if you choose the 2nd, use _ExcData from codeutils:
+                # from ..codeutils.__failuremngr import _ExcData
                 print(f"Error occurred during a periodic task: {e}")
 
-            sleep(self.interval)
+            sleep(self.__interval)
 
     def start(self):
         """
@@ -184,7 +192,7 @@ class PeriodicTask:
         Starts the threading process.
         """
 
-        self.thread.start()
+        self.__thread.start()
 
     def stop(self):
         """
@@ -193,14 +201,14 @@ class PeriodicTask:
         A manual function that allows the user to stop the function.
         """
 
-        self.stop_event.set()
-        self.thread.join()
+        self.__stop_event.set()
+        self.__thread.join()
 
 
-def periodic_running_task(interval):
+def periodic_task(interval):
     """
-    periodic_running_task()
-    -----------------------
+    @periodic_task()
+    ----------------
     Runs a decorated function periodically within a specified interval through a background thread.
 
     Parameters
@@ -211,16 +219,18 @@ def periodic_running_task(interval):
     Example Usage
     ~~~~~~~~~~~~~
     >>> import time
-    >>> @periodic_running_task(2)
+    >>>
+    >>> @periodic_task(2)
     ... def my_task():
     ...     print("Task is running...")
     ...
-    >>> TASK_INSTANCE = my_task()
-    ... try:
+    >>> task_instance = my_task()
+    >>> try:
     ...     time.sleep(4)
     ... finally:
-    >>>     TASK_INSTANCE.stop() # Stop the periodic task
+    ...     task_instance.stop() # Stop the periodic task
     ...     print("Task has stopped.")
+    ...
     Task is running...
     Task is running...
     Task has stopped.
@@ -246,7 +256,7 @@ def batch_processor(data, workers, process_function):
     """
     batch_processor()
     -----------------
-    Processes data in batches using concurrent futures.
+    Processes data in batches using concurrent.futures.
 
     Parameters
     ~~~~~~~~~~
@@ -288,15 +298,21 @@ def batch_processor(data, workers, process_function):
             try:
                 results[index] = future.result()
             except Exception as e:
+                # TODO: note from zen - similar to ln 178 this
+                # is bad error handling, consider adding a param to
+                # decide whether to suppress exceptions or raise them
+                # of course add a finally if any concurrent stuff needs to be stopped
                 print(f"Task failed due to an exception: {e}")
                 results[index] = None
     return results
 
 
+# TODO: note from zen - consider adding some @property funcs so users can
+# get the workers and process_func of the qp? (just a QOL change)
 class QueueProcessor:
     """Class for creating thread-safe queues."""
 
-    def __init__(self, num_workers, process_item):
+    def __init__(self, workers, process_function):
         """
         QueueProcessor()
         ----------------
@@ -304,27 +320,27 @@ class QueueProcessor:
 
         Parameters
         ~~~~~~~~~~
-        :param num_workers: The amount of threads to be created.
-        :type num_workers: int
-        :param process_item: The function that processes each item.
-        :type process_item: F
+        :param workers: The amount of threads to be created.
+        :type workers: int
+        :param process_function: The function that processes each item.
+        :type process_function: F
 
         Example Usage
         ~~~~~~~~~~~~~
-        >>> from threading import Lock
-        ...
+        >>> import threading
+        >>>
         >>> results = []
-        >>> results_lock = Lock()
-        ...
+        >>> results_lock = threading.Lock()
+        >>>
         >>> def process_item(item):
         ...     result = f"Processed {item}"
         ...     with results_lock:
         ...         results.append(result)
         ...
         >>> # Use the QueueProcessor
-        >>> qp = QueueProcessor(num_workers=3, process_item=process_item)
+        >>> qp = QueueProcessor(workers=3, process_function=process_item)
         >>> qp.start()
-        ...
+        >>>
         >>> for i in range(3):
         ...     qp.add_task(f"Task {i}")
         ...
@@ -333,11 +349,15 @@ class QueueProcessor:
         [Processed Task 1, Processed Task 2, Processed Task 3]
         """
 
-        self._queue = Queue()
-        self._num_workers = num_workers
-        self._process_item = process_item
-        self._workers = []
-        self._running = False
+        # TODO: note from zen - above example usage caused a massive error
+
+        self.__queue = Queue()
+        self.__workers = workers
+        self.__process_function = process_function
+        self.__active_workers = []
+        # TODO: note from zen - running does not do anything right now, consider adding checks
+        # to prevent start() from being called again if the qp is already running?
+        self.__running = False
 
     def _consumer(self):
         """
@@ -348,16 +368,17 @@ class QueueProcessor:
 
         while True:
             try:
-                item = self._queue.get(timeout=1)
+                item = self.__queue.get(timeout=1)
                 if item is None:
                     break
-                self._process_item(item)
+                self.__process_function(item)
             except Empty:
                 continue
             except Exception as e:
+                # TODO: note from zen - see line 178
                 print(f"An error occurred during queue processing: {e}")
             finally:
-                self._queue.task_done()
+                self.__queue.task_done()
 
     def start(self):
         """
@@ -366,11 +387,11 @@ class QueueProcessor:
         Starts the QueueProcessor class.
         """
 
-        self._running = True
-        for _ in range(self._num_workers):
+        self.__running = True
+        for _ in range(self.__workers):
             worker = Thread(target=self._consumer)
             worker.start()
-            self._workers.append(worker)
+            self.__active_workers.append(worker)
 
     def stop(self):
         """
@@ -379,20 +400,20 @@ class QueueProcessor:
         Stops the queue for the QueueProcessor.
         """
 
-        for _ in range(self._num_workers):
-            self._queue.put(None)
+        for _ in range(self.__workers):
+            self.__queue.put(None)
 
-        for worker in self._workers:
+        for worker in self.__active_workers:
             worker.join()
 
-        self._workers = []
-        self._running = False
+        self.__active_workers = []
+        self.__running = False
 
     def add_task(self, item):
         """
-        QueueProcessor.add_task()
-        -------------------------
+        QueueProcessor().add_task()
+        ---------------------------
         Adds an item to be processed.
         """
 
-        self._queue.put(item)
+        self.__queue.put(item)

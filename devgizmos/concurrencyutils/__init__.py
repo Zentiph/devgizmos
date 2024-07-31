@@ -8,7 +8,7 @@ __all__ = [
     "batch_processor",
     "barrier_sync",
     "lock_handler",
-    "periodic_running_task",
+    "periodic_task",
     "thread_manager",
     "QueueProcessor",
 ]
@@ -18,6 +18,6 @@ from .__concur import (
     barrier_sync,
     batch_processor,
     lock_handler,
-    periodic_running_task,
+    periodic_task,
     thread_manager,
 )
