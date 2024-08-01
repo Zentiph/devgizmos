@@ -35,14 +35,23 @@ class Seed:
         ~~~~~~~~~~~~~
         >>> from random import random
         >>>
+        >>> # generate the seed
         >>> seed = Seed.generate()
+        >>> # set the random state using the seed
         >>> seed.set_state()
-        >>> random()
+        >>> # use the get method to calculate random results
+        >>> # without changing the random state
+        >>> seed.get(random)
         0.18126486333322134
+        >>> seed.get(random)
+        0.18126486333322134
+        >>> # reset the random state
         >>> seed.reset_state()
         >>> random()
         0.19521491075191701
         >>>
+        >>>
+        >>> # use as a context manager
         >>> with Seed(18) as s:
         ...     random()
         ...
@@ -52,6 +61,8 @@ class Seed:
         ...
         0.18126486333322134
         >>>
+        >>>
+        >>> # or a decorator
         >>> @s
         ... def print_rand():
         ...     print(random())
@@ -61,18 +72,19 @@ class Seed:
         >>> print_rand()
         0.18126486333322134
         >>>
-        >>> # states can be entered from inside other states
+        >>> # states can be nested,
+        >>> # meaning they can be entered from inside other states
         >>> s = Seed.generate()
-        >>> # set the first state
+        >>> # set the outer state
         >>> s.set_state()
         >>> random()
         0.6387044505372729
         >>> s.generate_seed()
-        >>> # set the next state
+        >>> # set the inner state
         >>> s.set_state()
         >>> random()
         0.1692528073567121
-        >>> # revert to the previous state
+        >>> # revert to the previous (outer) state
         >>> s.revert_state()
         >>> random()
         0.6387044505372729
@@ -169,6 +181,36 @@ class Seed:
 
         self.__seed = s
 
+    def get(self, func, *args, **kwargs):
+        """
+        Seed().get()
+        ------------
+        Gets the result from the random function and args/kwargs
+        provided while maintaining the random state.
+
+        Parameters
+        ~~~~~~~~~~
+        :param func: The random function to use.
+        :type func: Callable[..., Any]
+        :param args: The args to pass to the random function, if any.
+        :type args: Any
+        :param kwargs: The kwargs to pass to the random function, if any.
+        :type kwargs: Any
+
+        Raises
+        ~~~~~~
+        :raises TypeError: If func is not callable.
+        """
+
+        # type checks
+        if not callable(func):
+            raise TypeError("'func' must be callable")
+
+        orig_state = getstate()
+        result = func(*args, **kwargs)
+        setstate(orig_state)
+        return result
+
     def set_state(self):
         """
         Seed().set_state()
@@ -188,7 +230,8 @@ class Seed:
 
         if self.__state_stack:
             self.__state_stack.pop()
-            setstate(self.__state_stack[-1])
+            if self.__state_stack:
+                setstate(self.__state_stack[-1])
 
     def reset_state(self):
         """
@@ -215,3 +258,9 @@ class Seed:
         # pylint: disable=protected-access, unused-private-member
         clone.__state_stack = self.__state_stack.copy()
         return clone
+
+    def __str__(self):
+        return str(self.__seed)
+
+    def __repr__(self):
+        return f"Seed({self.__seed})"

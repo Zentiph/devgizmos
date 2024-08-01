@@ -10,7 +10,8 @@ devgizmos's documentation can be found [here](https://docs.python.org/).
 
 Contributing
 ------------
-Contributions are not currently welcome, but feel free to open an issue or email if you notice any bugs/have suggestions.
+Contributions are not currently welcome, but feel free to open
+an issue or email if you notice any bugs or have suggestions.
 """
 
 __version__ = "0.0.3"
@@ -24,7 +25,6 @@ __maintainers__ = ("Gavin Borne", "Leo Nguyen")
 __all__ = [
     "errguards",
     "codeutils",
-    "interpolation",
     "performance",
     "regex",
     "sysutils",
@@ -32,5 +32,5 @@ __all__ = [
     "BasicLogger",
 ]
 
-from . import codeutils, errguards, interpolation, performance, regex, sysutils, types
+from . import codeutils, errguards, performance, regex, sysutils, types
 from .__basic_logger import BasicLogger

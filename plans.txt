@@ -1,17 +1,16 @@
 plans for devgizmos
 
-1. interp stuff
-2. arithmetic package
+1. arithmetic package
 	- need to check if already in math module
 	- sum (over args, or an iterable)
 	- product (over args, or an iterable)
 	- ...
-3. lightweight version of the package (probably not any time soon)
-4. add support for self arg when class methods are decorated (print self or nothing instead of cls.__repr__())
-5. add ConvertibleTo ___ Protocols to types package and a check version of them to checks module
-6. parallel execution ulti?
-7. math tools such as different pi-calculating algorithms
-8. web stuff
-9. more failurehandlers
-10. move contmngrs to more specified/specialized dirs
-11. make all class methods that arent classmethods in docstrings have parens after the name
+2. lightweight version of the package (probably not any time soon)
+3. add support for self arg when class methods are decorated (print self or nothing instead of cls.__repr__())
+4. add ConvertibleTo ___ Protocols to types package and a check version of them to checks module
+5. parallel execution ulti?
+6. math tools such as different pi-calculating algorithms
+7. web stuff
+8. more failurehandlers
+9. move contmngrs to more specified/specialized dirs
+10. make all class methods that arent classmethods in docstrings have parens after the name

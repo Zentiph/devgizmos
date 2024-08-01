@@ -145,7 +145,7 @@ def barrier_sync(barrier):
 class PeriodicTask:
     """The main functionality of the decorator, periodic_task."""
 
-    def __init__(self, interval, func, *args, raise_exceptions=False, **kwargs):
+    def __init__(self, interval, func, *args, **kwargs):
         """
         PeriodicTask()
         --------------
@@ -159,8 +159,6 @@ class PeriodicTask:
         :type func: F
         :param args: The arguments passed to the function.
         :type args: Any
-        :param raise_exceptions: Allows an exception should be suppressed or raised. Defaults to False.
-        :type raise_exceptions: bool
         :param kwargs: The keyword arguments passed to the function.
         :type kwargs: Any
         """
@@ -171,7 +169,7 @@ class PeriodicTask:
         self.__interval = interval
         self.__func = func
         self.__args = args
-        self.__raise_exceptions = raise_exceptions
+        self.__raise_exceptions = False
         self.__kwargs = kwargs
         self.__stop_event = Event()
         self.__thread = Thread(target=self.__target)
@@ -198,6 +196,39 @@ class PeriodicTask:
                 print(f"Error occurred during a periodic task: {e}")
 
             sleep(self.__interval)
+
+    @property
+    def raise_exceptions(self):
+        """
+        PeriodicTask().raise_exceptions
+        -------------------------------
+        Returns whether the PeriodicTask should raise or suppress exceptions.
+
+        Return
+        ~~~~~~
+        :return: Whether to raise or suppress exceptions.
+        :rtype: bool
+        """
+
+        return self.__raise_exceptions
+
+    @raise_exceptions.setter
+    def raise_exceptions(self, re, /):
+        """
+        PeriodicTask().raise_exceptions()
+        ---------------------------------
+        Sets whether the PeriodicTask should raise or suppress exceptions.
+
+        Parameters
+        ~~~~~~~~~~
+        :param re: Whether to raise or suppress exceptions.
+        :type re: bool
+        """
+
+        # type checks
+        ensure_instance_of(re, bool)
+
+        self.__raise_exceptions = re
 
     def start(self):
         """
