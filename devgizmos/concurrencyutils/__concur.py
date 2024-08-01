@@ -145,7 +145,7 @@ def barrier_sync(barrier):
 class PeriodicTask:
     """The main functionality of the decorator, periodic_task."""
 
-    def __init__(self, interval, func, *args, **kwargs):
+    def __init__(self, interval, func, *args, raise_exceptions=False, **kwargs):
         """
         PeriodicTask()
         --------------
@@ -159,6 +159,8 @@ class PeriodicTask:
         :type func: F
         :param args: The arguments passed to the function.
         :type args: Any
+        :param raise_exceptions: Allows an exception should be suppressed or raised. Defaults to False.
+        :type raise_exceptions: bool
         :param kwargs: The keyword arguments passed to the function.
         :type kwargs: Any
         """
@@ -169,6 +171,7 @@ class PeriodicTask:
         self.__interval = interval
         self.__func = func
         self.__args = args
+        self.__raise_exceptions = raise_exceptions
         self.__kwargs = kwargs
         self.__stop_event = Event()
         self.__thread = Thread(target=self.__target)
@@ -185,11 +188,13 @@ class PeriodicTask:
             try:
                 self.__func(*self.__args, **self.__kwargs)
             except Exception as e:
-                # TODO: note from zen - this is bad error handling, consider
-                # either stopping the task and then raising it or save it to a
-                # class attribute for error logging purposes
-                # if you choose the 2nd, use _ExcData from codeutils:
-                # from ..codeutils.__failuremngr import _ExcData
+                if self.__raise_exceptions:
+                    self.stop()
+                    raise RuntimeError(
+                        f"An error occurred during queue processing: {e}"
+                    ) from e
+
+                self.stop()
                 print(f"Error occurred during a periodic task: {e}")
 
             sleep(self.__interval)
@@ -261,7 +266,7 @@ def periodic_task(interval):
     return decorator
 
 
-def batch_processor(data, workers, process_function):
+def batch_processor(data, workers, process_function, raise_exceptions=False):
     """
     batch_processor()
     -----------------
@@ -275,6 +280,8 @@ def batch_processor(data, workers, process_function):
     :type workers: int
     :param process_function: The function that processes each item.
     :type process_function: F
+    :param raise_exceptions: Allows an exception should be suppressed or raised. Defaults to False.
+    :type raise_exceptions: bool
 
     Return
     ~~~~~~
@@ -307,10 +314,11 @@ def batch_processor(data, workers, process_function):
             try:
                 results[index] = future.result()
             except Exception as e:
-                # TODO: note from zen - similar to ln 178 this
-                # is bad error handling, consider adding a param to
-                # decide whether to suppress exceptions or raise them
-                # of course add a finally if any concurrent stuff needs to be stopped
+                if raise_exceptions:
+                    raise RuntimeError(
+                        f"An error occurred during queue processing: {e}"
+                    ) from e
+
                 print(f"Task failed due to an exception: {e}")
                 results[index] = None
     return results
