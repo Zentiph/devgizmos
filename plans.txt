@@ -6,8 +6,7 @@ plans for devgizmos
 	- product (over args, or an iterable)
 	- ...
 2. lightweight version of the package (probably not any time soon)
-3. add support for self arg when class methods are decorated (print self or nothing instead of cls.__repr__())
-4. add ConvertibleTo ___ Protocols to types package and a check version of them to checks module
+4. add Protocols to types package and a check version of them to checks module
 5. parallel execution ulti?
 6. math tools such as different pi-calculating algorithms
 7. web stuff

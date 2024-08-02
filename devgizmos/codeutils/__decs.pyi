@@ -38,7 +38,9 @@ def deprecated(
     date: Optional[str] = None,
 ) -> Decorated: ...
 def decorate_all_methods(
-    decorator: Callable[[Callable[P, T]], Callable[P, T]], *args: Any, **kwargs: Any
+    decorator: Callable[..., Callable[[Callable[P, T]], Callable[P, T]]],
+    *args: Any,
+    **kwargs: Any
 ) -> DecoratedCls: ...
 
 class ImmutableInstance:

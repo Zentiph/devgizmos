@@ -8,9 +8,11 @@ value checkers, range checkers, and more.
 __all__ = [
     "contains",
     "contains_duplicates",
+    "convertible_to",
     "dict_has_keys",
     "ensure_callable",
     "ensure_contains",
+    "ensure_convertible_to",
     "ensure_dict_has_keys",
     "ensure_in_bounds",
     "ensure_in_range",
@@ -30,9 +32,11 @@ __all__ = [
 from .__errguards import (
     contains,
     contains_duplicates,
+    convertible_to,
     dict_has_keys,
     ensure_callable,
     ensure_contains,
+    ensure_convertible_to,
     ensure_dict_has_keys,
     ensure_in_bounds,
     ensure_in_range,

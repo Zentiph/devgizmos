@@ -89,7 +89,7 @@ def ensure_instance_of(value, *types, optional=False, msg=""):
     :type types: Type
     :param optional: Whether the types are optional, meaning the value can be None, defaults to False.
     :type optional: bool
-    :param msg: The exception message, leave empty to use the default, defaults to "".
+    :param msg: The exception message; leave empty to use the default, defaults to "".
     Ex: msg="{value} is not one of the expected types: {types}"
     :type msg: str
 
@@ -165,7 +165,7 @@ def ensure_value(value, *values, msg=""):
     :type value: Any
     :param values: The expected values.
     :type values: Any
-    :param msg: The exception message, leave empty to use the default, defaults to "".
+    :param msg: The exception message; leave empty to use the default, defaults to "".
     Ex: msg="{value} is not one of the expected values: {values}"
     :type msg: str
 
@@ -263,7 +263,7 @@ def ensure_in_range(value, seq, /, start=0, end=-1, *, msg=""):
     :type start: int, optional
     :param end: The end index of the range to check (inclusive), defaults to -1 (checks the whole sequence).
     :type end: int, optional
-    :param msg: The exception message, leave empty to use the default, defaults to "".
+    :param msg: The exception message; leave empty to use the default, defaults to "".
     Ex: msg="{value} is not in the range {lower}-{upper} in the sequence {seq}"
     :type msg: str
 
@@ -404,7 +404,7 @@ def ensure_in_bounds(value, lower, upper, /, *, inclusive=True, msg=""):
     :type upper: int | float | None
     :param inclusive: Whether the bounds are inclusive or exclusive, defaults to True.
     :type inclusive: bool, optional
-    :param msg: The exception message, leave empty to use the default, defaults to "".
+    :param msg: The exception message; leave empty to use the default, defaults to "".
     Ex: msg="{value} is not in the bounds ({lower}, {upper})."
     :type msg: str, optional
 
@@ -488,7 +488,7 @@ def ensure_matches_regex(regex, *strings, msg=""):
     :type regex: str
     :param strings: The strings to check.
     :type strings: str
-    :param msg: The exception message, leave empty to use the default, defaults to ""
+    :param msg: The exception message; leave empty to use the default, defaults to ""
     Ex: msg="{strings} do not match the regex: {regex}."
     :type msg: str, optional
 
@@ -572,7 +572,7 @@ def ensure_dict_has_keys(dictionary, *keys, msg=""):
     :type dictionary: Dict[Any, Any]
     :param keys: The keys to search for.
     :type keys: Any
-    :param msg: The exception message, leave empty to use the default, defaults to ""
+    :param msg: The exception message; leave empty to use the default, defaults to ""
     Ex: msg="{dict} does not contain the keys: {keys}."
     :type msg: str, optional
 
@@ -654,7 +654,7 @@ def ensure_contains(iterable, *items, msg=""):
     :type iterable: Iterable
     :param items: The items to search for.
     :type items: Any
-    :param msg: The exception message, leave empty to use the default, defaults to ""
+    :param msg: The exception message; leave empty to use the default, defaults to ""
     Ex: msg="{iter} does not contain the items: {items}."
     :type msg: str, optional
 
@@ -737,7 +737,7 @@ def ensure_superclass_of(superclass, *subclasses, msg=""):
     :type superclass: Type
     :param subclasses: The subclasses to check.
     :type subclasses: Type
-    :param msg: The exception message, leave empty to use the default, defaults to ""
+    :param msg: The exception message; leave empty to use the default, defaults to ""
     Ex: msg="Not all of the classes: {subs} are subclasses of {super}."
     :type msg: str, optional
 
@@ -745,6 +745,7 @@ def ensure_superclass_of(superclass, *subclasses, msg=""):
     ~~~~~~
     :raises TypeError: If superclass is not a type.
     :raises TypeError: If any subclass in subclasses is not a type.
+    :raises TypeError: If msg is not a str.
     :raises ValueError: If the subclasses are not subclasses of the superclass.
 
     Example Usage
@@ -767,6 +768,34 @@ def ensure_superclass_of(superclass, *subclasses, msg=""):
         raise ValueError(msg)
 
 
+def is_callable(*objs):
+    """
+    is_callable()
+    -------------
+    Checks if all the objects are callable.
+
+    Admittedly, this function is not too useful given the built-in
+    function callable, but it exists for consistency.
+
+    Parameters
+    ~~~~~~~~~~
+    :param objs: The objects to check.
+    :type objs: object
+
+    Example Usage
+    ~~~~~~~~~~~~~
+    >>> def func(*args, **kwargs):
+    ...     return None
+    ...
+    >>> is_callable(func)
+    True
+    >>> is_callable(5)
+    False
+    """
+
+    return all(callable(o) for o in objs)
+
+
 def ensure_callable(*objs, msg=""):
     """
     ensure_callable()
@@ -777,13 +806,14 @@ def ensure_callable(*objs, msg=""):
     ~~~~~~~~~~
     :param objs: The objects to check.
     :type objs: object
-    :param msg: The exception message, leave empty to use the default, defaults to ""
+    :param msg: The exception message; leave empty to use the default, defaults to ""
     Ex: msg="{objs} are not all callable."
     :type msg: str, optional
 
     Raises
     ~~~~~~
     :raises TypeError: If the objects are not callable.
+    :raises TypeError: If msg is not a str.
 
     Example Usage
     ~~~~~~~~~~~~~
@@ -791,8 +821,7 @@ def ensure_callable(*objs, msg=""):
     ...     return None
     ...
     >>> ensure_callable(func)
-    >>> x = 5
-    >>> ensure_callable(x)
+    >>> ensure_callable(5)
     TypeError: expected callable objects, got 5 instead
     """
 
@@ -860,13 +889,14 @@ def ensure_no_duplicates(*objs, msg=""):
     ~~~~~~~~~~
     :param objs: The objects to check.
     :type objs: Iterable
-    :param msg: The exception message, leave empty to use the default, defaults to ""
+    :param msg: The exception message; leave empty to use the default, defaults to ""
     Ex: msg="{objs} contain duplicates."
     :type msg: str, optional
 
     Raises
     ~~~~~~
     :raises TypeError: If any of the objects in objs are not an Iterable.
+    :raises TypeError: If msg is not a str.
     :raises ValueError: If the objects contain duplicate items.
 
     Example Usage
@@ -891,3 +921,100 @@ def ensure_no_duplicates(*objs, msg=""):
             )
 
         raise TypeError(msg)
+
+
+def convertible_to(value, *objs, **kwargs):
+    """
+    convertible_to()
+    ----------------
+    Returns True if the value is convertible to the given type, otherwise returns False.
+
+    Parameters
+    ~~~~~~~~~~
+    :param value: The object to check the convertibility of.
+    :type value: Any
+    :param objs: The objects to check if value can be converted to.
+    :type objs: Type
+    :param kwargs: The kwargs to pass to the objs, if any.
+    :type kwargs: Any
+
+    Raises
+    ~~~~~~
+    :raises TypeError: If any of the objects in objs is not an object.
+
+    Return
+    ~~~~~~
+    :return: True if the value is convertible to the given type, otherwise False.
+    :rtype: bool
+
+    Example Usage
+    ~~~~~~~~~~~~~
+    >>> convertible_to(5, float)
+    True
+    >>> convertible_to("hi", int)
+    False
+    >>> convertible_to("ffffff", int, base=16)
+    True
+    """
+
+    # type checks
+    if not all(isinstance(o, type) for o in objs):
+        raise TypeError("each obj given must be an object")
+
+    for obj in objs:
+        try:
+            obj(value, **kwargs)
+            return True
+        except (TypeError, ValueError):
+            return False
+
+
+def ensure_convertible_to(value, *objs, msg="", **kwargs):
+    """
+    ensure_convertible_to()
+    -----------------------
+    Returns True if the value is convertible to the given type, otherwise returns False.
+
+    Parameters
+    ~~~~~~~~~~
+    :param value: The object to check the convertibility of.
+    :type value: Any
+    :param objs: The objects to check if value can be converted to.
+    :type objs: Type
+    :param msg: The exception message; leave empty to use the default, defaults to ""
+    Ex: msg="expected a value convertible to {objs}, not {value}."
+    :type msg: str, optional
+    :param kwargs: The kwargs to pass to the objs, if any.
+    :type kwargs: Any
+
+    Raises
+    ~~~~~~
+    :raises TypeError: If any of the objects in objs is not an object.
+    :raises TypeError: If msg is not a str.
+    :raises TypeError: If the value is not convertible to the objs.
+
+    Return
+    ~~~~~~
+    :return: True if the value is convertible to the given type, otherwise False.
+    :rtype: bool
+
+    Example Usage
+    ~~~~~~~~~~~~~
+    >>> ensure_convertible_to(5, float)
+    >>> ensure_convertible_to("hi", int)
+    TypeError: expected a value convertible to int, not 'hi'
+    """
+
+    if convertible_to(value, *objs, **kwargs):
+        return
+
+    _msg_chk(msg)
+
+    obj_names = ", ".join(o.__name__ for o in objs)
+
+    if msg:
+        msg = msg.format(value=repr(value), objs=obj_names, kwargs=kwargs)
+    else:
+        msg = f"expected a value convertible to {obj_names}, not {repr(value)}"
+
+    raise TypeError(msg)
