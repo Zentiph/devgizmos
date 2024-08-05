@@ -1,7 +1,7 @@
 """
 info
 ====
-Module containing code information related functionality,
+Package containing code information related functionality,
 such as a function-tracing decorator and a deprecation decorator.
 """
 

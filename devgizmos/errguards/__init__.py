@@ -1,7 +1,7 @@
 """
 errguards
 =========
-Module containing checker/validator functions such as type checkers,
+Package containing checker/validator functions such as type checkers,
 value checkers, range checkers, and more.
 """
 

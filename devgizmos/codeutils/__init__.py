@@ -14,10 +14,6 @@ __all__ = [
     "rate_limit",
     "singleton",
     "type_checker",
-    "FailureHandler",
-    "FailureManager",
-    "Fallback",
-    "Suppress",
     "Seed",
     "Retry",
     "Timeout",
@@ -34,7 +30,6 @@ from .__decs import (
     singleton,
     type_checker,
 )
-from .__failuremngr import FailureHandler, FailureManager, Fallback, Suppress
 from .__misc import Seed
 from .__retry import Retry
 from .__timeout import Timeout, UnsupportedOSError

@@ -1,10 +1,11 @@
 """
 checks.__checks
 ===============
-
 Module used for checking certain cases.
 Mainly used for type and value checking function parameters.
 """
+
+# pylint: disable=too-many-lines
 
 from collections.abc import Iterable, Sequence
 from re import match as re_match
@@ -875,8 +876,8 @@ def contains_duplicates(*objs):
         raise TypeError("each obj given must be an Iterable")
 
     if all(len(o) == len(set(o)) for o in objs):
-        return True
-    return False
+        return False
+    return True
 
 
 def ensure_no_duplicates(*objs, msg=""):

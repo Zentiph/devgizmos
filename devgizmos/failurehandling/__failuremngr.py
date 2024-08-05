@@ -19,7 +19,7 @@ from ..errguards import (
 )
 
 
-class FailureHandler(ABC):
+class _FailureHandler(ABC):
     """Abstract base class for FailureManager handlers."""
 
     @abstractmethod
@@ -36,8 +36,8 @@ class FailureHandler(ABC):
     @property
     def activated(self):
         """
-        FailureHandler().activated
-        --------------------------
+        _FailureHandler().activated
+        ---------------------------
         Returns whether the FailureHandler is activated.
 
         Return
@@ -51,8 +51,8 @@ class FailureHandler(ABC):
     @activated.setter
     def activated(self, a, /):
         """
-        FailureHandler().activated()
-        ----------------------------
+        _FailureHandler().activated()
+        -----------------------------
         Sets whether the FailureHandler is activated.
 
         Parameters
@@ -73,8 +73,8 @@ class FailureHandler(ABC):
     @property
     def priority(self):
         """
-        FailureHandler().priority
-        -------------------------
+        _FailureHandler().priority
+        --------------------------
         Returns the FailureHandler's priority.
         Priority determines the order the FailureManager executes its handlers.
         Lowest number (minimum 1) takes highest priority.
@@ -90,8 +90,8 @@ class FailureHandler(ABC):
     @priority.setter
     def priority(self, p, /):
         """
-        FailureHandler().priority()
-        ---------------------------
+        _FailureHandler().priority()
+        ----------------------------
         Sets the FailureHandler's priority.
         Priority determines the order the FailureManager executes its handlers.
         Lowest number (minimum 1) takes highest priority.
@@ -104,7 +104,7 @@ class FailureHandler(ABC):
         Raises
         ~~~~~~
         :raises TypeError: If p is not an int.
-        :raises ValueError: If p is less than or equal to 0.
+        :raises ValueError: If p is less than 1.
         """
 
         # type checks
@@ -118,8 +118,8 @@ class FailureHandler(ABC):
     @property
     def returned(self):
         """
-        FailureHandler().returned
-        -------------------------
+        _FailureHandler().returned
+        --------------------------
         Returns the return value when called due to an error being raised.
 
         Return
@@ -133,8 +133,8 @@ class FailureHandler(ABC):
     @property
     def suppress(self):
         """
-        FailureHandler().suppress
-        -------------------------
+        _FailureHandler().suppress
+        --------------------------
         Returns whether the handler should suppress exceptions.
 
         Return
@@ -148,7 +148,7 @@ class FailureHandler(ABC):
     @suppress.setter
     def suppress(self, s):
         """
-        FailureHandler().suppress()
+        _FailureHandler().suppress()
         ---------------------------
         Sets whether exceptions should be suppressed by the handler.
 
@@ -163,6 +163,31 @@ class FailureHandler(ABC):
 
         self.__suppress = s
 
+    @classmethod
+    def with_priority(cls, priority, *args, **kwargs):
+        """
+        _FailureHandler.with_priority()
+        -------------------------------
+        Creates the FailureHandler with the given priority.
+
+        Parameters
+        ~~~~~~~~~~
+        :param priority: The priority of the handler.
+        :type priority: int
+        :param args: The args to pass to the FailureHandler.
+        :type args: Any
+        :param kwargs: The kwargs to pass to the FailureHandler.
+        :type kwargs: Any
+
+        Raises
+        :raises TypeError: If priority is not an int.
+        :raises ValueError: If priority is less than 1.
+        """
+
+        instance = cls(*args, **kwargs)
+        instance.priority = priority
+        return instance
+
     @abstractmethod
     def __str__(self):
         pass
@@ -174,7 +199,7 @@ class FailureHandler(ABC):
 
 # empty shell of a class, but exists merely for
 # suppressing functionality without any other functionality
-class Suppress(FailureHandler):
+class Suppress(_FailureHandler):
     """FailureHandler for FailureManager that suppresses the exceptions given to FailureManager."""
 
     def __init__(self):
@@ -186,7 +211,18 @@ class Suppress(FailureHandler):
 
         Example Usage
         ~~~~~~~~~~~~~
-        >>> # TODO
+        >>> # create the Suppress and
+        >>> # FailureManager instances
+        >>> fm = FailureManager(Suppress())
+        >>>
+        >>> # run dangerous code
+        >>> with fm:
+        ...     raise TypeError
+        ...
+        >>> # no error raised, nothing happens
+        >>> fm.caught[0].type
+        <class 'TypeError'>
+
         """
 
         super().__init__()
@@ -201,7 +237,7 @@ class Suppress(FailureHandler):
         return "Suppress()"
 
 
-class Fallback(FailureHandler):
+class Fallback(_FailureHandler):
     """FailureHandler for FailureManager that falls back to a function if the code fails."""
 
     def __init__(self, func, *args, **kwargs):
@@ -228,30 +264,19 @@ class Fallback(FailureHandler):
 
         Example Usage
         ~~~~~~~~~~~~~
-        >>> # TODO
-        >>>
-        >>> # showcasing Fallback's unique 'validate' and 'error_scan' methods
-        >>> def fun():
+        >>> # initialize the fallback function, Fallback, and FailureManager instances
+        >>> def fallback_func():
         ...     print("falling back")
         ...
-        >>> fb = Fallback(fun)
-        >>> # validate that the fallback func works
-        >>> fb.validate()
-        falling back
-        True
+        >>> fb = Fallback(fallback_func)
+        >>> fm = FailureManager(fb)
         >>>
-        >>> def risky():
+        >>> # run dangerous code
+        >>> with fm:
         ...     raise TypeError
         ...
-        >>> fb2 = Fallback(risky)
-        >>> fb2.validate()
-        False
-        >>>
-        >>> # error_scan works the same as validate but returns error info
-        >>> fb.error_scan()
-        >>> # returned None
-        >>> fb2.error_scan()
-        TypeError()
+        falling back
+        >>> # fallback func is executed due to code failure
         """
 
         # type checks
@@ -278,6 +303,24 @@ class Fallback(FailureHandler):
         ~~~~~~
         :return: Whether the function raised an exception.
         :rtype: bool
+
+        Example Usage
+        ~~~~~~~~~~~~~
+        >>> def fun():
+        ...     print("falling back")
+        ...
+        >>> fb = Fallback(fun)
+        >>> # validate that the fallback func works
+        >>> fb.validate()
+        falling back
+        True
+        >>>
+        >>> def risky():
+        ...     raise TypeError
+        ...
+        >>> fb2 = Fallback(risky)
+        >>> fb2.validate()
+        False
         """
 
         try:
@@ -297,6 +340,23 @@ class Fallback(FailureHandler):
         :return: Either None if the function raised no errors,
         or the exception that was raised when running the function.
         :rtype: Type[Exception] | None
+
+        Example Usage
+        ~~~~~~~~~~~~~
+        >>> # error_scan works the same as validate but returns error info
+        >>> def fun():
+        ...     print("falling back")
+        ...
+        >>> fb = Fallback(fun)
+        >>> fb.error_scan()
+        >>> # returned None
+        >>>
+        >>> def risky():
+        ...     raise TypeError
+        ...
+        >>> fb2 = Fallback(risky)
+        >>> fb2.error_scan()
+        TypeError()
         """
 
         try:
@@ -410,16 +470,16 @@ class _ExcData:
         raise self.__value
 
     def __str__(self):
-        return f"Exception {repr(self.__value)}, traceback {self.__trace}, time {self.__time}"
+        return f"_ExcData({repr(self.__value)}, traceback {self.__trace}, time {self.__time})"
 
     def __repr__(self):
-        return f"Exception {repr(self.__value)}, traceback {self.__trace}, time {self.__time}"
+        return f"_ExcData({repr(self.__value)}, traceback {self.__trace}, time {self.__time})"
 
 
 class FailureManager:
     """Class for handling code failures."""
 
-    def __init__(self, *handlers, exceptions=(Exception,)):
+    def __init__(self, *handlers, exceptions=(Exception,), assign_priorities=True):
         """
         FailureManager()
         ----------------
@@ -429,28 +489,62 @@ class FailureManager:
         Parameters
         ~~~~~~~~~~
         :param handlers: The handlers to use when handling failures, or None for no handler, defaults to None.
-        :type handlers: Tuple[FailureHandler, ...] | None, optional
+        :type handlers: Tuple[_FailureHandler, ...] | None, optional
         :param exceptions: The exceptions to activate the FailureManager for, defaults to (Exception,).
         :type exceptions: Tuple[Type[BaseException], ...], optional
+        :param assign_priorities: Whether to automatically assign priorities
+        to the passed handlers if required, defaults to True.
+        :type assign_priorities: bool, optional
 
         Raises
         ~~~~~~
-        :raises TypeError: If handlers is not a Tuple of FailureHandler instances or None.
+        :raises TypeError: If handlers is not a Tuple of _FailureHandler instances or None.
         :raises TypeError: If exceptions is not a Tuple of BaseExceptions.
 
         Example Usage
         ~~~~~~~~~~~~~
-        >>> # TODO
+        >>> # initialize the _FailureHandlers
+        >>> # to use with the FailureManager
+        >>> def fallback_func():
+        ...     print("falling back")
+        ...
+        >>> fm = FailureManager(Suppress(), Fallback(fallback_func))
+        >>>
+        >>> # use the FailureManager to run dangerous code
+        >>> with fm:
+        ...     raise TypeError
+        ...
+        falling back
+        >>> # or decorate a function
+        >>> @fm
+        ... def risky():
+        ...     raise TypeError
+        ...
+        >>> risky()
+        falling back
+        >>> # get the data of the caught exceptions
+        >>> # (in this case getting the first caught exception)
+        >>> fm.caught[0]
+        [_ExcData(TypeError(), traceback <traceback object at 0x0000026472841800>, time 2024-08-05 04:48:04.891888)]
         """
 
         # type checks
         if handlers is not None:
             ensure_instance_of(handlers, tuple)
-            ensure_superclass_of(FailureHandler, tuple(type(h) for h in handlers))
+            ensure_superclass_of(_FailureHandler, *(type(h) for h in handlers))
         ensure_instance_of(exceptions, tuple)
-        ensure_superclass_of(BaseException, exceptions)
+        ensure_superclass_of(BaseException, *exceptions)
+        ensure_instance_of(assign_priorities, bool)
 
         self.__handlers = list(handlers)
+
+        if assign_priorities:
+            priorities = []
+            for handler in self.__handlers:
+                while handler.priority in priorities:
+                    handler.priority += 1
+                priorities.append(handler.priority)
+
         self.__sort_handlers()
         self.__exceptions = exceptions
         self.__caught = []
@@ -519,13 +613,13 @@ class FailureManager:
         Parameters
         ~~~~~~~~~~
         :param handler: The handler to change the priority of.
-        :type handler: FailureHandler
+        :type handler: _FailureHandler
         :param priority: The new priority.
         :type priority: int
         """
 
         # type checks
-        ensure_superclass_of(FailureHandler, type(handler))
+        ensure_superclass_of(_FailureHandler, type(handler))
         ensure_instance_of(priority, int)
 
         # value checks
@@ -549,11 +643,11 @@ class FailureManager:
         Parameters
         ~~~~~~~~~~
         :param handler: The handler to add.
-        :type handler: FailureHandler
+        :type handler: _FailureHandler
         """
 
         # type checks
-        ensure_superclass_of(FailureHandler, type(handler))
+        ensure_superclass_of(_FailureHandler, type(handler))
 
         self.__handlers.append(handler)
         self.__sort_handlers()
@@ -582,7 +676,7 @@ class FailureManager:
         Return
         ~~~~~~
         :return: A tuple of the handlers.
-        :rtype: Tuple[FailureHandler, ...] | None
+        :rtype: Tuple[_FailureHandler, ...] | None
         """
 
         return _HandlerCollection(*self.__handlers)

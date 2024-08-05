@@ -1,7 +1,7 @@
 """
 concurrencyutils
 ================
-Module containing tools for threading.
+Package containing tools for threading.
 """
 
 __all__ = [

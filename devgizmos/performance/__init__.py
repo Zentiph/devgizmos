@@ -1,7 +1,7 @@
 """
 performance
 ===========
-Module containing performance related functionality such as timing/benchmark utility.
+Package containing performance related functionality such as timing/benchmark utility.
 """
 
 __all__ = [

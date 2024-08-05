@@ -14,7 +14,7 @@ LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
 
 class BasicLogger(Logger):
     """
-    Logger for quickly testing/logging.
+    Logger for quickly testing/logging. Inherits directly from logging.Logger.
     """
 
     def __init__(

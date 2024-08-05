@@ -17,7 +17,7 @@ from ..errguards import (
     ensure_instance_of,
     ensure_superclass_of,
 )
-from .__failuremngr import _ExcData
+from ..failurehandling.__failuremngr import _ExcData
 
 
 class Retry:

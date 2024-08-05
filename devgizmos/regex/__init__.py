@@ -1,9 +1,9 @@
 """
 regex
 =====
-Module containing useful regexes.
-For regex matching utility, import 'matches_regex()'
-or 'ensure_matches_regex()' from errguards.
+Package containing useful regexes.
+For regex matching utility, use
+errguards.matches_regex() or errguards.ensure_matches_regex().
 """
 
 __all__ = [
