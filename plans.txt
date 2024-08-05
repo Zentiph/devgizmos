@@ -6,6 +6,7 @@ plans for devgizmos
 	- product (over args, or an iterable)
 	- ...
 2. lightweight version of the package (probably not any time soon)
+3. tests
 6. math tools such as different pi-calculating algorithms
 7. web stuff
 8. more failurehandlers

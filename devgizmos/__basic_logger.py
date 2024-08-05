@@ -39,7 +39,7 @@ class BasicLogger(Logger):
         ensure_instance_of(fmt, str)
 
         # value checks
-        ensure_value(level, LOGGING_LEVELS)
+        ensure_value(level, *LOGGING_LEVELS)
 
         super().__init__("BasicLogger", level)
 
