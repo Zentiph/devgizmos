@@ -26,11 +26,10 @@ class _FailureHandler(ABC):
     def __init__(self, *args, **kwargs):
         self.__priority = 1
         self.__returned = None
-        self.__suppress = True
         self.__on = True
 
     @abstractmethod
-    def __call__(self):
+    def __call__(self, type_, value, traceback):
         pass
 
     @property
@@ -130,39 +129,6 @@ class _FailureHandler(ABC):
 
         return self.__returned
 
-    @property
-    def suppress(self):
-        """
-        _FailureHandler().suppress
-        --------------------------
-        Returns whether the handler should suppress exceptions.
-
-        Return
-        ~~~~~~
-        :return: Whether exceptions should be suppressed.
-        :rtype: bool
-        """
-
-        return self.__suppress
-
-    @suppress.setter
-    def suppress(self, s):
-        """
-        _FailureHandler().suppress()
-        ---------------------------
-        Sets whether exceptions should be suppressed by the handler.
-
-        Parameters
-        ~~~~~~~~~~
-        :param s: Whether to suppress exceptions.
-        :type s: bool
-        """
-
-        # type checks
-        ensure_instance_of(s, bool)
-
-        self.__suppress = s
-
     @classmethod
     def with_priority(cls, priority, *args, **kwargs):
         """
@@ -197,7 +163,7 @@ class _FailureHandler(ABC):
         pass
 
 
-# empty shell of a class, but exists merely for
+# pretty empty class, but exists for pure
 # suppressing functionality without any other functionality
 class Suppress(_FailureHandler):
     """FailureHandler for FailureManager that suppresses the exceptions given to FailureManager."""
@@ -222,12 +188,11 @@ class Suppress(_FailureHandler):
         >>> # no error raised, nothing happens
         >>> fm.caught[0].type
         <class 'TypeError'>
-
         """
 
         super().__init__()
 
-    def __call__(self):
+    def __call__(self, type_, value, traceback):
         return
 
     def __str__(self):
@@ -287,7 +252,7 @@ class Fallback(_FailureHandler):
         self.__kwargs = kwargs
         super().__init__()
 
-    def __call__(self):
+    def __call__(self, type_, value, traceback):
         self.__returned = self.__func(*self.__args, **self.__kwargs)
         return self.__returned
 
@@ -370,6 +335,66 @@ class Fallback(_FailureHandler):
 
     def __repr__(self):
         return f"Fallback({self.__func.__name__}, {self.__args}, {self.__kwargs})"
+
+
+class DifferentException(_FailureHandler):
+    """FailureHandler for FailureManager that creates a custom exception with additional information."""
+
+    def __init__(self, exc, fmt="{value}"):
+        """
+        DifferentException()
+        --------------------
+        FailureHandler for FailureManager that raises a different
+        exception with the given fmt.
+
+        Parameters
+        ~~~~~~~~~~
+        :param exc: The Exception to raise, or the name of a new exception.
+        :type exc: Type[BaseException] | str
+        :param fmt: The message format for the exception, defaults to "{value}".
+        Supported fields include: type, value, traceback
+        :type fmt: str, optional
+
+        Raises
+        ~~~~~~
+        :raises TypeError: If name is not a BaseException or str.
+        :raises TypeError: If fmt is not a str.
+
+        Example Usage
+        ~~~~~~~~~~~~~
+        >>> # initialize the DifferentException, and FailureManager instances
+        >>> CustomError = DifferentException("CustomError")
+        >>> fm = FailureManager(CustomError)
+        >>>
+        >>> # run dangerous code
+        >>> with fm:
+        ...     raise TypeError("Error message")
+        ...
+        devgizmos.failurehandling.__failuremngr.CustomError: Error message
+        """
+
+        # type checks
+        ensure_instance_of(exc, BaseException, str)
+        ensure_instance_of(fmt, str)
+
+        if isinstance(exc, str):
+            self.__exc = type(exc, (Exception,), {})
+        else:
+            self.__exc = exc
+        self.__fmt = fmt
+        super().__init__()
+
+    def __call__(self, type_, value, traceback):
+        print(value)
+        raise self.__exc(
+            self.__fmt.format(type=type_, value=value, traceback=traceback)
+        )
+
+    def __str__(self):
+        return f"DifferentException(exc={self.__exc}, fmt={self.__fmt})"
+
+    def __repr__(self):
+        return f"DifferentException(exc={self.__exc}, fmt={self.__fmt})"
 
 
 class _HandlerCollection:
@@ -557,10 +582,7 @@ class FailureManager:
 
             for handler in self.__handlers:
                 if handler.activated:
-                    handler()
-
-                    if not handler.suppress:
-                        return False
+                    handler(type_, value, traceback)
 
             self.__caught.append(_ExcData(type_, value, traceback, datetime.now()))
 
