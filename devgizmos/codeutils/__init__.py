@@ -15,7 +15,6 @@ __all__ = [
     "singleton",
     "type_checker",
     "Seed",
-    "Retry",
     "Timeout",
     "UnsupportedOSError",
 ]
@@ -31,5 +30,4 @@ from .__decs import (
     type_checker,
 )
 from .__misc import Seed
-from .__retry import Retry
 from .__timeout import Timeout, UnsupportedOSError

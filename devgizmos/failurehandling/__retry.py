@@ -37,6 +37,8 @@ class Retry:
         Class that retries a function if it fails
         up until the maximum number of attempts is reached.
 
+        Can be used for async functions as well.
+
         Parameters
         ~~~~~~~~~~
         :param max_attempts: The maximum number of times to attempt running

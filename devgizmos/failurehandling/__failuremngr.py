@@ -1,9 +1,9 @@
 # pylint: disable=too-many-lines
 
 """
-codeutils.__cutils
-==================
-Module containing function inspection/controlling utility.
+failurehandling.__failuremngr
+=============================
+Module containing FailureManager and related functionality.
 """
 
 from abc import ABC, abstractmethod
@@ -331,18 +331,24 @@ class Fallback(_FailureHandler):
             return e
 
     def __str__(self):
-        return f"Fallback({self.__func.__name__}, {self.__args}, {self.__kwargs})"
+        repr_args = tuple(arg for arg in self.__args)
+        repr_kwargs = dict((name, kwarg) for (name, kwarg) in self.__kwargs.items())
+
+        return f"Fallback(func={self.__func.__name__}, args={repr_args}, kwargs={repr_kwargs})"
 
     def __repr__(self):
-        return f"Fallback({self.__func.__name__}, {self.__args}, {self.__kwargs})"
+        repr_args = tuple(arg for arg in self.__args)
+        repr_kwargs = dict((name, kwarg) for (name, kwarg) in self.__kwargs.items())
+
+        return f"Fallback(func={self.__func.__name__}, args={repr_args}, kwargs={repr_kwargs})"
 
 
-class DifferentException(_FailureHandler):
+class CustomException(_FailureHandler):
     """FailureHandler for FailureManager that creates a custom exception with additional information."""
 
     def __init__(self, exc, fmt="{value}"):
         """
-        DifferentException()
+        CustomException()
         --------------------
         FailureHandler for FailureManager that raises a different
         exception with the given fmt.
@@ -362,8 +368,8 @@ class DifferentException(_FailureHandler):
 
         Example Usage
         ~~~~~~~~~~~~~
-        >>> # initialize the DifferentException, and FailureManager instances
-        >>> CustomError = DifferentException("CustomError")
+        >>> # initialize the CustomException, and FailureManager instances
+        >>> CustomError = CustomException("CustomError")
         >>> fm = FailureManager(CustomError)
         >>>
         >>> # run dangerous code
@@ -391,10 +397,10 @@ class DifferentException(_FailureHandler):
         )
 
     def __str__(self):
-        return f"DifferentException(exc={self.__exc}, fmt={self.__fmt})"
+        return f"CustomException(exc={self.__exc.__name__}, fmt={repr(self.__fmt)})"
 
     def __repr__(self):
-        return f"DifferentException(exc={self.__exc}, fmt={self.__fmt})"
+        return f"CustomException(exc={self.__exc.__name__}, fmt={repr(self.__fmt)})"
 
 
 class _HandlerCollection:
@@ -510,6 +516,8 @@ class FailureManager:
         ----------------
         Class that handles code failures using the handler provided.
         Can be used as a context manager and a decorator.
+
+        For retry functionality, see the separate, non-FailureHandler Retry class.
 
         Parameters
         ~~~~~~~~~~
