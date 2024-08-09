@@ -17,6 +17,7 @@ P = ParamSpec("P")  # generic param
 C = TypeVar("C")  # generic class instance type
 
 Decorated = Callable[[Callable[P, T]], Callable[P, T]]
+Decorator = Decorated
 DecoratedCls = Callable[[Type[T]], Type[T]]
 
 @overload
@@ -38,7 +39,7 @@ def deprecated(
     date: Optional[str] = None,
 ) -> Decorated: ...
 def decorate_all_methods(
-    decorator: Callable[..., Decorated],
+    decorator: Union[Decorator, Callable[P, Decorated]],
     *args: Any,
     **kwargs: Any,
 ) -> DecoratedCls: ...

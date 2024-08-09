@@ -27,8 +27,8 @@ def tracer(*, entry_msg="", exit_msg=""):
 
     Raises
     ~~~~~~
-    :raises TypeError: If entry_msg is not a str.
-    :raises TypeError: If exit_msg is not a str.
+    :raises TypeError: If entry_msg is not a str or None.
+    :raises TypeError: If exit_msg is not a str or None.
 
     Example Usage
     ~~~~~~~~~~~~~

@@ -6,7 +6,7 @@ Module containing decorators for the codeutils package.
 
 from collections import OrderedDict
 from functools import wraps
-from inspect import ismethod
+from inspect import getmembers, ismethod
 from time import perf_counter, sleep
 from typing import get_type_hints
 from warnings import warn
@@ -335,23 +335,29 @@ def decorate_all_methods(decorator, *args, **kwargs):
     ensure_callable(decorator)
 
     def decorator_(cls):
-        for attr_name, attr_value in cls.__dict__.items():
+        for attr_name, attr_value in getmembers(cls):
             if callable(attr_value) and not (
                 attr_name.startswith("__") and attr_name.endswith("__")
             ):
+                # check if the method is in the class or super classes
+                if not any(attr_name in c.__dict__ for c in cls.mro()):
+                    continue
+
                 # check if the method should be ignored
                 if getattr(attr_value, "_ignore_decoration", False):
-                    # try to use the decorator assuming it contains
-                    # a decorator and wrapper function
-                    try:
-                        attr_value = decorator(*args, **kwargs)(attr_value)
+                    continue
 
-                    # if above fails, try to use the decorator
-                    # assuming it only contains a wrapper
-                    except TypeError:
-                        attr_value = decorator(attr_value, *args, **kwargs)
+                # try to use the decorator assuming it contains
+                # a decorator and wrapper function
+                try:
+                    attr_value = decorator(*args, **kwargs)(attr_value)
 
-                    setattr(cls, attr_name, attr_value)
+                # if above fails, try to use the decorator
+                # assuming it only contains a wrapper
+                except TypeError:
+                    attr_value = decorator(attr_value, *args, **kwargs)
+
+                setattr(cls, attr_name, attr_value)
 
         return cls
 
