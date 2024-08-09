@@ -9,7 +9,7 @@ from .. import BasicLogger
 
 class TestBasicLogger(unittest.TestCase):
     def test_correct_args(self):
-        level_test_cases = [
+        level_test_cases = (
             NOTSET,
             DEBUG,
             INFO,
@@ -24,15 +24,16 @@ class TestBasicLogger(unittest.TestCase):
             30,
             40,
             50,
-        ]
+        )
 
         for level in level_test_cases:
-            try:
-                BasicLogger(level)
-            except Exception as e:
-                self.fail(
-                    f"BasicLogger({level}) unexpectedly raised {type(e).__name__}"
-                )
+            with self.subTest(level=level):
+                try:
+                    BasicLogger(level)
+                except Exception as e:
+                    self.fail(
+                        f"BasicLogger({level}) unexpectedly raised {type(e).__name__}"
+                    )
 
         fmt_test_cases = [
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -40,25 +41,28 @@ class TestBasicLogger(unittest.TestCase):
         ]
 
         for fmt in fmt_test_cases:
-            try:
-                BasicLogger(fmt=fmt)
-            except Exception as e:
-                self.fail(f"BasicLogger({fmt=}) unexpectedly raised {type(e).__name__}")
+            with self.subTest(fmt=fmt):
+                try:
+                    BasicLogger(fmt=fmt)
+                except Exception as e:
+                    self.fail(
+                        f"BasicLogger({fmt=}) unexpectedly raised {type(e).__name__}"
+                    )
 
     def test_incorrect_arg_types(self):
-        level_test_cases = [
+        level_test_cases = (
             10.0,
             "10",
             "DEBUG",
             [10],
-        ]
+        )
 
         for level in level_test_cases:
             with self.subTest(level=level):
                 with self.assertRaises(TypeError):
                     BasicLogger(level)
 
-        fmt_test_cases = [10, 7.3, ["%(message)s"]]
+        fmt_test_cases = (10, 7.3, ["%(message)s"])
 
         for fmt in fmt_test_cases:
             with self.subTest(fmt=fmt):
@@ -66,21 +70,23 @@ class TestBasicLogger(unittest.TestCase):
                     BasicLogger(fmt=fmt)
 
     def test_incorrect_arg_values(self):
-        level_test_cases = [1, 12, -10]
+        level_test_cases = (1, 12, -10)
 
         for level in level_test_cases:
             with self.subTest(level=level):
                 with self.assertRaises(ValueError):
                     BasicLogger(level)
 
-        with self.assertRaises(ValueError):
-            BasicLogger(fmt="unformatted")
+        with self.subTest():
+            with self.assertRaises(ValueError):
+                BasicLogger(fmt="unformatted")
 
     def test_logs_correctly(self):
         logger = BasicLogger()
 
-        with self.assertLogs(logger, DEBUG):
-            logger.log(logger.level, "Logging commencing")
+        with self.subTest():
+            with self.assertLogs(logger, DEBUG):
+                logger.log(logger.level, "Logging commencing")
 
 
 if __name__ == "__main__":

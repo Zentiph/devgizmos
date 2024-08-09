@@ -10,5 +10,3 @@ plans for devgizmos
 6. math tools such as different pi-calculating algorithms
 7. web stuff
 8. more failurehandlers
-9. move contmngrs to more specified/specialized dirs
-10. make all class methods that arent classmethods in docstrings have parens after the name

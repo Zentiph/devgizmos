@@ -104,7 +104,7 @@ def rate_limit(*args):
     return decorator
 
 
-def cache(maxsize=None, *, type_specific=False):
+def cache(maxsize=None, /, *, type_specific=False):
     """
     @cache()
     --------
@@ -151,6 +151,8 @@ def cache(maxsize=None, *, type_specific=False):
 
     ensure_instance_of(maxsize, int, optional=True)
     ensure_instance_of(type_specific, bool)
+    if maxsize is not None:
+        ensure_in_bounds(maxsize, 1, None)
 
     def decorator(func):
         cache_ = OrderedDict()
@@ -336,7 +338,16 @@ def decorate_all_methods(decorator, *args, **kwargs):
             if callable(attr_value) and not (
                 attr_name.startswith("__") and attr_name.endswith("__")
             ):
-                attr_value = decorator(*args, **kwargs)(attr_value)
+                # try to use the decorator assuming it contains
+                # a decorator and wrapper function
+                try:
+                    attr_value = decorator(*args, **kwargs)(attr_value)
+
+                # if above fails, try to use the decorator
+                # assuming it only contains a wrapper
+                except TypeError:
+                    attr_value = decorator(attr_value, *args, **kwargs)
+
                 setattr(cls, attr_name, attr_value)
 
         return cls
