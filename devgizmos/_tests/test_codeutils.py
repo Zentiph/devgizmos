@@ -1,8 +1,8 @@
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring, cell-var-from-loop
 
 import unittest
-from logging import Logger, StreamHandler, DEBUG
-from time import sleep, perf_counter
+from logging import DEBUG, Logger, StreamHandler
+from time import perf_counter, sleep
 
 from ..codeutils import (
     Seed,
@@ -185,6 +185,60 @@ class TestDecorateAllMethods(unittest.TestCase):
                     @decorate_all_methods(decorator)
                     class Example(self.Tester):  # pylint: disable=unused-variable
                         pass
+
+    def test_incorrect_arg_values(self):
+        class Callable:
+            def __init__(self):
+                pass
+
+            def __call__(self):
+                pass
+
+        for callable_ in (Callable, self.example_func):
+            with self.subTest(callable=callable_):
+                with self.assertRaises(TypeError):
+
+                    @decorate_all_methods(callable_)
+                    class Example(self.Tester):  # pylint: disable=unused-variable
+                        def new_method(self):
+                            return self.a
+
+                    Example(1).new_method()
+
+    def test_magic_methods_not_decorated(self):  # pylint: disable=invalid-name
+        for decorator in (self.decorator_ex1, self.decorator_ex2):
+            with self.subTest(decorator=decorator):
+
+                @decorate_all_methods(decorator)
+                # pylint: disable=unused-argument
+                class Example(self.Tester):
+                    def __magic__(self, *args, **kwargs):
+                        return
+
+                    def __front_dunder(
+                        self, *args, **kwargs
+                    ):  # pylint: disable=unused-private-member
+                        return
+
+                    def call_front_dunder(self, *args, **kwargs):
+                        return self.__front_dunder(*args, **kwargs)
+
+                    def back_dunder__(self, *args, **kwargs):
+                        return
+
+                ex = Example(1)
+
+                # negate assertLogs by checking for an AssertionError
+                # (making sure it DOESN'T log)
+                with self.assertRaises(AssertionError):
+                    with self.assertLogs(self.logger, DEBUG):
+                        ex.__magic__(2, 3)
+
+                with self.assertLogs(self.logger, DEBUG):
+                    ex.call_front_dunder(2, 3)
+
+                with self.assertLogs(self.logger, DEBUG):
+                    ex.back_dunder__(2, 3)
 
 
 if __name__ == "__main__":

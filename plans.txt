@@ -7,6 +7,8 @@ plans for devgizmos
 	- ...
 2. lightweight version of the package (probably not any time soon)
 3. tests
+4. add more ensure funcs to errguards using inspect module
+	- ex: ensure_is_method
 6. math tools such as different pi-calculating algorithms
 7. web stuff
 8. more failurehandlers

@@ -6,6 +6,7 @@ Module containing decorators for the codeutils package.
 
 from collections import OrderedDict
 from functools import wraps
+from inspect import ismethod
 from time import perf_counter, sleep
 from typing import get_type_hints
 from warnings import warn
@@ -338,21 +339,73 @@ def decorate_all_methods(decorator, *args, **kwargs):
             if callable(attr_value) and not (
                 attr_name.startswith("__") and attr_name.endswith("__")
             ):
-                # try to use the decorator assuming it contains
-                # a decorator and wrapper function
-                try:
-                    attr_value = decorator(*args, **kwargs)(attr_value)
+                # check if the method should be ignored
+                if getattr(attr_value, "_ignore_decoration", False):
+                    # try to use the decorator assuming it contains
+                    # a decorator and wrapper function
+                    try:
+                        attr_value = decorator(*args, **kwargs)(attr_value)
 
-                # if above fails, try to use the decorator
-                # assuming it only contains a wrapper
-                except TypeError:
-                    attr_value = decorator(attr_value, *args, **kwargs)
+                    # if above fails, try to use the decorator
+                    # assuming it only contains a wrapper
+                    except TypeError:
+                        attr_value = decorator(attr_value, *args, **kwargs)
 
-                setattr(cls, attr_name, attr_value)
+                    setattr(cls, attr_name, attr_value)
 
         return cls
 
     return decorator_
+
+
+def ignore_method_decoration(method, /):
+    """
+    @ignore_method_decoration
+    -------------------------
+    Decorator that marks the decorated method to be
+    ignored by the decorate_all_methods decorator.
+
+    Parameters
+    ~~~~~~~~~~
+    :param method: The method to decorate.
+    :type method: Callable[..., Any]
+
+    Raises
+    ~~~~~~
+    :raises TypeError: If method is not a method of a class.
+
+    Return
+    ~~~~~~
+    :return: The decorated method.
+    :rtype: Decorated
+
+    Example Usage
+    ~~~~~~~~~~~~~
+    >>> @decorate_all_methods(deprecated, "Don't use this class anymore, see MyBetterClass")
+    ... class MyClass:
+    ...     def __init__(self, a):
+    ...         self.a = a
+    ...     def __repr__(self):
+    ...         return f"MyClass(a={self.a})"
+    ...     def add_to_a(self, x):
+    ...         self.a += x
+    ...     @ignore_method_decoration
+    ...     def subtract_from_a(self, x):
+    ...         self.a -= x
+    ...
+    >>> cls = MyClass(1)
+    >>> cls.add_to_a(2)
+    <stdin>:1: DeprecationWarning: add_to_a is deprecated: Don't use this class anymore, see MyBetterClass
+    >>> cls.subtract_from_a(2)
+    >>> # no deprecation warning
+    """
+
+    # type checks
+    if not ismethod(method):
+        raise TypeError(f"expected a method, got {type(method).__name__} instead")
+
+    method._ignore_decoration = True  # pylint: disable=protected-access
+    return method
 
 
 def immutable(cls):
