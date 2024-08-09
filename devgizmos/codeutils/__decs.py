@@ -407,7 +407,7 @@ def ignore_method_decoration(method, /):
     """
 
     # type checks
-    if not ismethod(method):
+    if not callable(method):
         raise TypeError(f"expected a method, got {type(method).__name__} instead")
 
     method._ignore_decoration = True  # pylint: disable=protected-access

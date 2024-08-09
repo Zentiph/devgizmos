@@ -11,6 +11,7 @@ from ..codeutils import (
     cache,
     decorate_all_methods,
     deprecated,
+    ignore_method_decoration,
     immutable,
     lazy_property,
     rate_limit,
@@ -115,6 +116,8 @@ class TestCache(unittest.TestCase):
             self.assertAlmostEqual(tf - t0, 3, places=2)
 
 
+# also for testing ignore_method_decoration
+# since both are used together
 class TestDecorateAllMethods(unittest.TestCase):
     # logger for testing purposes
     logger = Logger("DecorateAllMethodsLogger")
@@ -220,6 +223,7 @@ class TestDecorateAllMethods(unittest.TestCase):
                     ):  # pylint: disable=unused-private-member
                         return
 
+                    @ignore_method_decoration
                     def call_front_dunder(self, *args, **kwargs):
                         return self.__front_dunder(*args, **kwargs)
 
@@ -239,6 +243,25 @@ class TestDecorateAllMethods(unittest.TestCase):
 
                 with self.assertLogs(self.logger, DEBUG):
                     ex.back_dunder__(2, 3)
+
+    def test_ignore_method_decoration(self):
+        for decorator in (self.decorator_ex1, self.decorator_ex2):
+            with self.subTest(decorator=decorator):
+
+                @decorate_all_methods(decorator)
+                class Example(self.Tester):
+                    @ignore_method_decoration
+                    def new_method(self):
+                        pass
+
+                ex = Example(1)
+
+                with self.assertLogs(self.logger, DEBUG):
+                    ex.get_a()
+
+                with self.assertRaises(AssertionError):
+                    with self.assertLogs(self.logger, DEBUG):
+                        ex.new_method()
 
 
 if __name__ == "__main__":
