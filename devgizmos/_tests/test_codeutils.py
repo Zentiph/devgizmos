@@ -1,6 +1,8 @@
-# pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring, cell-var-from-loop
+# pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring, cell-var-from-loop, invalid-name
 
 import unittest
+import unittest.mock as mock
+from io import StringIO
 from logging import DEBUG, Logger, StreamHandler
 from time import perf_counter, sleep
 
@@ -149,7 +151,7 @@ class TestDecorateAllMethods(unittest.TestCase):
     # basic class for testing
     class Tester:
         def __init__(self, a):
-            self.a = a  # pylint: disable=invalid-name
+            self.a = a
 
         def get_a(self):
             return self.a
@@ -208,7 +210,7 @@ class TestDecorateAllMethods(unittest.TestCase):
 
                     Example(1).new_method()
 
-    def test_magic_methods_not_decorated(self):  # pylint: disable=invalid-name
+    def test_magic_methods_not_decorated(self):
         for decorator in (self.decorator_ex1, self.decorator_ex2):
             with self.subTest(decorator=decorator):
 
@@ -244,7 +246,7 @@ class TestDecorateAllMethods(unittest.TestCase):
                 with self.assertLogs(self.logger, DEBUG):
                     ex.back_dunder__(2, 3)
 
-    def test_ignore_method_decoration(self):
+    def test_ignore_method_decoration_works(self):
         for decorator in (self.decorator_ex1, self.decorator_ex2):
             with self.subTest(decorator=decorator):
 
@@ -262,6 +264,44 @@ class TestDecorateAllMethods(unittest.TestCase):
                 with self.assertRaises(AssertionError):
                     with self.assertLogs(self.logger, DEBUG):
                         ex.new_method()
+
+    def test_ignore_method_decoration_incorrect_args(self):
+        for func in (10, "decorator", int()):
+            with self.subTest(func=func):
+                with self.assertRaises(TypeError):
+                    ignore_method_decoration(func)
+
+
+class TestDeprecated(unittest.TestCase):
+    @unittest.skip("")
+    @staticmethod
+    def testing_func(*args, **kwargs):
+        pass
+
+    # TODO:
+    # unfortunately this doesn't currently test that the message
+    # is correctly formatted since using unittest.mock is not
+    # working out. i'd like a msg format test to eventually be
+    # added but as of now it'll be postponed.
+    # if this is getting fixed, remove this comment when done.
+    def test_correct_args(self):
+        def test_func():
+            pass
+
+        for reason in ("Hi", "This is bad", "Poo poo code", ""):
+            with self.subTest(reason=reason):
+                with self.assertWarns(DeprecationWarning):
+                    deprecated(reason)(test_func)()
+
+        for version in (1, 3.0, 1.2, "1.2.1", "alpha"):
+            with self.subTest(version=version):
+                with self.assertWarns(DeprecationWarning):
+                    deprecated("", version)(test_func)()
+
+        for date in ("", "Friday", "8/10/2024", "10-8-24"):
+            with self.subTest(date=date):
+                with self.assertWarns(DeprecationWarning):
+                    deprecated("", date=date)(test_func)()
 
 
 if __name__ == "__main__":

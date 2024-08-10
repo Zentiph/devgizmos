@@ -6,7 +6,7 @@ Module containing decorators for the codeutils package.
 
 from collections import OrderedDict
 from functools import wraps
-from inspect import getmembers, ismethod
+from inspect import getmembers
 from time import perf_counter, sleep
 from typing import get_type_hints
 from warnings import warn
@@ -270,7 +270,7 @@ def deprecated(reason, version=None, date=None):
 
     # type checks
     ensure_instance_of(reason, str)
-    ensure_instance_of(version, (int, float, str), optional=True)
+    ensure_instance_of(version, int, float, str, optional=True)
     ensure_instance_of(date, str, optional=True)
 
     def decorator(func):
