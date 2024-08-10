@@ -303,6 +303,24 @@ class TestDeprecated(unittest.TestCase):
                 with self.assertWarns(DeprecationWarning):
                     deprecated("", date=date)(test_func)()
 
+    def test_incorrect_args(self):
+        def test_func():
+            pass
+
+        for reason in (10, 5.5, ["Msg"], True):
+            with self.subTest(reason=reason):
+                with self.assertRaises(TypeError):
+                    deprecated(reason)(test_func)
+
+        with self.subTest(version=["version"]):
+            with self.assertRaises(TypeError):
+                deprecated("", ["version"])(test_func)
+
+        for date in (10, 5.5, ["date"], True):
+            with self.subTest(date=date):
+                with self.assertRaises(TypeError):
+                    deprecated("", date=date)(test_func)
+
 
 if __name__ == "__main__":
     unittest.main()
