@@ -482,7 +482,7 @@ def singleton(cls):
 
     Parameters
     ~~~~~~~~~~
-    :param cls: The class to decorate and make a singleton.
+    :param cls: The class to make a singleton.
     :type cls: Type[T]
 
     Return
@@ -521,10 +521,10 @@ def singleton(cls):
     return wrapper
 
 
-def type_checker(func):
+def enforce_type_hints(func):
     """
-    @type_checker
-    -------------
+    @enforce_type_hints
+    -------------------
     Ensures the arguments passed to the decorated function are of the correct type based on the type hints.
 
     Parameters
@@ -544,7 +544,7 @@ def type_checker(func):
 
     Example Usage
     ~~~~~~~~~~~~~
-    >>> @type_checker
+    >>> @enforce_type_hints
     ... def typed_fun(a: int, b: float) -> str:
     ...     return str(a + b)
     ...

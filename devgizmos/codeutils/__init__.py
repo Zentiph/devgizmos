@@ -14,7 +14,7 @@ __all__ = [
     "lazyproperty",
     "rate_limit",
     "singleton",
-    "type_checker",
+    "enforce_type_hints",
     "Seed",
     "Timeout",
     "UnsupportedOSError",
@@ -24,12 +24,12 @@ from .__decs import (
     cache,
     decorate_all_methods,
     deprecated,
+    enforce_type_hints,
     ignore_method_decoration,
     immutable,
     lazyproperty,
     rate_limit,
     singleton,
-    type_checker,
 )
 from .__misc import Seed
 from .__timeout import Timeout, UnsupportedOSError

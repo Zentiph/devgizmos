@@ -13,12 +13,12 @@ from ..codeutils import (
     cache,
     decorate_all_methods,
     deprecated,
+    enforce_type_hints,
     ignore_method_decoration,
     immutable,
     lazyproperty,
     rate_limit,
     singleton,
-    type_checker,
 )
 
 
@@ -429,8 +429,75 @@ class TestRateLimit(unittest.TestCase):
 
 class TestSingleton(unittest.TestCase):
     def test_only_one_instance(self):
-        # TODO
-        pass
+        with self.subTest():
+
+            @singleton
+            class Single:
+                def __init__(self, x):
+                    self.x = x
+
+            single1 = Single(1)
+            single2 = Single(2)
+
+            self.assertEqual(single1.x, 1)
+            self.assertEqual(single2.x, 1)
+            self.assertIs(single1, single2)
+
+
+class TestTypeChecker(unittest.TestCase):
+    def test_hints_enforced(self):
+        with self.subTest():
+            # test args
+            @enforce_type_hints
+            def typed_args(arg1: int, arg2: str, /):  # pylint: disable=unused-argument
+                pass
+
+            with self.assertRaises(TypeError):
+                typed_args(1, 1)
+
+            with self.assertRaises(TypeError):
+                typed_args("1", "1")
+
+            with self.assertRaises(TypeError):
+                typed_args(1.0, "a")
+
+            with self.assertRaises(AssertionError):
+                with self.assertRaises(TypeError):
+                    typed_args(3, "hi")
+
+            # test kwargs
+            @enforce_type_hints
+            def typed_kwargs(
+                *, kwarg1: float = 1.0, kwarg2: int = 3
+            ):  # pylint: disable=unused-argument
+                pass
+
+            with self.assertRaises(TypeError):
+                typed_kwargs(kwarg1=1, kwarg2=1)
+
+            with self.assertRaises(TypeError):
+                typed_kwargs(kwarg1=3.0, kwarg2=2.0)
+
+            with self.assertRaises(TypeError):
+                typed_kwargs(kwarg1="1", kwarg2=1.0)
+
+            with self.assertRaises(AssertionError):
+                with self.assertRaises(TypeError):
+                    typed_kwargs(kwarg1=3.2, kwarg2=4)
+
+            # test return
+            @enforce_type_hints
+            def typed_return(b) -> int:
+                if b:
+                    return 3
+                return 3.0  # type: ignore
+
+            with self.assertRaises(TypeError):
+                typed_return(False)
+
+            with self.assertRaises(AssertionError):
+                with self.assertRaises(TypeError):
+                    typed_return(True)
 
 
 if __name__ == "__main__":
