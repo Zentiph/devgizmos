@@ -15,7 +15,7 @@ from ..codeutils import (
     deprecated,
     ignore_method_decoration,
     immutable,
-    lazy_property,
+    lazyproperty,
     rate_limit,
     singleton,
     type_checker,
@@ -30,7 +30,7 @@ class TestCache(unittest.TestCase):
         if wait > 0:
             sleep(wait)
 
-    def test_correct_args(self):
+    def test_results_cached(self):
         maxsize_test_cases = (1, 128, 53, 20, 178)
 
         for maxsize in maxsize_test_cases:
@@ -159,7 +159,7 @@ class TestDecorateAllMethods(unittest.TestCase):
         def set_a(self, a):
             self.a = a
 
-    def test_correct_args(self):
+    def test_methods_get_decorated(self):
         for decorator in (self.decorator_ex1, self.decorator_ex2):
             with self.subTest(decorator=decorator):
 
@@ -284,7 +284,7 @@ class TestDeprecated(unittest.TestCase):
     # working out. i'd like a msg format test to eventually be
     # added but as of now it'll be postponed.
     # if this is getting fixed, remove this comment when done.
-    def test_correct_args(self):
+    def test_deprecated_warning_pushed(self):
         def test_func():
             pass
 
@@ -303,7 +303,7 @@ class TestDeprecated(unittest.TestCase):
                 with self.assertWarns(DeprecationWarning):
                     deprecated("", date=date)(test_func)()
 
-    def test_incorrect_args(self):
+    def test_invalid_args(self):
         def test_func():
             pass
 
@@ -320,6 +320,117 @@ class TestDeprecated(unittest.TestCase):
             with self.subTest(date=date):
                 with self.assertRaises(TypeError):
                     deprecated("", date=date)(test_func)
+
+
+class TestImmutable(unittest.TestCase):
+    class TestClass:
+        def __init__(self, a):
+            self.a = a
+
+    def test_decorated_class_cannot_be_edited(self):
+        with self.subTest():
+            with self.assertRaises(AttributeError):
+
+                @immutable
+                class Example(self.TestClass):
+                    pass
+
+                ex = Example(1)
+                ex.a = 1
+
+    def test_invalid_args(self):
+        with self.subTest():
+            with self.assertRaises(TypeError):
+
+                @immutable
+                def test_func():
+                    pass
+
+
+class TestLazyProperty(unittest.TestCase):
+    class CircleFramework:
+        logger = Logger("lazy_propertyTestingLogger")
+
+        def __init__(self, radius):
+            self.radius = radius
+
+        def area(self):
+            self.logger.log(DEBUG, "Computing area")
+            return 3.14159 * self.radius**2
+
+    def test_property_result_cached(self):
+        with self.subTest():
+
+            class Circle(self.CircleFramework):
+                @lazyproperty
+                def area(self):
+                    return super().area()
+
+            c = Circle(10)
+
+            with self.assertLogs(c.logger, DEBUG):
+                print(c.area)
+
+            with self.assertRaises(AssertionError):
+                with self.assertLogs(c.logger, DEBUG):
+                    print(c.area)
+
+
+class TestRateLimit(unittest.TestCase):
+    def test_limits_calls(self):
+        with self.subTest():
+            # interval (single arg)
+            @rate_limit(1)
+            def test1():
+                pass
+
+            t0 = perf_counter()
+            test1()
+            test1()
+            tf = perf_counter()
+
+            self.assertAlmostEqual(tf - t0, 1, places=2)
+
+            # calls / period (two args)
+            @rate_limit(3, 3)
+            def test2():
+                pass
+
+            t0 = perf_counter()
+            test2()
+            test2()
+            tf = perf_counter()
+
+            self.assertAlmostEqual(tf - t0, 1, places=2)
+
+    def test_invalid_args(self):
+        with self.subTest():
+            for interval in ("1", [1]):
+                with self.assertRaises(TypeError):
+
+                    @rate_limit(interval)
+                    def test1():
+                        pass
+
+            for calls in (4.3, "1", [1]):
+                with self.assertRaises(TypeError):
+
+                    @rate_limit(calls, 1)
+                    def test2():
+                        pass
+
+            for period in ("1", [1]):
+                with self.assertRaises(TypeError):
+
+                    @rate_limit(1, period)
+                    def test3():
+                        pass
+
+
+class TestSingleton(unittest.TestCase):
+    def test_only_one_instance(self):
+        # TODO
+        pass
 
 
 if __name__ == "__main__":

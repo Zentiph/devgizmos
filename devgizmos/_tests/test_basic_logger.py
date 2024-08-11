@@ -8,7 +8,7 @@ from .. import BasicLogger
 
 
 class TestBasicLogger(unittest.TestCase):
-    def test_correct_args(self):
+    def test_valid_args_do_not_raise(self):
         level_test_cases = (
             NOTSET,
             DEBUG,
@@ -49,7 +49,7 @@ class TestBasicLogger(unittest.TestCase):
                         f"BasicLogger({fmt=}) unexpectedly raised {type(e).__name__}"
                     )
 
-    def test_incorrect_arg_types(self):
+    def test_invalid_arg_types(self):
         level_test_cases = (
             10.0,
             "10",
@@ -69,7 +69,7 @@ class TestBasicLogger(unittest.TestCase):
                 with self.assertRaises(TypeError):
                     BasicLogger(fmt=fmt)
 
-    def test_incorrect_arg_values(self):
+    def test_invalid_arg_values(self):
         level_test_cases = (1, 12, -10)
 
         for level in level_test_cases:

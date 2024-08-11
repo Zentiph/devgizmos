@@ -56,7 +56,7 @@ def rate_limit(*args):
     >>> t2 = get_time()
     >>> t2 - t1
     1.0003656
-    >>> # the function will not be "re-callable"
+    >>> # the function will not be re-called
     >>> # for ~1 second each time it is called
     """
 
@@ -186,7 +186,7 @@ def cache(maxsize=None, /, *, type_specific=False):
 
 
 # pylint: disable=invalid-name
-class lazy_property:
+class lazyproperty:
     """
     Transforms the decorated method into a property that is
     only computed once, and is then cached as an attribute.
@@ -194,7 +194,7 @@ class lazy_property:
 
     def __init__(self, func):
         """
-        @lazy_property
+        @lazyproperty
         --------------
         Transforms the decorated method into a property that is
         only computed once, and is then cached as an attribute.
@@ -204,10 +204,10 @@ class lazy_property:
         >>> class Circle:
         ...     def __init__(self, radius):
         ...         self.radius = radius
-        ...     @lazy_property
+        ...     @lazyproperty
         ...     def area(self):
         ...         print("Computing area")
-        ...         return 3.14159 * self.radius ** 2
+        ...         return 3.14159 * self.radius**2
         ...
         >>> c = Circle(10)
         >>> c.area
@@ -226,6 +226,7 @@ class lazy_property:
     def __get__(self, instance, owner):
         if instance is None:
             return self
+
         value = self.func(instance)
         setattr(instance, self.name, value)
         return value
