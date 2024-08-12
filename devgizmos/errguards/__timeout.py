@@ -8,7 +8,7 @@ from functools import wraps
 from inspect import currentframe
 from platform import system
 
-from ..errguards import ensure_in_bounds, ensure_instance_of, ensure_superclass_of
+from .__errguards import ensure_in_bounds, ensure_instance_of, ensure_superclass_of
 
 if system() in ("Darwin", "Linux"):
     # pylint: disable=no-name-in-module

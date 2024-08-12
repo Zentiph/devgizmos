@@ -24,7 +24,7 @@ __maintainers__ = ("Gavin Borne", "Leo Nguyen")
 
 __all__ = [
     "errguards",
-    "codeutils",
+    "funcutils",
     "failurehandling",
     "info",
     "performance",
@@ -32,16 +32,17 @@ __all__ = [
     "sysutils",
     "types",
     "BasicLogger",
+    "Seed",
 ]
 
 from . import (
-    codeutils,
     errguards,
     failurehandling,
+    funcutils,
     info,
     performance,
     regex,
     sysutils,
     types,
 )
-from .__basic_logger import BasicLogger
+from .__misc import BasicLogger, Seed

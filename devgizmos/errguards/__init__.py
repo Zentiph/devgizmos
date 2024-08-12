@@ -1,8 +1,7 @@
 """
 errguards
 =========
-Package containing checker/validator functions such as type checkers,
-value checkers, range checkers, and more.
+Package containing error guarding tools, such as type/value checkers.
 """
 
 __all__ = [
@@ -27,6 +26,8 @@ __all__ = [
     "is_superclass_of",
     "is_value",
     "matches_regex",
+    "Timeout",
+    "UnsupportedOSError",
 ]
 
 from .__errguards import (
@@ -52,3 +53,4 @@ from .__errguards import (
     is_value,
     matches_regex,
 )
+from .__timeout import Timeout, UnsupportedOSError

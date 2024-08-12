@@ -1,13 +1,9 @@
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring, cell-var-from-loop, invalid-name
 
 import unittest
-from logging import DEBUG, Logger, StreamHandler
 from time import perf_counter, sleep
 
-from ..codeutils import (
-    Seed,
-    Timeout,
-    UnsupportedOSError,
+from ..funcutils import (
     cache,
     deprecated,
     enforce_type_hints,

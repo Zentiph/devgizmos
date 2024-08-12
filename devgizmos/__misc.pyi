@@ -1,9 +1,19 @@
 # pylint: disable=all
 
+import logging
 from types import TracebackType
 from typing import Any, Callable, Optional, Self, Type, TypeVar, Union
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+LoggingLevel = int
+
+class BasicLogger(logging.Logger):
+    def __init__(
+        self,
+        level: LoggingLevel = logging.DEBUG,
+        fmt: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    ) -> None: ...
 
 class Seed:
     def __init__(
