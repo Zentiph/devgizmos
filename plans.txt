@@ -9,6 +9,10 @@ plans for devgizmos
 3. tests
 4. add more ensure funcs to errguards using inspect module
 	- ex: ensure_is_method
+5. singleton metaclass
 6. math tools such as different pi-calculating algorithms
 7. web stuff
 8. more failurehandlers
+9. split codeutils into more packages/modules
+	- classtools, etc.
+10. add class names to class docstrings
