@@ -1,6 +1,6 @@
 """
 types.__number
-==============
+--------------
 Contains the custom Number type.
 """
 
@@ -12,7 +12,11 @@ from ..regex import COMPLEX_EXACT, COMPLEX_PARENS_EXACT, FLOAT_EXACT, INT_EXACT
 
 
 class Number:
-    """Represents a general number."""
+    """
+    Number
+    ------
+    Represents a general number.
+    """
 
     # pylint: disable=too-many-branches
     def __new__(cls, obj, base=10, /, *, preserve_type=False):

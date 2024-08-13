@@ -1,8 +1,7 @@
 """
 info
-====
-Package containing code information related functionality,
-such as a function-tracing decorator and a deprecation decorator.
+----
+Package containing code information tools.
 """
 
 __all__ = ["tracer"]

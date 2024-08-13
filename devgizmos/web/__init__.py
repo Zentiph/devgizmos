@@ -1,7 +1,7 @@
 """
 web
-===
-Package containing web utilities such as
+---
+Package containing web interaction utilities.
 TODO:
 """
 

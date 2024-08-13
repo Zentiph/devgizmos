@@ -1,6 +1,6 @@
 """
 funcutils
-=========
+---------
 Package containing utility for working with functions.
 """
 

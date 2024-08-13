@@ -1,7 +1,7 @@
 """
 performance
-===========
-Package containing performance related functionality such as timing/benchmark utility.
+-----------
+Package containing performance measuring tools.
 """
 
 __all__ = [
@@ -10,6 +10,14 @@ __all__ = [
     "NotStartedError",
     "ReactivationError",
     "Timer",
+    "BadResetError",
 ]
 
-from .__perf import Benchmark, MemoryProfiler, NotStartedError, ReactivationError, Timer
+from .__perf import (
+    BadResetError,
+    Benchmark,
+    MemoryProfiler,
+    NotStartedError,
+    ReactivationError,
+    Timer,
+)

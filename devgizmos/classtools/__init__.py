@@ -1,6 +1,6 @@
 """
 classtools
-==========
+----------
 Package containing utilities for working with classes.
 """
 
@@ -10,6 +10,7 @@ __all__ = [
     "immutable",
     "lazyproperty",
     "singleton",
+    "SingleMeta",
 ]
 
 from .__clstools import (

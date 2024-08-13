@@ -1,6 +1,6 @@
 """
 errguards
-=========
+---------
 Package containing error guarding tools, such as type/value checkers.
 """
 

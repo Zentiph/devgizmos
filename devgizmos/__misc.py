@@ -19,7 +19,10 @@ LOGGING_LEVELS = (0, 10, 20, 30, 40, 50)
 
 class BasicLogger(Logger):
     """
-    Logger for quickly testing/logging. Inherits directly from logging.Logger.
+    BasicLogger
+    -----------
+    Logger for quickly testing/logging.
+    Inherits directly from logging.Logger.
     """
 
     def __init__(
@@ -55,7 +58,11 @@ class BasicLogger(Logger):
 
 
 class Seed:
-    """Class used for executing random code with a set seed."""
+    """
+    Seed
+    ----
+    Class used for executing random code with a set seed.
+    """
 
     def __init__(self, seed):
         """
@@ -80,11 +87,11 @@ class Seed:
         >>> seed = Seed.generate()
         >>> # set the random state using the seed
         >>> seed.set_state()
-        >>> # use the get method to calculate random results
+        >>> # use the calculate method to calculate random results
         >>> # without changing the random state
-        >>> seed.get(random)
+        >>> seed.calculate(random)
         0.18126486333322134
-        >>> seed.get(random)
+        >>> seed.calculate(random)
         0.18126486333322134
         >>> # reset the random state
         >>> seed.reset_state()
@@ -112,6 +119,7 @@ class Seed:
         0.18126486333322134
         >>> print_rand()
         0.18126486333322134
+        >>>
         >>>
         >>> # states can be nested,
         >>> # meaning they can be entered from inside other states
@@ -178,7 +186,7 @@ class Seed:
         """
         Seed().generate_seed()
         ----------------------
-        Generates a new seed and sets the Seed object's seed.
+        Generates a new seed using randint and sets the Seed object's seed.
         """
 
         self.seed = randint(0, 2**32 - 1)
@@ -222,12 +230,12 @@ class Seed:
 
         self.__seed = s
 
-    def get(self, func, *args, **kwargs):
+    def calculate(self, func, *args, **kwargs):
         """
-        Seed().get()
-        ------------
-        Gets the result from the random function and args/kwargs
-        provided while maintaining the random state.
+        Seed().calculate()
+        ------------------
+        Calculates the result from the function using the args
+        and kwargs provided while maintaining the random state.
 
         Parameters
         ~~~~~~~~~~
@@ -304,4 +312,4 @@ class Seed:
         return str(self.__seed)
 
     def __repr__(self):
-        return f"Seed({self.__seed})"
+        return f"Seed(seed={self.__seed})"

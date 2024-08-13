@@ -1,6 +1,6 @@
 """
 checks.__checks
-===============
+---------------
 Module used for checking certain cases.
 Mainly used for type and value checking function parameters.
 """

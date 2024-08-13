@@ -1,6 +1,6 @@
 """
 codeutils.__timeout
-===================
+-------------------
 Module containing the Timeout class and related functionality.
 """
 
@@ -28,7 +28,11 @@ class UnsupportedOSError(Exception):
 
 
 class Timeout:
-    """Class for timing out code if it takes too long to run."""
+    """
+    Timeout
+    -------
+    Class for timing out code if it takes too long to run.
+    """
 
     def __init__(self, cutoff, exc=TimeoutError):
         """
@@ -52,8 +56,14 @@ class Timeout:
 
         Example Usage
         ~~~~~~~~~~~~~
-        >>> # TODO
+        >>>
         """
+
+        # note from zen - TODO: leo if you could maybe get the
+        # windows subsystem for linux at some point and test
+        # out the class and make a use case for windows
+        # i'd be really grateful
+        # it bricks my windows so i can't
 
         # type checks
         ensure_instance_of(cutoff, (int, float))
@@ -186,3 +196,9 @@ class Timeout:
         ensure_superclass_of(BaseException, e)
 
         self.__exc = e
+
+    def __str__(self):
+        return f"Timeout(cutoff={repr(self.__cutoff)}, exc={repr(self.__exc)})"
+
+    def __repr__(self):
+        return f"Timeout(cutoff={repr(self.__cutoff)}, exc={repr(self.__exc)})"

@@ -1,6 +1,6 @@
 """
 info.__info
-===========
+-----------
 Contains code information related functionality.
 """
 

@@ -1,6 +1,6 @@
 """
 failurehandling
-===============
+---------------
 Package containing the FailureManager class that can be
 used along with _FailureHandler instances to handle exceptions.
 """

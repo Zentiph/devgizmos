@@ -1,6 +1,6 @@
 """
 sysutils.__sysu
-===============
+---------------
 Module containing system related utility.
 """
 

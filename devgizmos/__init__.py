@@ -1,20 +1,21 @@
 """
 devgizmos
-=========
-devgizmos is a Python package containing useful development
-tools to be used within other Python scripts.
+---------
+devgizmos is a Python library containing development
+tools such as performance testing, failure handling,
+error guards, utilities, and more.
 
 Documentation
--------------
+~~~~~~~~~~~~~
 devgizmos's documentation can be found [here](https://docs.python.org/).
 
 Contributing
-------------
+~~~~~~~~~~~~
 Contributions are not currently welcome, but feel free to open
 an issue or email if you notice any bugs or have suggestions.
 """
 
-__version__ = "0.0.3"
+__version__ = "0.8.3"
 __authors__ = ("Gavin Borne", "Leo Nguyen")
 __email__ = "zentiphdev@gmail.com"
 __license__ = "MIT"

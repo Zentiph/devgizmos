@@ -1,6 +1,6 @@
 """
 sysutils
-========
+--------
 Package containing system utilities such as
 file, directory, and environment management.
 """

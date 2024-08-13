@@ -1,6 +1,6 @@
 """
 types.__char
-============
+------------
 Contains the custom Char type.
 """
 
@@ -8,7 +8,11 @@ from ..errguards import ensure_instance_of
 
 
 class Char:
-    """Represents a single character string."""
+    """
+    Char
+    ----
+    Represents a single character string.
+    """
 
     def __new__(cls, obj, /, *, truncate=False):
         """

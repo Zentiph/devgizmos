@@ -1,7 +1,8 @@
 """
 regex
-=====
+-----
 Package containing useful regexes.
+
 For regex matching utility, use
 errguards.matches_regex() or errguards.ensure_matches_regex().
 """

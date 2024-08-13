@@ -1,6 +1,6 @@
 """
 regex.__regexes
-===============
+---------------
 Module containing useful regexes.
 """
 

@@ -1,6 +1,6 @@
 """
 codeutils.__retry
-=================
+-----------------
 Module containing the Retry class.
 """
 
@@ -21,7 +21,11 @@ from ..failurehandling.__failuremngr import _ExcData
 
 
 class Retry:
-    """Class for retrying failed code."""
+    """
+    Retry
+    -----
+    Class for retrying failed code.
+    """
 
     def __init__(
         self,

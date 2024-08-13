@@ -1,7 +1,7 @@
 """
-codeutils.__decs
-================
-Module containing decorators for the codeutils package.
+funcutils.__fnutils
+-------------------
+Module containing utility for working with functions.
 """
 
 from collections import OrderedDict

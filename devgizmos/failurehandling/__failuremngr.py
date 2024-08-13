@@ -2,7 +2,7 @@
 
 """
 failurehandling.__failuremngr
-=============================
+-----------------------------
 Module containing FailureManager and related functionality.
 """
 
@@ -20,7 +20,11 @@ from ..errguards import (
 
 
 class _FailureHandler(ABC):
-    """Abstract base class for FailureManager handlers."""
+    """
+    _FailureHandler
+    ---------------
+    Abstract base class for FailureManager handlers.
+    """
 
     @abstractmethod
     def __init__(self, *args, **kwargs):
@@ -166,7 +170,11 @@ class _FailureHandler(ABC):
 # pretty empty class, but exists for pure
 # suppressing functionality without any other functionality
 class Suppress(_FailureHandler):
-    """FailureHandler for FailureManager that suppresses the exceptions given to FailureManager."""
+    """
+    Suppress
+    --------
+    FailureHandler for FailureManager that suppresses the exceptions given to FailureManager.
+    """
 
     def __init__(self):
         """
@@ -203,7 +211,11 @@ class Suppress(_FailureHandler):
 
 
 class Fallback(_FailureHandler):
-    """FailureHandler for FailureManager that falls back to a function if the code fails."""
+    """
+    Fallback
+    --------
+    FailureHandler for FailureManager that falls back to a function if the code fails.
+    """
 
     def __init__(self, func, *args, **kwargs):
         """
@@ -344,7 +356,11 @@ class Fallback(_FailureHandler):
 
 
 class CustomException(_FailureHandler):
-    """FailureHandler for FailureManager that creates a custom exception with additional information."""
+    """
+    CustomException
+    ---------------
+    FailureHandler for FailureManager that creates a custom exception with additional information.
+    """
 
     def __init__(self, exc, fmt="{value}"):
         """
@@ -405,6 +421,8 @@ class CustomException(_FailureHandler):
 
 class _HandlerCollection:
     """
+    _HandlerCollection
+    ------------------
     Helper class to provide additional functionality
     to the FailureManager.handlers property.
     """
@@ -443,7 +461,11 @@ class _HandlerCollection:
 
 
 class _ExcData:
-    """Helper class for returning caught exception data with FailureManager."""
+    """
+    _ExcData
+    --------
+    Helper class for returning caught exception data with FailureManager.
+    """
 
     def __init__(self, type_, value, traceback, time):
         self.__type = type_
@@ -508,7 +530,11 @@ class _ExcData:
 
 
 class FailureManager:
-    """Class for handling code failures."""
+    """
+    FailureManager
+    --------------
+    Class for handling code failures.
+    """
 
     def __init__(self, *handlers, exceptions=(Exception,), assign_priorities=True):
         """
@@ -773,3 +799,9 @@ class FailureManager:
         """
 
         self.__caught.clear()
+
+    def __str__(self):
+        return f"FailureManager(handlers={self.__handlers}, exceptions={self.__exceptions})"
+
+    def __repr__(self):
+        return f"FailureManager(handlers={self.__handlers}, exceptions={self.__exceptions})"

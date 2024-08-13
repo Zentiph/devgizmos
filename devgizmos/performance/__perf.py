@@ -1,6 +1,6 @@
 """
 performance.__perf
-==================
+------------------
 Module containing performance related functionality.
 """
 
@@ -46,7 +46,11 @@ class BadResetError(Exception):
 
 # pylint: disable=too-many-instance-attributes
 class Timer:
-    """Class for timing code."""
+    """
+    Timer
+    -----
+    Class for timing code.
+    """
 
     def __init__(self, unit="ns", precision=3):
         """
@@ -340,7 +344,11 @@ class Timer:
 
 
 class Benchmark:
-    """Class for benchmarking code."""
+    """
+    Benchmark
+    ---------
+    Class for benchmarking code.
+    """
 
     def __init__(self, trials=10, unit="ns", precision=3):
         """
@@ -591,9 +599,19 @@ class Benchmark:
 
         self.__precision = p
 
+    def __str__(self):
+        return f"Benchmark(trials={repr(self.__trials)}, unit={repr(self.__unit)}, precision={repr(self.__precision)})"
+
+    def __repr__(self):
+        return f"Benchmark(trials={repr(self.__trials)}, unit={repr(self.__unit)}, precision={repr(self.__precision)})"
+
 
 class MemoryProfiler:
-    """Class for profiling memory usage."""
+    """
+    MemoryProfiler
+    --------------
+    Class for profiling memory usage.
+    """
 
     def __init__(self, unit="kb", precision=3):
         """

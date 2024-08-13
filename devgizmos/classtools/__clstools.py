@@ -1,6 +1,6 @@
 """
 classtools.__decs
-=================
+-----------------
 Module containing decorators for the classtools package.
 """
 
@@ -13,6 +13,8 @@ from ..errguards import ensure_callable, ensure_instance_of
 # pylint: disable=invalid-name
 class lazyproperty:
     """
+    lazyproperty
+    ------------
     Transforms the decorated method into a property that is
     only computed once, and is then cached as an attribute.
     """

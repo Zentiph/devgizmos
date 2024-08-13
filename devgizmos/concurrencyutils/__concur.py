@@ -1,6 +1,6 @@
 """
 concurrencyutils.__concur
-==================
+-------------------------
 Module containing tools for threading.
 """
 
@@ -143,7 +143,11 @@ def barrier_sync(barrier):
 
 
 class PeriodicTask:
-    """The main functionality of the decorator, periodic_task."""
+    """
+    PeriodicTask
+    ------------
+    The main functionality of the decorator, periodic_task.
+    """
 
     def __init__(self, interval, func, *args, **kwargs):
         """
@@ -169,7 +173,7 @@ class PeriodicTask:
         self.__interval = interval
         self.__func = func
         self.__args = args
-        self.__raise_exceptions = False
+        self.__raise = False
         self.__kwargs = kwargs
         self.__stop_event = Event()
         self.__thread = Thread(target=self.__target)
@@ -180,13 +184,17 @@ class PeriodicTask:
         PeriodicTask().__target()
         -------------------------
         The thread's target, a private function only used in PeriodicTask.
+
+        Raises
+        ~~~~~~
+        :raises RuntimeError: If an error occurs during queue processing.
         """
 
         while not self.__stop_event.is_set():
             try:
                 self.__func(*self.__args, **self.__kwargs)
             except Exception as e:
-                if self.__raise_exceptions:
+                if self.__raise:
                     self.stop()
                     raise RuntimeError(
                         f"An error occurred during queue processing: {e}"
@@ -210,7 +218,7 @@ class PeriodicTask:
         :rtype: bool
         """
 
-        return self.__raise_exceptions
+        return self.__raise
 
     @raise_exceptions.setter
     def raise_exceptions(self, re, /):
@@ -228,7 +236,7 @@ class PeriodicTask:
         # type checks
         ensure_instance_of(re, bool)
 
-        self.__raise_exceptions = re
+        self.__raise = re
 
     def start(self):
         """
@@ -314,6 +322,10 @@ def batch_processor(data, workers, process_function, raise_exceptions=False):
     :param raise_exceptions: Allows an exception should be suppressed or raised. Defaults to False.
     :type raise_exceptions: bool
 
+    Raises
+    ~~~~~~
+    :raises RuntimeError: If an error occurs during queue processing.
+
     Return
     ~~~~~~
     :return: List of results from processing each data item.
@@ -356,7 +368,11 @@ def batch_processor(data, workers, process_function, raise_exceptions=False):
 
 
 class QueueProcessor:
-    """Class for creating thread-safe queues."""
+    """
+    QueueProcessor
+    --------------
+    Class for creating thread-safe queues.
+    """
 
     def __init__(self, workers, process_function, raise_exceptions=False):
         """
@@ -372,10 +388,6 @@ class QueueProcessor:
         :type process_function: F
         :param raise_exceptions: Allows an exception should be suppressed or raised. Defaults to False.
         :type raise_exceptions: bool
-
-        Raises
-        ~~~~~~
-        :raises ReactivationError: If the start() method is called twice before the stop() method has been called.
 
         Example Usage
         ~~~~~~~~~~~~~
@@ -403,16 +415,16 @@ class QueueProcessor:
 
         self.__queue = Queue()
         self.__workers = workers
-        self.__process_function = process_function
+        self.__func = process_function
         self.__active_workers = []
         self.__running = False
-        self.__raise_exceptions = raise_exceptions
+        self.__raise = raise_exceptions
 
     @property
     def workers(self):
         """
         QueueProcessor().workers
-        ----------------------------
+        ------------------------
         Returns the list of active workers.
         """
         return self.__active_workers
@@ -421,10 +433,10 @@ class QueueProcessor:
     def process_func(self):
         """
         QueueProcessor().workers
-        ----------------------------
+        ------------------------
         Returns the process function's name.
         """
-        return self.__process_function.__name__
+        return self.__func.__name__
 
     def _consumer(self):
         """
@@ -440,12 +452,12 @@ class QueueProcessor:
                 if item is None:
                     break
 
-                self.__process_function(item)
+                self.__func(item)
                 self.__queue.task_done()
             except Empty:
                 continue
             except Exception as e:
-                if self.__raise_exceptions:
+                if self.__raise:
                     self.stop()
                     raise RuntimeError(
                         f"An error occurred during queue processing: {e}"
@@ -458,6 +470,10 @@ class QueueProcessor:
         QueueProcessor().start()
         ------------------------
         Starts the QueueProcessor class.
+
+        Raises
+        ~~~~~~
+        :raises ReactivationError: If the start() method is called twice before the stop() method has been called.
         """
 
         if self.__running:
@@ -495,3 +511,15 @@ class QueueProcessor:
         """
 
         self.__queue.put(item)
+
+    def __str__(self):
+        return (
+            f"QueueProcess(workers={repr(self.__workers)}, "
+            + f"process_function={repr(self.__func)}, raise_exceptions={repr(self.__raise)})"
+        )
+
+    def __repr__(self):
+        return (
+            f"QueueProcess(workers={repr(self.__workers)}, "
+            + f"process_function={repr(self.__func)}, raise_exceptions={repr(self.__raise)})"
+        )

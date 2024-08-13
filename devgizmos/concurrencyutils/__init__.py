@@ -1,6 +1,6 @@
 """
 concurrencyutils
-================
+----------------
 Package containing tools for threading.
 """
 
@@ -16,10 +16,10 @@ __all__ = [
 
 from .__concur import (
     QueueProcessor,
+    ReactivationError,
     barrier_sync,
     batch_processor,
     lock_handler,
     periodic_task,
     thread_manager,
-    ReactivationError,
 )
