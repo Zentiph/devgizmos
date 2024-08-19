@@ -8,11 +8,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from functools import wraps
 from time import sleep
-from typing import Union
-from threading import Event, Thread, Lock, Barrier
+from typing import Union, TypeVar, Callable, Any
+from threading import Thread, Barrier, Event  # Lock
 from queue import Queue, Empty
 
 from ..errguards import ensure_instance_of
+
+# TODO: This isn't considered as a type. Why?
+# for type checking
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class ReactivationError(Exception):
@@ -66,6 +70,8 @@ def thread_manager(target, *args, **kwargs):
         thread.join()
 
 
+# TODO: For some stupid reason, something is conflicting with the type of threading.
+# A solution is required ASAP.
 @contextmanager
 def lock_handler(lock):
     """
@@ -90,7 +96,10 @@ def lock_handler(lock):
     """
 
     # type check
-    ensure_instance_of(lock, Lock)
+    # if not isinstance(lock, threading.Lock):
+    # raise TypeError(
+    #     f"Excepted a threading.Lock object, got {type(lock).name} instead."
+    # )
 
     lock.acquire()
     try:
@@ -412,6 +421,12 @@ class QueueProcessor:
         print(results)
         [Processed Task 0, Processed Task 1, Processed Task 2]
         """
+
+        # type checks
+        ensure_instance_of(workers, int)
+        ensure_instance_of(raise_exceptions, bool)
+        # TODO: This is broken, and I'm not sure why.
+        # ensure_instance_of(process_function, F)
 
         self.__queue = Queue()
         self.__workers = workers
