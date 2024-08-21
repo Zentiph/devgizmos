@@ -1,7 +1,7 @@
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring, cell-var-from-loop, invalid-name
 # pylint: disable=pointless-string-statement
 
-from threading import Barrier, current_thread, Thread
+from threading import Barrier, current_thread, Lock, Thread
 from contextlib import contextmanager
 import unittest
 
@@ -15,8 +15,9 @@ from ..concurrencyutils import (
     thread_manager,
 )
 
+
 # threading.Lock is having issues right now... please look into it ASAP!
-"""class TestLockHandler(unittest.TestCase):
+class TestLockHandler(unittest.TestCase):
     def test_invalid_lock(self):
         invalid_locks = ["what's a lock?", 12564, None, object()]
 
@@ -33,7 +34,6 @@ from ..concurrencyutils import (
 
             with lock_handler(lock):
                 self.assertTrue(lock.locked())
-"""
 
 
 class TestBarrierSync(unittest.TestCase):

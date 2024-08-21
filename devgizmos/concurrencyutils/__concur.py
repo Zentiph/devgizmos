@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from functools import wraps
 from time import sleep
+from types import BuiltinFunctionType
 from typing import Union, TypeVar, Callable, Any
 from threading import Thread, Barrier, Event  # Lock
 from queue import Queue, Empty
@@ -16,6 +17,8 @@ from ..errguards import ensure_instance_of
 
 # TODO: This isn't considered as a type. Why?
 # for type checking
+
+# TODO: leo, see DMs
 F = TypeVar("F", bound=Callable[..., Any])
 
 
@@ -70,8 +73,6 @@ def thread_manager(target, *args, **kwargs):
         thread.join()
 
 
-# TODO: For some stupid reason, something is conflicting with the type of threading.
-# A solution is required ASAP.
 @contextmanager
 def lock_handler(lock):
     """
@@ -96,10 +97,10 @@ def lock_handler(lock):
     """
 
     # type check
-    # if not isinstance(lock, threading.Lock):
-    # raise TypeError(
-    #     f"Excepted a threading.Lock object, got {type(lock).name} instead."
-    # )
+    if not isinstance(lock, BuiltinFunctionType):
+        raise TypeError(
+            f"Excepted a threading.Lock, got {type(lock).__name__} instead."
+        )
 
     lock.acquire()
     try:
