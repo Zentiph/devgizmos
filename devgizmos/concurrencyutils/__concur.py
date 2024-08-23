@@ -4,22 +4,17 @@ concurrencyutils.__concur
 Module containing tools for threading.
 """
 
+# type import for threading.Lock type
+from _thread import LockType
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from functools import wraps
+from queue import Empty, Queue
+from threading import Barrier, Event, Thread
 from time import sleep
-from types import BuiltinFunctionType
-from typing import Union, TypeVar, Callable, Any
-from threading import Thread, Barrier, Event  # Lock
-from queue import Queue, Empty
 
-from ..errguards import ensure_instance_of
-
-# TODO: This isn't considered as a type. Why?
-# for type checking
-
-# TODO: leo, see DMs
-F = TypeVar("F", bound=Callable[..., Any])
+from ..errguards import ensure_callable, ensure_instance_of
 
 
 class ReactivationError(Exception):
@@ -97,9 +92,11 @@ def lock_handler(lock):
     """
 
     # type check
-    if not isinstance(lock, BuiltinFunctionType):
+    # (threading.Lock is a builtin function,
+    # not a class, so we do this bullshit instead)
+    if not isinstance(lock, LockType):
         raise TypeError(
-            f"Excepted a threading.Lock, got {type(lock).__name__} instead."
+            f"Expected a threading.Lock instance, got {type(lock).__name__} instead."
         )
 
     lock.acquire()
@@ -178,7 +175,7 @@ class PeriodicTask:
         """
 
         # type checks
-        ensure_instance_of(interval, Union[int, float])
+        ensure_instance_of(interval, int, float)
 
         self.__interval = interval
         self.__func = func
@@ -300,7 +297,7 @@ def periodic_task(interval):
     """
 
     # type checks
-    ensure_instance_of(interval, Union[int, float])
+    ensure_instance_of(interval, int, float)
 
     def decorator(func):
         @wraps(func)
@@ -426,8 +423,7 @@ class QueueProcessor:
         # type checks
         ensure_instance_of(workers, int)
         ensure_instance_of(raise_exceptions, bool)
-        # TODO: This is broken, and I'm not sure why.
-        # ensure_instance_of(process_function, F)
+        ensure_callable(process_function)
 
         self.__queue = Queue()
         self.__workers = workers
