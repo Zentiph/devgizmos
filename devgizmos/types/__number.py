@@ -36,7 +36,7 @@ class Number:
         The object must have at least one number-conversion method (i.e. __int__), or be a str, bytes, or bytearray.
         :type obj: ConvertibleToNumber | str | bytes | bytearray
         :param preserve_type: Whether to preserve the type of the number given, defaults to False.
-        By default, Number will simplify given numbers as much as possible. (Ex: Number((1+0j)) -> 1)
+        By default, a new Number will simplify given values as much as possible. (Ex: Number((1.0 + 0.0j)) -> Number(1))
         :type preserve_type: bool, optional
         :param base: The base of the number.
         Only compatible when obj is a str, bytes, or bytearray and represents an int.
@@ -44,7 +44,8 @@ class Number:
 
         Raises
         ~~~~~~
-        :raises TypeError: If the object to convert is not a str, bytes, bytearray, or ConvertibleToNumber,
+        :raises TypeError: If the object to convert cannot be converted to an
+        int, float, complex, or Number, or is not a convertible str, bytes, or bytearray.
 
         Return
         ~~~~~~
