@@ -92,12 +92,7 @@ def lock_handler(lock):
     """
 
     # type check
-    # (threading.Lock is a builtin function,
-    # not a class, so we do this bullshit instead)
-    if not isinstance(lock, LockType):
-        raise TypeError(
-            f"Expected a threading.Lock instance, got {type(lock).__name__} instead."
-        )
+    ensure_instance_of(lock, LockType)
 
     lock.acquire()
     try:
