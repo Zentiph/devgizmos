@@ -16,7 +16,6 @@ from ..concurrencyutils import (
 )
 
 
-# threading.Lock is having issues right now... please look into it ASAP!
 class TestLockHandler(unittest.TestCase):
     def test_invalid_lock(self):
         invalid_locks = ["what's a lock?", 12564, None, object()]
@@ -48,7 +47,7 @@ class TestBarrierSync(unittest.TestCase):
 
     def test_valid_barriers(self):
         with self.subTest():
-            my_barrier = Barrier(2)  # if it takes too long, timeout
+            my_barrier = Barrier(2)
 
             def worker(barrier):
                 with barrier_sync(barrier):
@@ -83,6 +82,39 @@ class TestQueueProcessor(unittest.TestCase):
 
         with self.assertRaises(ReactivationError):
             qd.start()
+
+    # might unit test checking booleans for the last one, but not needed rn
+    def test_invalid_params(self):
+        # pylint: disable=unused-argument
+        def process_item(item):
+            pass
+
+        invalid_workers = ["what's a workers", None, object()]
+
+        for invalid_worker in invalid_workers:
+            with self.subTest(worker=invalid_worker):
+                with self.assertRaises(TypeError):
+                    qd = QueueProcessor(invalid_worker, process_item)
+                    qd.start()
+
+        invalid_processors = ["what's a object?", None, 12344]
+
+        for invalid_processor in invalid_processors:
+            with self.subTest(processor=invalid_processor):
+                with self.assertRaises(TypeError):
+                    qd = QueueProcessor(1, invalid_processor)
+                    qd.start()
+
+
+class TestThreadManager(unittest.TestCase):
+    def test_invalid_target(self):
+        invalid_targets = ["target??", None, 71222, int()]
+
+        for invalid_target in invalid_targets:
+            with self.subTest(target=invalid_target):
+                with self.assertRaises(TypeError):
+                    with thread_manager(invalid_target):
+                        pass
 
 
 if __name__ == "__main__":

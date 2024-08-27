@@ -59,6 +59,9 @@ def thread_manager(target, *args, **kwargs):
     Thread is finishing.
     """
 
+    # type check
+    ensure_callable(target)
+
     thread = Thread(target=target, args=args, kwargs=kwargs)
     thread.start()
 
