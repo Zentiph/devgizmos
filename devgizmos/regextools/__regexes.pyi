@@ -8,4 +8,8 @@ COMPLEX: str
 COMPLEX_EXACT: str
 COMPLEX_PARENS: str
 COMPLEX_PARENS_EXACT: str
+
 EMAIL: str
+
+IPV4: str
+IPV6: str

@@ -29,7 +29,7 @@ __all__ = [
     "failurehandling",
     "info",
     "performance",
-    "regex",
+    "regextools",
     "sysutils",
     "types",
     "BasicLogger",
@@ -42,7 +42,7 @@ from . import (
     funcutils,
     info,
     performance,
-    regex,
+    regextools,
     sysutils,
     types,
 )

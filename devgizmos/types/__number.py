@@ -8,7 +8,7 @@ from math import ceil, floor, trunc
 from re import match as re_match
 
 from ..errguards import ensure_instance_of
-from ..regex import COMPLEX_EXACT, COMPLEX_PARENS_EXACT, FLOAT_EXACT, INT_EXACT
+from ..regextools import COMPLEX_EXACT, COMPLEX_PARENS_EXACT, FLOAT_EXACT, INT_EXACT
 
 
 class Number:

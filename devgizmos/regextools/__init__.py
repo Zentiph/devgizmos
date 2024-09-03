@@ -17,6 +17,14 @@ __all__ = [
     "INT",
     "INT_EXACT",
     "EMAIL",
+    "IPV4",
+    "IPV6",
+    "ensure_matches",
+    "is_email",
+    "is_ip",
+    "is_ipv4",
+    "is_ipv6",
+    "matches",
 ]
 
 from .__regexes import (
@@ -24,9 +32,12 @@ from .__regexes import (
     COMPLEX_EXACT,
     COMPLEX_PARENS,
     COMPLEX_PARENS_EXACT,
+    EMAIL,
     FLOAT,
     FLOAT_EXACT,
     INT,
     INT_EXACT,
-    EMAIL,
+    IPV4,
+    IPV6,
 )
+from .__rtools import ensure_matches, is_email, is_ip, is_ipv4, is_ipv6, matches

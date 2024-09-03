@@ -16,7 +16,6 @@ __all__ = [
     "ensure_in_bounds",
     "ensure_in_range",
     "ensure_instance_of",
-    "ensure_matches_regex",
     "ensure_no_duplicates",
     "ensure_superclass_of",
     "ensure_value",
@@ -25,7 +24,6 @@ __all__ = [
     "is_instance_of",
     "is_superclass_of",
     "is_value",
-    "matches_regex",
     "Timeout",
     "UnsupportedOSError",
 ]
@@ -42,7 +40,6 @@ from .__errguards import (
     ensure_in_bounds,
     ensure_in_range,
     ensure_instance_of,
-    ensure_matches_regex,
     ensure_no_duplicates,
     ensure_superclass_of,
     ensure_value,
@@ -51,6 +48,5 @@ from .__errguards import (
     is_instance_of,
     is_superclass_of,
     is_value,
-    matches_regex,
 )
 from .__timeout import Timeout, UnsupportedOSError

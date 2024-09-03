@@ -8,7 +8,6 @@ Mainly used for type and value checking function parameters.
 # pylint: disable=too-many-lines
 
 from collections.abc import Iterable, Sequence
-from re import match as re_match
 
 
 def _msg_chk(msg):
@@ -431,90 +430,6 @@ def ensure_in_bounds(value, lower, upper, /, *, inclusive=True, msg=""):
             msg = msg.format(value=value, lower=lower, upper=upper)
         else:
             msg = f"{value} must be in the bounds ({lower}, {upper})"
-
-        raise ValueError(msg)
-
-
-def matches_regex(regex, *strings):
-    """
-    matches_regex()
-    ---------------
-    Determines if the given string matches the regex provided.
-
-    Parameters
-    ~~~~~~~~~~
-    :param regex: The regex to compare the strings to.
-    :type regex: str
-    :param strings: The strings to check.
-    :type strings: str
-
-    Raises
-    ~~~~~~
-    :raises TypeError: If regex is not a str.
-    :raises TypeError: If a string in strings is not a str.
-
-    Return
-    ------
-    :return: True if the string matches the regex, otherwise False.
-    :rtype: bool
-
-    Example Usage
-    ~~~~~~~~~~~~~
-    >>> matches_regex(r'^\\S+@\\S+\\.\\S+$', "name@example.com")
-    True
-    >>> matches_regex(r'^\\S+@\\S+\\.\\S+$', "hello")
-    False
-    """
-
-    # type checks
-    if not isinstance(regex, str):
-        raise TypeError(f"'regex' must be a 'str', not '{type(regex).__name__}'")
-    if not all(isinstance(s, str) for s in strings):
-        raise TypeError("all strings given must be type 'str'")
-
-    if all(re_match(regex, s) for s in strings):
-        return True
-    return False
-
-
-def ensure_matches_regex(regex, *strings, msg=""):
-    """
-    ensure_matches_regex()
-    ----------------------
-    Ensures the given strings match the regex provided.
-
-    Parameters
-    ~~~~~~~~~~
-    :param regex: The regex to compare the strings to.
-    :type regex: str
-    :param strings: The strings to check.
-    :type strings: str
-    :param msg: The exception message; leave empty to use the default, defaults to ""
-    Ex: msg="{strings} do not match the regex: {regex}."
-    :type msg: str, optional
-
-    Raises
-    ~~~~~~
-    :raises TypeError: If regex is not a str.
-    :raises TypeError: If a string in strings is not a str.
-    :raises ValueError: If the strings do not match the regex.
-
-    Example Usage
-    ~~~~~~~~~~~~~
-    >>> ensure_matches_regex(r'^\\S+@\\S+\\.\\S+$', "name@example.com")
-    >>> ensure_matches_regex(r'^\\S+@\\S+\\.\\S+$', "hello")
-    ValueError: expected strings 'hello' to match the regex: '^\\S+@\\S+\\.\\S+$'
-    """
-
-    if not matches_regex(regex, *strings):
-        _msg_chk(msg)
-
-        string_names = ", ".join(repr(s) for s in strings)
-
-        if msg:
-            msg = msg.format(strings=string_names, regex=repr(regex))
-        else:
-            msg = f"expected strings {string_names} to match the regex: {repr(regex)}"
 
         raise ValueError(msg)
 
